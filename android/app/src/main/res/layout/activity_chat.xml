@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_primary"
+    android:orientation="vertical">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/bg_secondary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
+
+        <View
+            android:id="@+id/statusDot"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/ic_dot_online" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Jarvis"
+                android:textColor="@color/text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ready"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnSpeaker"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_btn_surface"
+            android:contentDescription="Toggle speaker"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_lock_silent_mode_off"
+            android:tint="@color/text_secondary" />
+
+        <ImageButton
+            android:id="@+id/btnMemory"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_btn_surface"
+            android:contentDescription="Memory"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_recent_history"
+            android:tint="@color/text_secondary" />
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_btn_surface"
+            android:contentDescription="Settings"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:tint="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- Chat list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChat"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Confirmation card -->
+    <LinearLayout
+        android:id="@+id/confirmCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Confirm action"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvConfirmMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="12dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirmNo"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="Cancel"
+                android:textColor="@color/text_secondary"
+                app:cornerRadius="22dp"
+                app:strokeColor="@color/text_muted" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirmYes"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="Confirm"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/accent"
+                app:cornerRadius="22dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Wave bar (shown when listening) -->
+    <LinearLayout
+        android:id="@+id/waveContainer"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/bg_secondary"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <View android:id="@+id/wave1" android:layout_width="5dp" android:layout_height="16dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave2" android:layout_width="5dp" android:layout_height="28dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave3" android:layout_width="5dp" android:layout_height="44dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave4" android:layout_width="5dp" android:layout_height="56dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave5" android:layout_width="5dp" android:layout_height="44dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave6" android:layout_width="5dp" android:layout_height="28dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+        <View android:id="@+id/wave7" android:layout_width="5dp" android:layout_height="16dp"
+            android:layout_marginLeft="4dp" android:layout_marginRight="4dp"
+            android:background="@drawable/bg_pill_accent" />
+
+        <TextView
+            android:id="@+id/tvListening"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:text="Listening…"
+            android:textColor="@color/accent_light"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Typing indicator -->
+    <TextView
+        android:id="@+id/tvTyping"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_secondary"
+        android:paddingLeft="20dp"
+        android:paddingTop="4dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="4dp"
+        android:text="Jarvis is thinking…"
+        android:textColor="@color/text_muted"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <!-- Input row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/bg_secondary"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="12dp"
+        android:paddingTop="10dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="10dp">
+
+        <ImageButton
+            android:id="@+id/btnMic"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_accent"
+            android:contentDescription="Voice input"
+            android:padding="12dp"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:tint="@color/white" />
+
+        <EditText
+            android:id="@+id/etInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input"
+            android:inputType="textMultiLine|textCapSentences"
+            android:maxLines="5"
+            android:minHeight="52dp"
+            android:paddingLeft="18dp"
+            android:paddingTop="13dp"
+            android:paddingRight="18dp"
+            android:paddingBottom="13dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted"
+            android:hint="Ask Jarvis anything…"
+            android:textSize="15sp" />
+
+        <ImageButton
+            android:id="@+id/btnSend"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_btn_accent"
+            android:contentDescription="Send"
+            android:padding="12dp"
+            android:src="@android:drawable/ic_menu_send"
+            android:tint="@color/white" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Jarvis</string>
+    <string name="accessibility_label">Jarvis Phone Control</string>
+    <string name="accessibility_desc">Allows Jarvis to control your phone via voice commands.</string>
+</resources>

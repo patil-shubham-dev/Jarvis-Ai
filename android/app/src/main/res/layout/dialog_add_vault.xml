@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <Spinner
+        android:id="@+id/spinnerVaultCategory"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:id="@+id/etVaultTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Title (e.g. Gmail password)"
+        android:textColorHint="@color/text_muted"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:id="@+id/etVaultValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Value (will be encrypted)"
+        android:textColorHint="@color/text_muted"
+        android:textSize="15sp"
+        android:inputType="textMultiLine"
+        android:minLines="2" />
+
+</LinearLayout>

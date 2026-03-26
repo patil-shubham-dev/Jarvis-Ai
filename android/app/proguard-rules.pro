@@ -1,0 +1,2 @@
+-keep class com.jarvis.assistant.** { *; }
+-dontwarn okhttp3.**

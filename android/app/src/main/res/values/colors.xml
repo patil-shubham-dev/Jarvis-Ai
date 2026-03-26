@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_primary">#FF111110</color>
+    <color name="bg_secondary">#FF1A1917</color>
+    <color name="bg_card">#FF222120</color>
+    <color name="bg_input">#FF1E1D1C</color>
+    <color name="accent">#FFCC785C</color>
+    <color name="accent_light">#FFE8917A</color>
+    <color name="text_primary">#FFEDE9E4</color>
+    <color name="text_secondary">#FF9A9590</color>
+    <color name="text_muted">#FF4A4845</color>
+    <color name="text_on_accent">#FFFFFFFF</color>
+    <color name="bubble_user">#FF2A2724</color>
+    <color name="bubble_jarvis">#FF1E1D1C</color>
+    <color name="bubble_border">#FF333130</color>
+    <color name="status_online">#FF4CAF50</color>
+    <color name="status_error">#FFEF5350</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="teal_200">#FF03DAC5</color>
+</resources>

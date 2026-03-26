@@ -1,0 +1,35 @@
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+local.properties
+
+# Gradle
+.gradle/
+build/
+captures/
+*.hprof
+.cxx/
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+*.swp
+
+# Keys / secrets (NEVER commit these)
+keystore/
+*.jks
+*.keystore
+google-services.json
+*.p12
+
+# Kotlin
+kotlin-build/
