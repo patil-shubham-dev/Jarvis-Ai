@@ -31,16 +31,6 @@ The core idea: your assistant should get *smarter the longer you use it*, not re
 
 ---
 
-## Screenshots
-
-<!-- REPLACE THESE with real screenshots. Suggested layout: Chat → Voice → Memory → Vault -->
-
-| Chat Interface | Voice Mode | Memory Viewer | Secure Vault |
-|:-:|:-:|:-:|:-:|
-| ![Chat](https://via.placeholder.com/200x400?text=Chat+UI) | ![Voice](https://via.placeholder.com/200x400?text=Voice+Mode) | ![Memory](https://via.placeholder.com/200x400?text=Memory+Viewer) | ![Vault](https://via.placeholder.com/200x400?text=Vault+UI) |
-
----
-
 ## Features
 
 ### 🧠 Conversational AI
