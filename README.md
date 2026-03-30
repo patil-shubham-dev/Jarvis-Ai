@@ -8,16 +8,11 @@ Built for people who want more than a chatbot on their phone.</p>
 <p>
   <img src="https://img.shields.io/badge/Android-API%2026%2B-4FC3F7?style=for-the-badge&logo=android&logoColor=white"/>
   <img src="https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Claude%20API-Anthropic-D4A017?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/AI-Bring%20Your%20Own%20Key-D4A017?style=for-the-badge&logo=openai&logoColor=white"/>
   <img src="https://img.shields.io/badge/Architecture-MVVM-00C853?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Status-WIP-orange?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
 </p>
-
-<!-- REPLACE THIS with a real demo GIF: app/screenshots/demo.gif -->
-> 📸 **[Demo GIF — drop in a screen recording here]**
-
-</div>
 
 ---
 
@@ -34,7 +29,8 @@ The core idea: your assistant should get *smarter the longer you use it*, not re
 ## Features
 
 ### 🧠 Conversational AI
-- Powered by **Anthropic Claude** with SSE streaming (word-by-word responses)
+- **Bring Your Own API Key** — works with any OpenAI-compatible LLM provider (OpenAI, Groq, Together AI, OpenRouter, Mistral, etc.)
+- SSE streaming for word-by-word responses
 - Full **conversation history** maintained per session
 - **Multi-step commands** — *"Text Rahul I'm running late, then set an alarm for 9 PM"*
 
@@ -60,7 +56,7 @@ Via Android Accessibility Service:
 > Sensitive actions (calls, messages) always surface a confirmation card before executing.
 
 ### 🗃️ Persistent Memory
-- Extracts facts from every conversation (`<<<MEMORY>>>` blocks in Claude responses)
+- Extracts facts from every conversation (`<<<MEMORY>>>` blocks in AI responses)
 - Stores name, habits, relationships, preferences in **Room DB**
 - Last 30 memories injected into every system prompt automatically
 - **Memory Viewer** — browse, inspect, and delete what Jarvis knows about you
@@ -104,7 +100,7 @@ This architecture enables **semantic search**, **context injection**, and eventu
 | Target SDK | 35 (Android 15) |
 | Build System | Gradle 8.11.1 + AGP 8.8.2 |
 | Java Version | 21 |
-| AI Backend | Anthropic Claude API (SSE streaming) |
+| AI Backend | Any OpenAI-compatible API (SSE streaming) |
 | Local Database | Room 2.6.1 |
 | Architecture | MVVM + Repository |
 | Encryption | AES-256-GCM via Android Keystore |
@@ -120,7 +116,7 @@ This architecture enables **semantic search**, **context injection**, and eventu
 android/
 └── app/src/main/java/com/jarvis/assistant/
     ├── core/
-    │   ├── api/ClaudeApi.kt              # Streaming Claude API client (SSE)
+    │   ├── api/AIApi.kt                  # Streaming AI API client (SSE)
     │   ├── commands/CommandExecutor.kt   # Phone action dispatcher
     │   ├── crypto/VaultCrypto.kt         # AES-256 encryption
     │   └── prefs/Prefs.kt               # SharedPreferences wrapper
@@ -149,7 +145,7 @@ android/
 - Android Studio Ladybug / Meerkat 2024+
 - JDK 21
 - Android device — USB Debugging enabled
-- Anthropic API key → [console.anthropic.com](https://console.anthropic.com)
+- An API key from **any supported LLM provider** (see below)
 
 ### 1. Clone
 
@@ -179,9 +175,21 @@ Grant the following on the onboarding screen:
 
 ### 5. Add your API key
 
-`Settings (gear icon) → Paste your Claude API key → Save`
+Jarvis works with **any OpenAI-compatible API**. Grab a key from whichever provider you prefer:
 
-The model name will be auto-populated. You can change it in Settings.
+| Provider | Free Tier | Get Key |
+|---|---|---|
+| [OpenAI](https://platform.openai.com) | ❌ | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| [Groq](https://groq.com) | ✅ Fast | [console.groq.com](https://console.groq.com) |
+| [OpenRouter](https://openrouter.ai) | ✅ Credits | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| [Together AI](https://together.ai) | ✅ Credits | [api.together.xyz](https://api.together.xyz) |
+| [Mistral](https://mistral.ai) | ✅ Trial | [console.mistral.ai](https://console.mistral.ai) |
+
+Then in the app:
+
+`Settings (gear icon) → Paste your API key → Set Base URL → Select model → Save`
+
+> The **Base URL** field lets you point Jarvis at any OpenAI-compatible endpoint.
 
 ### 6. One-time ADB permission (brightness + system control)
 
@@ -201,17 +209,17 @@ cd android
 
 ## Architecture Notes
 
-**Streaming** — Claude API is called with `"stream": true`. `ClaudeApi.streamChat()` returns a `Flow<String>` emitting each SSE chunk. `ChatViewModel` appends each chunk to the live message in real time.
+**Streaming** — The AI API is called with `"stream": true`. `AIApi.streamChat()` returns a `Flow<String>` emitting each SSE chunk. `ChatViewModel` appends each chunk to the live message in real time.
 
-**Command detection** — Claude is prompted to return pure JSON for phone actions. `CommandExecutor.tryExecute()` checks if the response starts with `{` and dispatches accordingly.
+**Command detection** — The model is prompted to return pure JSON for phone actions. `CommandExecutor.tryExecute()` checks if the response starts with `{` and dispatches accordingly.
 
-**Memory extraction** — Every Claude response is parsed for `<<<MEMORY>>>` blocks. Extracted facts are stored in Room DB and injected into every subsequent system prompt (last 30 entries).
+**Memory extraction** — Every AI response is parsed for `<<<MEMORY>>>` blocks. Extracted facts are stored in Room DB and injected into every subsequent system prompt (last 30 entries).
 
 ---
 
 ## Roadmap
 
-- [x] Streaming chat with Claude
+- [x] Streaming chat with any OpenAI-compatible LLM
 - [x] Wake word activation
 - [x] Accessibility-based phone control
 - [x] Persistent Room DB memory
