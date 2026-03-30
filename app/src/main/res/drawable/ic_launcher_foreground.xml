@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer glow ring -->
+    <path
+        android:pathData="M54,14 A40,40 0 1,1 53.99,14 Z"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="2.5"
+        android:fillColor="#00000000" />
+    <!-- Inner ring -->
+    <path
+        android:pathData="M54,26 A28,28 0 1,1 53.99,26 Z"
+        android:strokeColor="#4FC3F7"
+        android:strokeAlpha="0.4"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000" />
+    <!-- J letterform -->
+    <path
+        android:pathData="M50,36 L58,36 L58,62 Q58,72 50,72 Q42,72 42,64 L42,60 L46,60 L46,64 Q46,68 50,68 Q54,68 54,62 L54,40 L50,40 Z"
+        android:fillColor="#4FC3F7" />
+    <!-- Accent dots -->
+    <path
+        android:pathData="M44,18 A2.5,2.5 0 1,1 43.99,18 Z"
+        android:fillColor="#4FC3F7" />
+    <path
+        android:pathData="M64,18 A2.5,2.5 0 1,1 63.99,18 Z"
+        android:fillColor="#4FC3F7"
+        android:fillAlpha="0.5" />
+</vector>

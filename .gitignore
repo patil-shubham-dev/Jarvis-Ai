@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Android
 *.apk
 *.ap_
@@ -33,3 +34,119 @@ google-services.json
 
 # Kotlin
 kotlin-build/
+=======
+# ══════════════════════════════════════════
+#         JARVIS AI — .gitignore
+# ══════════════════════════════════════════
+
+# ──── Build outputs ────
+/build/
+app/build/
+**/build/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ──── Local config (never commit these) ────
+local.properties
+keystore.properties
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# ──── API keys & secrets ────
+secrets.properties
+api_keys.xml
+.env
+.env.*
+
+# ──── Gradle ────
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar
+
+# ──── IDE: Android Studio / IntelliJ ────
+*.iml
+*.ipr
+*.iws
+.idea/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+captures/
+*.hprof
+
+# ──── IDE: VS Code ────
+.vscode/
+*.code-workspace
+
+# ──── macOS ────
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# ──── Windows ────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ──── Linux ────
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ──── Kotlin ────
+*.class
+*.kotlin_module
+
+# ──── Test outputs ────
+/test-results/
+/reports/
+
+# ──── Profiling ────
+*.trace
+
+# ──── Generated sources ────
+app/src/main/java/**/generated/
+app/src/debug/
+app/src/release/
+
+# ──── Proguard (keep rules, not output) ────
+app/proguard/dump.txt
+app/proguard/mapping.txt
+app/proguard/seeds.txt
+app/proguard/usage.txt
+
+# ──── Release signing ────
+release/
+/release
+
+# ──── Logs ────
+*.log
+logs/
+>>>>>>> bfb04b9 (initial commit: Jarvis AI cleaned version)

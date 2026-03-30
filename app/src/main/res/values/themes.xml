@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!--         JARVIS AI — BASE THEME (Dark)          -->
+    <!-- ══════════════════════════════════════════════ -->
+    <style name="Theme.JarvisAI" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Color System -->
+        <item name="colorPrimary">@color/jarvis_primary</item>
+        <item name="colorPrimaryDark">@color/bg_deepspace</item>
+        <item name="colorPrimaryVariant">@color/jarvis_primary_dark</item>
+        <item name="colorSecondary">@color/jarvis_accent</item>
+        <item name="colorSecondaryVariant">@color/jarvis_accent_alt</item>
+        <item name="colorAccent">@color/jarvis_accent</item>
+        <item name="colorOnPrimary">@color/text_on_dark</item>
+        <item name="colorOnSecondary">@color/text_on_dark</item>
+        <item name="android:colorBackground">@color/bg_deepspace</item>
+        <item name="colorSurface">@color/bg_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorError">@color/status_error</item>
+        <item name="colorOnError">@color/text_on_dark</item>
+
+        <!-- Window -->
+        <item name="android:windowBackground">@color/bg_deepspace</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/bg_deepspace</item>
+        <item name="android:navigationBarColor">@color/bg_surface</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Text -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+
+        <!-- Ripple -->
+        <item name="rippleColor">@color/ripple_primary</item>
+        <item name="android:colorControlHighlight">@color/ripple_primary</item>
+
+        <!-- Shape -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.JarvisAI.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.JarvisAI.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.JarvisAI.LargeComponent</item>
+
+        <!-- Toolbar -->
+        <item name="toolbarStyle">@style/Widget.JarvisAI.Toolbar</item>
+
+        <!-- Material Components -->
+        <item name="textInputStyle">@style/Widget.JarvisAI.TextInputLayout</item>
+
+        <!-- Bottom Sheet -->
+        <item name="bottomSheetDialogTheme">@style/Theme.JarvisAI.BottomSheet</item>
+        <item name="bottomSheetStyle">@style/Widget.JarvisAI.BottomSheet</item>
+    </style>
+
+    <!-- Splash / Launcher theme -->
+    <style name="Theme.JarvisAI.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bg_deepspace</item>
+    </style>
+
+    <!-- Dialog theme -->
+    <style name="Theme.JarvisAI.Dialog" parent="Theme.MaterialComponents.Dialog">
+        <item name="colorPrimary">@color/jarvis_primary</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:colorBackground">@color/bg_card</item>
+        <item name="android:windowBackground">@color/bg_card</item>
+    </style>
+
+    <!-- Bottom Sheet theme -->
+    <style name="Theme.JarvisAI.BottomSheet" parent="Theme.MaterialComponents.BottomSheetDialog">
+        <item name="colorPrimary">@color/jarvis_primary</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:colorBackground">@color/bg_card</item>
+        <item name="bottomSheetStyle">@style/Widget.JarvisAI.BottomSheet</item>
+    </style>
+
+    <!-- Overlay / System window theme (for overlay service) -->
+    <style name="Theme.JarvisAI.Overlay" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorPrimary">@color/jarvis_primary</item>
+    </style>
+
+    <!-- ═══════════════════ SHAPES ═══════════════════ -->
+    <style name="ShapeAppearance.JarvisAI.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.JarvisAI.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.JarvisAI.LargeComponent" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <!-- ══════════════════ WIDGETS ══════════════════ -->
+
+    <style name="Widget.JarvisAI.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/bg_surface</item>
+        <item name="titleTextColor">@color/text_primary</item>
+        <item name="navigationIconTint">@color/icon_primary</item>
+    </style>
+
+    <style name="Widget.JarvisAI.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/jarvis_primary</item>
+        <item name="android:textColor">@color/text_on_dark</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="rippleColor">@color/ripple_dark</item>
+    </style>
+
+    <style name="Widget.JarvisAI.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/jarvis_primary</item>
+        <item name="android:textColor">@color/jarvis_primary</item>
+        <item name="rippleColor">@color/ripple_primary</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="Widget.JarvisAI.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/jarvis_primary</item>
+        <item name="rippleColor">@color/ripple_primary</item>
+    </style>
+
+    <style name="Widget.JarvisAI.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/border_active</item>
+        <item name="boxBackgroundColor">@color/bg_surface</item>
+        <item name="hintTextColor">@color/text_hint</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
+
+    <style name="Widget.JarvisAI.BottomSheet" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="backgroundTint">@color/bg_card</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.JarvisAI.LargeComponent</item>
+    </style>
+
+    <!-- ═══════════════════ TEXT STYLES ═══════════════════ -->
+    <style name="TextAppearance.JarvisAI.Headline" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <style name="TextAppearance.JarvisAI.Body" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:lineSpacingMultiplier">1.4</item>
+    </style>
+
+    <style name="TextAppearance.JarvisAI.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <style name="TextAppearance.JarvisAI.Accent" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/jarvis_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+</resources>

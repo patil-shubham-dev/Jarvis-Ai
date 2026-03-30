@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Outer ring -->
+    <path
+        android:pathData="M48,8 A40,40 0 1,1 47.99,8 Z"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
+    <!-- Inner ring -->
+    <path
+        android:pathData="M48,20 A28,28 0 1,1 47.99,20 Z"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000" />
+    <!-- J letter -->
+    <path
+        android:pathData="M44,30 L52,30 L52,54 Q52,64 44,64 Q36,64 36,56 L36,52 L40,52 L40,56 Q40,60 44,60 Q48,60 48,54 L48,34 L44,34 Z"
+        android:fillColor="#4FC3F7" />
+    <!-- Top accent dots -->
+    <path
+        android:pathData="M38,14 A2,2 0 1,1 37.99,14 Z"
+        android:fillColor="#4FC3F7" />
+    <path
+        android:pathData="M58,14 A2,2 0 1,1 57.99,14 Z"
+        android:fillColor="#4FC3F7"
+        android:fillAlpha="0.6" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude sensitive data from backups -->
+    <exclude domain="sharedpref" path="jarvis_prefs.xml" />
+    <exclude domain="database" path="jarvis_chat.db" />
+</full-backup-content>

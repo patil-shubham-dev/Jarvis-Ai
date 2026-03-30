@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Head circle -->
+    <path
+        android:pathData="M24,4 A14,14 0 1,1 23.99,4 Z"
+        android:fillColor="#0D47A1" />
+    <!-- Face highlight ring -->
+    <path
+        android:pathData="M24,4 A14,14 0 1,1 23.99,4 Z"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000" />
+    <!-- Eyes -->
+    <path
+        android:pathData="M18,15 A2.5,2.5 0 1,1 17.99,15 Z"
+        android:fillColor="#4FC3F7" />
+    <path
+        android:pathData="M30,15 A2.5,2.5 0 1,1 29.99,15 Z"
+        android:fillColor="#4FC3F7" />
+    <!-- Mouth line -->
+    <path
+        android:pathData="M19,21 Q24,25 29,21"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round" />
+    <!-- Shoulders / body suggestion -->
+    <path
+        android:pathData="M10,44 Q10,34 24,34 Q38,34 38,44"
+        android:fillColor="#0A1628" />
+    <path
+        android:pathData="M10,44 Q10,34 24,34 Q38,34 38,44"
+        android:strokeColor="#4FC3F7"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000" />
+</vector>

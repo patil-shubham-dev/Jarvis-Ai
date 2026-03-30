@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # JARVIS — AI Personal Assistant for Android
 
 A production-grade Android AI assistant that combines a Claude-powered conversational brain with full phone automation. Speak naturally in Hindi, English, or Hinglish to send WhatsApp messages, make calls, set alarms, control system settings, and more — all while building a persistent memory of your preferences and habits.
@@ -74,10 +75,102 @@ android/
 ├── build.gradle
 ├── settings.gradle
 └── gradle.properties
+=======
+<div align="center">
+
+# ⚡ Jarvis AI
+
+### Android AI Assistant with Memory, Context & Device Control
+
+<img src="https://img.shields.io/badge/Android-API%2026%2B-4FC3F7?style=for-the-badge&logo=android"/>
+<img src="https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=for-the-badge&logo=kotlin"/>
+<img src="https://img.shields.io/badge/Architecture-MVVM-00C853?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge"/>
+
+</div>
+
+---
+
+## ✨ Overview
+
+Jarvis AI is a customizable Android assistant designed to go beyond chat.
+
+It combines:
+
+* conversational AI
+* system-level control
+* memory-driven intelligence
+
+to create a personal assistant that adapts over time.
+
+---
+
+## 🔥 Core Features
+
+* 💬 Chat-based AI interface
+* 🎙️ Voice input (Speech-to-Text)
+* 🔊 Text-to-Speech responses
+* 🪟 Floating overlay assistant
+* ♿ Accessibility-based device control
+* 🔑 Bring your own API key
+* 🌙 Dark UI for continuous usage
+
+---
+
+## ⚡ Device Control Capabilities
+
+Jarvis is designed to interact with your device using system services.
+
+* Open apps
+* Navigate UI using accessibility
+* Perform repetitive actions
+* Assist with daily workflows
+* Overlay assistant across apps
+
+> Control is limited by Android permissions and user approval.
+
+---
+
+## 🧠 Memory System
+
+Jarvis is built around a structured memory architecture.
+
+### Core Capabilities
+
+* Store user data
+* Retrieve relevant context
+* Adapt responses based on history
+* Improve behavior over time
+
+---
+
+## 🧠 Jarvis Core Memory Architecture
+
+```
+/JARVIS
+│
+├── CORE_IDENTITY/
+├── SOCIAL_GRAPH/
+├── BEHAVIORAL_INTELLIGENCE/
+├── KNOWLEDGE_BASE/
+├── MEMORY_TIMELINE/
+├── PREFERENCES_ENGINE/
+├── LIFE_OPERATIONS/
+├── COMMUNICATIONS/
+├── DIGITAL_FOOTPRINT/
+├── DECISION_ENGINE/
+├── HEALTH_PROFILE/
+├── FINANCIAL_SYSTEM/
+├── SECURITY_VAULT/
+├── LEARNING_ENGINE/
+├── CONTEXT_ENGINE/
+└── SYSTEM_LOGS/
+>>>>>>> bfb04b9 (initial commit: Jarvis AI cleaned version)
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Setup Instructions
 
 ### Prerequisites
@@ -125,10 +218,239 @@ With the phone connected via USB and USB Debugging enabled:
 
 ```bash
 adb shell pm grant com.jarvis.assistant android.permission.WRITE_SECURE_SETTINGS
+=======
+### 🧍 Core Identity
+
+Defines who the user is.
+
+* profile
+* goals
+* personality
+* strengths
+
+---
+
+### 👥 Social Graph
+
+Tracks relationships and interactions.
+
+* family, friends, connections
+* interaction history
+* importance weighting
+
+Used for:
+
+* smarter replies
+* reminders
+* social context
+
+---
+
+### 🧠 Behavioral Intelligence
+
+Learns real user patterns.
+
+* habits
+* routines
+* distractions
+* productivity cycles
+
+---
+
+### 📚 Knowledge Base
+
+What the user knows.
+
+* academic data
+* skills
+* interests
+* projects
+
+---
+
+### 🕒 Memory Timeline
+
+Tracks life events.
+
+* daily logs
+* achievements
+* lessons
+
+---
+
+### 🎯 Preferences Engine
+
+Learns choices.
+
+* UI preferences
+* content preferences
+* decision styles
+
+---
+
+### ⚙️ Life Operations
+
+Execution layer.
+
+* tasks
+* reminders
+* scheduling
+
+---
+
+### 💬 Communications
+
+Stores interactions.
+
+* chats
+* AI conversations
+* communication patterns
+
+---
+
+### 🌐 Digital Footprint
+
+Tracks usage patterns.
+
+* app usage
+* behavior signals
+
+---
+
+### 🧠 Decision Engine
+
+Improves decision making.
+
+* past decisions
+* risk profile
+* pattern learning
+
+---
+
+### ❤️ Health Profile
+
+Optional personal tracking.
+
+* physical
+* mental
+* lifestyle
+
+---
+
+### 💰 Financial System
+
+Tracks money flow.
+
+* expenses
+* subscriptions
+* investments
+
+---
+
+### 🔐 Security Vault
+
+Sensitive data storage.
+
+* encrypted credentials
+* API keys
+* private data
+
+> Must use strong encryption (e.g. AES-based storage)
+
+---
+
+### 🤖 Learning Engine
+
+Self-improving intelligence.
+
+* user pattern models
+* predictions
+* embeddings
+
+---
+
+### 🔄 Context Engine
+
+Real-time awareness.
+
+* current activity
+* active tasks
+* environment
+
+---
+
+### 📊 System Logs
+
+Transparency layer.
+
+* actions
+* errors
+* decisions
+
+---
+
+## ⚡ Advanced Intelligence Layer
+
+### 1. Vector Memory Layer
+
+* Convert data into embeddings
+* Store in vector database
+* Enable semantic search & recall
+
+---
+
+### 2. Agent System
+
+* Planner Agent → decides what to do
+* Memory Agent → retrieves context
+* Action Agent → executes tasks
+* Communication Agent → interacts with user
+
+---
+
+### 3. Continuous Learning Loop
+
+Observe → Analyze → Update → Predict → Act
+
+Jarvis improves itself by learning from user behavior and context over time.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone
+
+```bash
+git clone https://github.com/your-username/jarvis-ai.git
+cd jarvis-ai
 ```
 
 ---
 
+### 2. Open in Android Studio
+
+Let Gradle sync.
+
+---
+
+### 3. Add API Key
+
+Open app → Settings → Paste API key
+
+> No API keys are included
+
+---
+
+### 4. Run
+
+```bash
+./gradlew installDebug
+>>>>>>> bfb04b9 (initial commit: Jarvis AI cleaned version)
+```
+
+---
+
+<<<<<<< HEAD
 ## Build Instructions
 
 ### Debug APK
@@ -143,10 +465,22 @@ cd android
 
 ```bash
 ./gradlew assembleRelease
+=======
+## 🏗️ Project Structure
+
+```
+app/
+ ├── ui/
+ ├── viewmodel/
+ ├── data/
+ ├── api/
+ ├── utils/
+>>>>>>> bfb04b9 (initial commit: Jarvis AI cleaned version)
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Voice Commands
 
 | Command | Action |
@@ -203,3 +537,42 @@ copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 ```
+=======
+## 🧠 Tech Stack
+
+* Kotlin
+* Android SDK
+* MVVM Architecture
+* Retrofit
+* Coroutines
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+* Keep code simple and readable
+* Follow existing structure
+* Open PR with clear description
+
+---
+
+## ⚠️ Notes
+
+* This project is experimental
+* Some features depend on system permissions
+* Not affiliated with any AI provider
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## ⭐ Support
+
+Star the repo if you find it useful.
+>>>>>>> bfb04b9 (initial commit: Jarvis AI cleaned version)

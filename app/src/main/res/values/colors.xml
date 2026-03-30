@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ═══════════════════════════════════════ -->
+    <!--        JARVIS AI — COLOR SYSTEM         -->
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- Primary Brand — Minimalist Neutral -->
+    <color name="jarvis_primary">#FFFFFF</color>
+    <color name="jarvis_primary_dark">#E0E0E0</color>
+    <color name="jarvis_primary_light">#F5F5F5</color>
+    <color name="jarvis_primary_dim">#1AFFFFFF</color>
+    <color name="jarvis_accent">#00E5FF</color>
+    <color name="jarvis_accent_alt">#5500E5FF</color>
+
+    <!-- Backgrounds — Deep Neutral -->
+    <color name="bg_deepspace">#0D1117</color>
+    <color name="bg_surface">#171717</color>
+    <color name="bg_surface_elevated">#212121</color>
+    <color name="bg_card">#2F2F2F</color>
+    <color name="bg_overlay">#CC0D0D0D</color>
+
+    <!-- Chat Bubbles -->
+    <color name="bubble_user">#2F2F2F</color>
+    <color name="bubble_jarvis">#171717</color>
+    <color name="bubble_error">#1AFF3B30</color>
+    <color name="bubble_error_stroke">#33FF3B30</color>
+
+    <!-- Text -->
+    <color name="text_primary">#ECECEC</color>
+    <color name="text_secondary">#9B9B9B</color>
+    <color name="text_hint">#676767</color>
+    <color name="text_accent">#FFFFFF</color>
+    <color name="text_error">#FF3B30</color>
+    <color name="text_on_dark">#FFFFFF</color>
+
+    <!-- Icons -->
+    <color name="icon_primary">#ECECEC</color>
+    <color name="icon_secondary">#9B9B9B</color>
+    <color name="icon_disabled">#4A4A4A</color>
+
+    <!-- Dividers & Borders -->
+    <color name="divider">#1AFFFFFF</color>
+    <color name="border_subtle">#1AFFFFFF</color>
+    <color name="border_active">#33FFFFFF</color>
+
+    <!-- Status -->
+    <color name="status_success">#34C759</color>
+    <color name="status_warning">#FF9F0A</color>
+    <color name="status_error">#FF3B30</color>
+    <color name="status_info">#4FC3F7</color>
+
+    <!-- Glow / FX -->
+    <color name="glow_primary">#554FC3F7</color>
+    <color name="glow_accent">#4400E5FF</color>
+    <color name="glow_listening">#5534C759</color>
+
+    <!-- Ripple -->
+    <color name="ripple_primary">#334FC3F7</color>
+    <color name="ripple_dark">#1AFFFFFF</color>
+
+    <!-- Launcher / Legacy -->
+    <color name="colorPrimary">#FFFFFF</color>
+    <color name="colorPrimaryDark">#0D0D0D</color>
+    <color name="colorAccent">#FFFFFF</color>
+    <color name="colorBackground">#0D0D0D</color>
+    <color name="colorSurface">#171717</color>
+    <color name="colorOnPrimary">#000000</color>
+    <color name="colorOnBackground">#ECECEC</color>
+    <color name="colorOnSurface">#ECECEC</color>
+    <color name="colorError">#FF3B30</color>
+    <color name="colorOnError">#FFFFFF</color>
+
+    <!-- Transparent -->
+    <color name="transparent">#00000000</color>
+</resources>

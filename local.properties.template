@@ -1,0 +1,15 @@
+## This file must *NOT* be checked into Version Control Systems,
+## as it contains information specific to your local installation.
+##
+## Location of the SDK. This is only used by Gradle.
+## For customization when using a Version Control System, please read the
+## header note.
+
+# Set this to your Android SDK path — adjust as needed:
+# Windows example:
+sdk.dir=C\:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+# macOS / Linux example:
+# sdk.dir=/Users/YourName/Library/Android/sdk
+
+# Optional: Add your OpenAI API key here (never commit this file)
+OPENAI_API_KEY=
