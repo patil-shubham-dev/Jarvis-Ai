@@ -1,4 +1,4 @@
-```markdown
+`
 <div align="center">
 
 # ⚡ Jarvis AI
@@ -58,7 +58,7 @@ Via Android Accessibility Service:
 | `"Set alarm for 6 AM tomorrow"` | Creates an alarm |
 | `"Open Spotify"` | Launches the app |
 | `"Turn off WiFi"` | Opens WiFi panel |
-| `"Set volume to 60"` | Adjusts media volume |
+| `"Set volume to 60%"` | Adjusts media volume |
 | `"Navigate to CP Delhi"` | Opens Google Maps navigation |
 | `"Text mum I'm busy and remind me in 30 mins"` | Executes multi-step command |
 
@@ -94,6 +94,188 @@ JARVIS_MEMORY/
 ├── LIFE_OPERATIONS/            ← tasks, reminders, scheduling
 ├── COMMUNICATIONS/             ← chat history, message patterns
 ├── DECISION_ENGINE/            ← past decisions, risk profile
+├── SECURITY_VAULT/             ← encrypted credentials, API keys
+└── CONTEXT_ENGINE/             ← current activity, real-time awareness
+```
+
+This architecture enables **semantic search**, **context injection**, and eventually — **vector-based memory retrieval**.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Language** | Kotlin |
+| **Min SDK** | 26 (Android 8.0) |
+| **Target SDK** | 35 (Android 15) |
+| **Build System** | Gradle 8.11.1 + AGP 8.8.2 |
+| **Java Version** | 21 |
+| **AI Backend** | Any OpenAI-compatible API (SSE streaming) |
+| **Local Database** | Room 2.6.1 |
+| **Architecture** | MVVM + Repository |
+| **Encryption** | AES-256-GCM via Android Keystore |
+| **Biometrics** | AndroidX Biometric 1.1.0 |
+| **HTTP Client** | OkHttp 4.12.0 |
+| **UI** | Material Components 1.12.0 |
+
+---
+
+## 📁 Project Structure
+
+```
+android/
+└── app/src/main/java/com/jarvis/assistant/
+    ├── core/
+    │   ├── api/AIApi.kt                  # Streaming AI API client (SSE)
+    │   ├── commands/CommandExecutor.kt   # Phone action dispatcher
+    │   ├── crypto/VaultCrypto.kt         # AES-256 encryption
+    │   └── prefs/Prefs.kt                # SharedPreferences wrapper
+    ├── data/
+    │   ├── db/                           # Room DAOs + Database
+    │   ├── models/Entities.kt            # Room entity data classes
+    │   └── repository/MemoryExtractor.kt
+    ├── services/
+    │   ├── JarvisAccessibilityService.kt # Phone control via accessibility
+    │   ├── JarvisListenerService.kt      # Wake word (foreground service)
+    │   └── BootReceiver.kt
+    └── ui/
+        ├── chat/          # ChatActivity + ChatViewModel + ChatAdapter
+        ├── memory/        # MemoryActivity
+        ├── settings/      # SettingsActivity
+        ├── vault/         # VaultActivity (biometric locked)
+        └── onboarding/    # SplashActivity + PermissionsActivity
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Android Studio Ladybug / Meerkat 2024+
+- JDK 21
+- Android device — USB Debugging enabled
+- An API key from **any supported LLM provider** (see below)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/patil-shubham-dev/jarvis-ai.git
+cd jarvis-ai
+```
+
+### 2. Open in Android Studio
+
+`File → Open → select the android/ folder`
+
+Wait for Gradle sync to complete.
+
+### 3. Run on Device
+
+Connect via USB, enable USB Debugging, click **Run ▶**.
+
+### 4. First Launch Setup
+
+Grant the following permissions on the onboarding screen:
+
+- ✅ Microphone
+- ✅ Contacts
+- ✅ Phone / Calls
+- ✅ Notifications
+- ✅ **Accessibility Service** ← required for WhatsApp and app automation
+
+### 5. Add Your API Key
+
+Jarvis works with **any OpenAI-compatible API**. Grab a key from whichever provider you prefer:
+
+| Provider | Free Tier | Get Key |
+|----------|-----------|---------|
+| [OpenAI](https://platform.openai.com) | ❌ No | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| [Groq](https://groq.com) | ✅ Fast | [console.groq.com](https://console.groq.com) |
+| [OpenRouter](https://openrouter.ai) | ✅ Credits | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| [Together AI](https://together.ai) | ✅ Credits | [api.together.xyz](https://api.together.xyz) |
+| [Mistral](https://mistral.ai) | ✅ Trial | [console.mistral.ai](https://console.mistral.ai) |
+
+**In the app:**  
+`Settings (gear icon) → Paste your API key → Set Base URL → Select model → Save`
+
+> 💡 The **Base URL** field lets you point Jarvis at any OpenAI-compatible endpoint.
+
+### 6. One-Time ADB Permission (Optional)
+
+For brightness and system control:
+
+```bash
+adb shell pm grant com.jarvis.assistant android.permission.WRITE_SECURE_SETTINGS
+```
+
+### Build a Debug APK
+
+```bash
+cd android
+./gradlew assembleDebug
+# Output: app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+## 🏗️ Architecture Notes
+
+**Streaming** — The AI API is called with `"stream": true`. `AIApi.streamChat()` returns a `Flow<String>` emitting each SSE chunk. `ChatViewModel` appends each chunk to the live message in real time.
+
+**Command Detection** — The model is prompted to return pure JSON for phone actions. `CommandExecutor.tryExecute()` checks if the response starts with `{` and dispatches accordingly.
+
+**Memory Extraction** — Every AI response is parsed for `<<<MEMORY>>>` blocks. Extracted facts are stored in Room DB and injected into every subsequent system prompt (last 30 entries).
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Streaming chat with any OpenAI-compatible LLM
+- [x] Wake word activation
+- [x] Accessibility-based phone control
+- [x] Persistent Room DB memory
+- [x] AES-256 encrypted vault
+- [x] Hinglish voice recognition
+- [ ] Vector embeddings for semantic memory search
+- [ ] On-device ML for intent classification
+- [ ] Widget / lock screen overlay
+- [ ] Multi-device memory sync
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit clearly: `git commit -m "feat: describe what you did"`
+4. Push and open a pull request
+
+> Please follow the existing code style — no unnecessary comments, clean abstractions, meaningful names.
+
+---
+
+## 📄 License
+
+```
+MIT License — Copyright (c) 2025
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+```
+
+---
+
+<div align="center">
+  <sub>Built with curiosity. If this saves you time, drop a ⭐</sub>
+</div>
+```├── DECISION_ENGINE/            ← past decisions, risk profile
 ├── SECURITY_VAULT/             ← encrypted credentials, API keys
 └── CONTEXT_ENGINE/             ← current activity, real-time awareness
 ```
