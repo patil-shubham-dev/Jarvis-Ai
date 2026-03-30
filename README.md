@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # JARVIS — AI Personal Assistant for Android
 
 A production-grade Android AI assistant that combines a Claude-powered conversational brain with full phone automation. Speak naturally in Hindi, English, or Hinglish to send WhatsApp messages, make calls, set alarms, control system settings, and more — all while building a persistent memory of your preferences and habits.
