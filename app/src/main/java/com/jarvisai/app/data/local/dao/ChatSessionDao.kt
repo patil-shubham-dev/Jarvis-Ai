@@ -1,7 +1,7 @@
 package com.jarvisai.app.data.local.dao
 
 import androidx.room.*
-import com.jarvisai.app.data.local.entity.ChatSessionEntity
+import com.jarvisai.app.data.models.ChatSessionEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

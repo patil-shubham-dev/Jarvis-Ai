@@ -35,6 +35,8 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         observeState()
 
+        handleIntent(intent)
+
         if (SecurePrefs.isFirstLaunch(this)) {
             com.jarvisai.app.ui.onboarding.OnboardingBottomSheet().show(
                 supportFragmentManager, "onboarding"
@@ -42,26 +44,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra("WAKE_WORD_TRIGGERED", false) == true) {
+            startVoiceInput()
+        }
+    }
+
     private fun setupUI() {
-        binding.btnMore.setOnClickListener { view ->
-            val popup = androidx.appcompat.widget.PopupMenu(this, view)
-            popup.menu.add("History")
-            popup.menu.add("New Chat")
-            popup.menu.add("Settings")
-            popup.setOnMenuItemClickListener { item ->
-                when (item.title) {
-                    "History" -> binding.drawerLayout.openDrawer(GravityCompat.START)
-                    "New Chat" -> startNewChat()
-                    "Settings" -> startActivity(Intent(this, SettingsActivity::class.java))
-                }
-                true
-            }
-            popup.show()
+        binding.btnMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+        
+        binding.btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        binding.btnClearHistory.setOnClickListener {
-            viewModel.clearAllHistory()
-        }
+        startPulseAnimation()
+        setupMemoryDashboard()
 
         // Adapter setup
         adapter = ChatAdapter()
@@ -76,6 +80,12 @@ class MainActivity : AppCompatActivity() {
             viewModel.loadSession(session.id)
             binding.drawerLayout.closeDrawer(GravityCompat.START)
         }
+
+        // Sidebar Header bindings
+        val headerView = binding.navigationContainer.findViewById<android.view.View>(com.jarvisai.app.R.id.sidebarHeader)
+        headerView?.findViewById<android.view.View>(com.jarvisai.app.R.id.btnSidebarNewChat)?.setOnClickListener {
+            startNewChat()
+        }
         binding.recyclerHistory.apply {
             adapter = historyAdapter
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -89,14 +99,6 @@ class MainActivity : AppCompatActivity() {
                 sendMessage(); true
             } else false
         }
-        
-        // Vision setup
-        binding.btnVision.setOnClickListener {
-            captureAndAnalyzeScreen()
-        }
-
-        setupMemoryDashboard()
-        startPulseAnimation()
     }
 
     private fun setupMemoryDashboard() {
@@ -199,22 +201,15 @@ class MainActivity : AppCompatActivity() {
                     viewModel.messages.collect { messages ->
                         adapter.submitList(messages) {
                             if (messages.isNotEmpty()) {
-                                // Smooth scroll only if the list is already near bottom to prevent jitter
-                                val layoutManager = binding.recyclerMessages.layoutManager as LinearLayoutManager
-                                val lastVisible = layoutManager.findLastCompletelyVisibleItemPosition()
-                                if (lastVisible >= messages.size - 3) {
-                                    binding.recyclerMessages.scrollToPosition(messages.size - 1)
-                                }
+                                binding.recyclerMessages.scrollToPosition(messages.size - 1)
                             }
                         }
                     }
                 }
-                // Observe Loading/Streaming (Thinking Indicator)
+                // Observe Loading/Streaming
                 launch {
                     viewModel.isLoading.collect { loading ->
-                        binding.layoutThinking.visibility = 
-                            if (loading) android.view.View.VISIBLE else android.view.View.GONE
-                        updateStatusPulse(loading)
+                        // In Claude UI, we might use a subtle indicator or blinking cursor
                     }
                 }
                 // Observe History Sessions in Sidebar

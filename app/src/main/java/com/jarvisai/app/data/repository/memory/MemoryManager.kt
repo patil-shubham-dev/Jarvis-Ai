@@ -1,4 +1,4 @@
-package com.jarvisai.app.core.memory
+package com.jarvisai.app.data.repository.memory
 
 import android.content.Context
 import com.google.gson.Gson
@@ -65,6 +65,20 @@ class MemoryManager @Inject constructor(
         if (!file.exists()) return null
         return try {
             gson.fromJson(file.readText(), typeToken.type)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Reads raw text from a specific module file.
+     */
+    fun readFromJson(moduleName: String, fileName: String): String? {
+        val dir = moduleDirs[moduleName] ?: return null
+        val file = File(dir, if (fileName.endsWith(".json")) fileName else "$fileName.json")
+        if (!file.exists()) return null
+        return try {
+            file.readText()
         } catch (e: Exception) {
             null
         }

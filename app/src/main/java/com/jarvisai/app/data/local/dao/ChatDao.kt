@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.jarvisai.app.data.local.entity.ChatMessageEntity
+import com.jarvisai.app.data.models.ChatMessageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

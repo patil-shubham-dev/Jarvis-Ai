@@ -1,4 +1,4 @@
-package com.jarvisai.app.core.context
+package com.jarvisai.app.api.context
 
 import android.content.Context
 import android.content.Intent
@@ -13,14 +13,24 @@ import javax.inject.Singleton
 class ContextEngine @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    
+    private var foregroundApp: String = "com.jarvisai.app"
+
+    fun updateForegroundApp(packageName: String) {
+        foregroundApp = packageName
+    }
+
     fun getCurrentContext(): String {
         return buildString {
             append("--- CURRENT SYSTEM CONTEXT ---\n")
-            append("Time: ${getTimeOfDay()}\n")
+            append("Time: ${getTimeOfDay()} (${Calendar.getInstance().time})\n")
             append("Battery: ${getBatteryLevel()}%\n")
-            // Can be expanded to include Wi-Fi state, Location, Bluetooth state.
+            append("Foreground App: $foregroundApp\n")
+            append("Screen Content Access: ${isAccessibilityActive()}\n")
         }
+    }
+
+    private fun isAccessibilityActive(): Boolean {
+        return com.jarvisai.app.service.JarvisAccessibilityService.instance != null
     }
 
     private fun getTimeOfDay(): String {

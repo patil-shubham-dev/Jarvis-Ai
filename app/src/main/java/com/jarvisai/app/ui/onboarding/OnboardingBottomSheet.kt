@@ -10,8 +10,8 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.jarvisai.app.R
 import com.jarvisai.app.databinding.BottomSheetOnboardingBinding
-import com.jarvisai.app.ui.settings.SettingsActivity
-import com.jarvisai.app.util.SecurePrefs
+import com.jarvisai.app.ui.activities.SettingsActivity
+import com.jarvisai.app.utils.SecurePrefs
 
 class OnboardingBottomSheet : BottomSheetDialogFragment() {
 

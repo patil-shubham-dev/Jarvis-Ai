@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.jarvisai.app.core.ai.LlmClient
-import com.jarvisai.app.core.ai.OpenAILlmClient
+    import com.jarvisai.app.api.LlmClient
+import com.jarvisai.app.api.OpenAILlmClient
+import com.jarvisai.app.api.agents.PlannerAgent
 import com.jarvisai.app.data.local.AppDatabase
 import com.jarvisai.app.data.local.dao.ChatDao
 import com.jarvisai.app.data.local.dao.ChatSessionDao
@@ -45,8 +46,8 @@ object AppModule {
     /** LlmClient now uses raw OkHttp to support dynamic base URLs per provider */
     @Provides
     @Singleton
-    fun provideLlmClient(okHttpClient: OkHttpClient): LlmClient {
-        return OpenAILlmClient(okHttpClient)
+    fun provideLlmClient(okHttpClient: OkHttpClient, plannerAgent: PlannerAgent): LlmClient {
+        return OpenAILlmClient(okHttpClient, plannerAgent)
     }
 
     @Provides

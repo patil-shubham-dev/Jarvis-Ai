@@ -8,4 +8,4 @@
     android:canRetrieveWindowContent="true"
     android:canRequestFilterKeyEvents="true"
     android:canRequestTouchExplorationMode="false"
-    android:settingsActivity="com.jarvisai.app.ui.settings.SettingsActivity" />
+    android:settingsActivity="com.jarvisai.app.ui.activities.SettingsActivity" />

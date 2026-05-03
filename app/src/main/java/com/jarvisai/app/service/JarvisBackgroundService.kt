@@ -11,7 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.jarvisai.app.R
-import com.jarvisai.app.ui.chat.MainActivity
+import com.jarvisai.app.ui.activities.MainActivity
 
 /**
  * Service that runs continuously in the background to listen for "Hey Jarvis" 
@@ -38,7 +38,7 @@ class JarvisBackgroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val accessKey = intent?.getStringExtra("PICOVOICE_ACCESS_KEY") 
-            ?: com.jarvisai.app.util.SecurePrefs.getPicovoiceKey(this)
+            ?: com.jarvisai.app.utils.SecurePrefs.getPicovoiceKey(this)
 
         if (accessKey.isNotEmpty()) {
             startCustomHotwordDetection(accessKey)
@@ -141,7 +141,7 @@ class JarvisBackgroundService : Service() {
     private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_mic)
         .setContentTitle("Jarvis Listening...")
-        .setContentText("Say 'Porcupine' to wake me up.")
+        .setContentText("Say 'Jarvis' to wake me up.")
         .setOngoing(true)
         .setContentIntent(
             PendingIntent.getActivity(this, 0,

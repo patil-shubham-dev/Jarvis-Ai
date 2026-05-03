@@ -1,4 +1,4 @@
-package com.jarvisai.app.core.ai
+package com.jarvisai.app.api
 
 /**
  * Detects the AI provider and available models based on the API key prefix.
@@ -25,7 +25,7 @@ object ModelDetector {
     )
 
     enum class Provider {
-        OPENAI, ANTHROPIC, GOOGLE, GROQ, MISTRAL, OPENROUTER, DEEPSEEK, TOGETHER, SAMBANOVA, UNKNOWN
+        OPENAI, ANTHROPIC, GOOGLE, GROQ, MISTRAL, OPENROUTER, DEEPSEEK, TOGETHER, SAMBANOVA, NVIDIA, UNKNOWN
     }
 
     fun detect(apiKey: String): ProviderInfo {
@@ -39,6 +39,7 @@ object ModelDetector {
             key.startsWith("sk-deepseek-") || key.startsWith("deepseek-") -> deepSeekProvider()
             key.startsWith("mi-") -> mistralProvider()
             key.startsWith("tog_") || key.startsWith("together_") -> togetherProvider()
+            key.startsWith("nvapi-") -> nvidiaProvider()
             key.length == 36 && key.contains("-") -> sambaNovaProvider() // Standard UUID key format
             else -> unknownProvider()
         }
@@ -153,6 +154,17 @@ object ModelDetector {
             ModelInfo("Meta-Llama-3.1-405B-Instruct", "Llama 3.1 405B", "128K", isRecommended = true),
             ModelInfo("Meta-Llama-3.1-70B-Instruct",  "Llama 3.1 70B",  "128K"),
             ModelInfo("Meta-Llama-3.1-8B-Instruct",   "Llama 3.1 8B",   "128K")
+        )
+    )
+
+    private fun nvidiaProvider() = ProviderInfo(
+        provider = Provider.NVIDIA,
+        displayName = "Nvidia",
+        baseUrl = "https://integrate.api.nvidia.com/v1/",
+        models = listOf(
+            ModelInfo("meta/llama-3.1-405b-instruct", "Llama 3.1 405B", "128K", isRecommended = true),
+            ModelInfo("meta/llama-3.1-70b-instruct",  "Llama 3.1 70B",  "128K"),
+            ModelInfo("nvidia/llama-3.1-nemotron-70b-instruct", "Nemotron 70B", "128K")
         )
     )
 

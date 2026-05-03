@@ -1,4 +1,4 @@
-package com.jarvisai.app.data.local.entity
+package com.jarvisai.app.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

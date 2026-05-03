@@ -1,4 +1,4 @@
-package com.jarvisai.app.data.model
+package com.jarvisai.app.data.models
 
 enum class MessageRole { USER, ASSISTANT, JARVIS, ERROR }
 

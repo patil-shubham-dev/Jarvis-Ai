@@ -3,7 +3,7 @@ package com.jarvisai.app.data.local
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.jarvisai.app.data.model.MessageRole
+import com.jarvisai.app.data.models.MessageRole
 
 class Converters {
     private val gson = Gson()

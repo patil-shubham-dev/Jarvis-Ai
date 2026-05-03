@@ -1,4 +1,4 @@
-package com.jarvisai.app.agents
+package com.jarvisai.app.api.agents
 
 import com.jarvisai.app.core.action.ActionEngine
 import javax.inject.Inject
@@ -19,7 +19,8 @@ class ActionAgent @Inject constructor(
         val type = when (action.lowercase()) {
             "open_app" -> ActionEngine.ActionType.OPEN_APP
             "set_reminder" -> ActionEngine.ActionType.SET_REMINDER
-            "send_message" -> ActionEngine.ActionType.SEND_MESSAGE
+            "send_message", "send_whatsapp" -> ActionEngine.ActionType.SEND_MESSAGE
+            "search_web" -> ActionEngine.ActionType.SEARCH_WEB
             else -> ActionEngine.ActionType.UNKNOWN
         }
 

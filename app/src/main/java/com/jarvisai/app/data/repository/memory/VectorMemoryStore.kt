@@ -1,10 +1,10 @@
-package com.jarvisai.app.core.memory
+package com.jarvisai.app.data.repository.memory
 
 import android.content.Context
-import com.jarvisai.app.core.ai.LlmClient
+import com.jarvisai.app.api.LlmClient
 import com.jarvisai.app.data.local.dao.MemoryDao
-import com.jarvisai.app.data.local.entity.MemorySnippetEntity
-import com.jarvisai.app.util.SecurePrefs
+import com.jarvisai.app.data.models.MemorySnippetEntity
+import com.jarvisai.app.utils.SecurePrefs
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,18 +21,48 @@ class VectorMemoryStore @Inject constructor(
     private val llmClient: LlmClient
 ) {
     /**
-     * Stores a memory snippet with its vector embedding.
+     * Stores a memory snippet with its vector embedding and metadata.
      */
-    suspend fun store(text: String, module: String) {
+    suspend fun store(
+        text: String,
+        module: String,
+        type: String = "context",
+        importance: Float = 0.5f,
+        summary: String = ""
+    ) {
         val apiKey = SecurePrefs.getApiKey(context)
         if (apiKey.isBlank()) return
 
         try {
-            val embedding = llmClient.getEmbeddings(apiKey, text)
+            val embedding = llmClient.getEmbeddings(apiKey, text, "text-embedding-3-small")
+            
+            // Deduplication check
+            val queryEmbedding = embedding
+            val allSnippets = memoryDao.getAllSnippets()
+            val mostSimilar = allSnippets
+                .map { it to cosineSimilarity(queryEmbedding, it.embedding) }
+                .maxByOrNull { it.second }
+
+            if (mostSimilar != null && mostSimilar.second > 0.9f) {
+                // Update existing memory
+                val existing = mostSimilar.first
+                memoryDao.insertSnippet(existing.copy(
+                    text = text,
+                    embedding = embedding,
+                    importance = importance,
+                    summary = summary,
+                    timestamp = System.currentTimeMillis()
+                ))
+                return
+            }
+
             memoryDao.insertSnippet(MemorySnippetEntity(
                 text = text,
                 embedding = embedding,
-                metadata = module
+                type = type,
+                importance = importance,
+                module = module,
+                summary = summary
             ))
         } catch (e: Exception) {
             // Log error silently
@@ -47,7 +77,7 @@ class VectorMemoryStore @Inject constructor(
         if (apiKey.isBlank()) return emptyList()
 
         return try {
-            val queryEmbedding = llmClient.getEmbeddings(apiKey, query)
+            val queryEmbedding = llmClient.getEmbeddings(apiKey, query, "text-embedding-3-small")
             val allSnippets = memoryDao.getAllSnippets()
 
             allSnippets

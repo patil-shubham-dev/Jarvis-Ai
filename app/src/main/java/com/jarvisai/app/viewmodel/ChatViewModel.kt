@@ -87,7 +87,9 @@ class ChatViewModel @Inject constructor(
             
             // Final update to persist full response (only if successful)
             if (accumulated.isNotEmpty()) {
-                repository.updateLastMessage(currentSession, accumulated.toString())
+                val fullResponse = accumulated.toString()
+                repository.updateLastMessage(currentSession, fullResponse)
+                repository.processResponseIntents(fullResponse)
             }
             _isLoading.value = false
             generateSmartTitle(currentSession, text, accumulated.toString().take(100))
@@ -95,7 +97,9 @@ class ChatViewModel @Inject constructor(
     }
 
     private fun generateSmartTitle(sessionId: String, userText: String, aiText: String) {
-        // Implementation for Step 2: Smart Title Generation coming next...
+        viewModelScope.launch {
+            repository.generateAndSaveTitle(sessionId, userText, aiText)
+        }
     }
 
     fun loadSession(sessionId: String) {

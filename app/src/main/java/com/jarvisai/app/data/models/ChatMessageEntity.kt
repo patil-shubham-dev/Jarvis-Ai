@@ -1,9 +1,9 @@
-package com.jarvisai.app.data.local.entity
+package com.jarvisai.app.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Index
-import com.jarvisai.app.data.model.MessageRole
+import com.jarvisai.app.data.models.MessageRole
 
 @Entity(
     tableName = "chat_messages",

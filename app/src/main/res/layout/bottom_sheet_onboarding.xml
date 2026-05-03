@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/bg_card"
+    android:background="@color/bg_surface"
     android:paddingBottom="32dp">
 
     <!-- Drag handle -->
@@ -67,11 +67,11 @@
         android:layout_height="52dp"
         android:layout_marginHorizontal="24dp"
         android:text="Grant Permission"
-        android:textColor="@color/bg_deepspace"
+        android:textColor="@color/bg_main"
         android:textSize="15sp"
         android:fontFamily="sans-serif-medium"
         app:backgroundTint="@color/jarvis_primary"
-        app:cornerRadius="14dp" />
+        app:cornerRadius="26dp" />
 
     <!-- Skip / later -->
     <com.google.android.material.button.MaterialButton
@@ -83,7 +83,6 @@
         android:text="Skip for now"
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        app:rippleColor="@color/ripple_primary" />
+        style="@style/Widget.MaterialComponents.Button.TextButton" />
 
 </LinearLayout>

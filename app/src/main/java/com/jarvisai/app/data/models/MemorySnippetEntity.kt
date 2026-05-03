@@ -1,4 +1,4 @@
-package com.jarvisai.app.data.local.entity
+package com.jarvisai.app.data.models
 
 import androidx.room.*
 
@@ -7,6 +7,9 @@ data class MemorySnippetEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val text: String,
     val embedding: List<Float>,
-    val metadata: String, // module name (e.g., "CORE_IDENTITY")
+    val type: String, // "preference" | "fact" | "goal" | "task" | "context"
+    val importance: Float, // 0.0 to 1.0
+    val module: String, // e.g., "CORE_IDENTITY"
+    val summary: String,
     val timestamp: Long = System.currentTimeMillis()
 )

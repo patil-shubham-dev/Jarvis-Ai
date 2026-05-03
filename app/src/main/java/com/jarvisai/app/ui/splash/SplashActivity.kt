@@ -7,7 +7,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.jarvisai.app.R
-import com.jarvisai.app.ui.chat.MainActivity
+import com.jarvisai.app.ui.activities.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,17 +17,12 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        if (com.jarvisai.app.core.security.RootDetection.isDeviceRooted()) {
-            android.widget.Toast.makeText(this, "Rooted device detected. Shutting down.", android.widget.Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
+        // Root detection removed for compatibility
         checkBiometricAndProceed()
     }
 
     private fun checkBiometricAndProceed() {
-        if (!com.jarvisai.app.util.SecurePrefs.isBiometricEnabled(this)) {
+        if (!com.jarvisai.app.utils.SecurePrefs.isBiometricEnabled(this)) {
             goToMain()
             return
         }

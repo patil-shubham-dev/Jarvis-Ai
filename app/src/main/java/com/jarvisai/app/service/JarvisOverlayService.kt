@@ -12,7 +12,7 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.jarvisai.app.R
-import com.jarvisai.app.ui.chat.MainActivity
+import com.jarvisai.app.ui.activities.MainActivity
 
 class JarvisOverlayService : Service() {
 

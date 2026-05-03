@@ -25,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var rowAccessibility: ItemSettingsToggleBinding
     private lateinit var rowTts: ItemSettingsToggleBinding
     private lateinit var rowBiometric: ItemSettingsToggleBinding
+    private lateinit var rowVoiceIntelligence: ItemSettingsToggleBinding
 
     private var detectedModels: List<ModelDetector.ModelInfo> = emptyList()
     private var isInternalUpdate = false
@@ -38,6 +39,7 @@ class SettingsActivity : AppCompatActivity() {
         rowAccessibility = binding.rowAccessibility
         rowTts          = binding.rowTts
         rowBiometric    = binding.rowBiometric
+        rowVoiceIntelligence = binding.rowVoiceIntelligence
 
         setupToolbar()
         setupRowLabels()
@@ -90,6 +92,11 @@ class SettingsActivity : AppCompatActivity() {
         rowBiometric.textLabel.text = getString(R.string.pref_biometric)
         rowBiometric.textSublabel.text = "Required on every app launch"
         rowBiometric.textSublabel.visibility = View.VISIBLE
+
+        rowVoiceIntelligence.imgIcon.setImageResource(R.drawable.ic_mic)
+        rowVoiceIntelligence.textLabel.text = "Voice Intelligence"
+        rowVoiceIntelligence.textSublabel.text = "Always-on wake word (Picovoice)"
+        rowVoiceIntelligence.textSublabel.visibility = View.VISIBLE
     }
 
     // ── API Key ───────────────────────────────────────────────────────────────
@@ -170,6 +177,7 @@ class SettingsActivity : AppCompatActivity() {
                 openOverlayPermission()
             } else {
                 SecurePrefs.saveOverlayEnabled(this, checked)
+                toggleOverlayService(checked)
             }
         }
 
@@ -198,6 +206,61 @@ class SettingsActivity : AppCompatActivity() {
             SecurePrefs.saveBiometricEnabled(this, checked)
             if (checked) showToast("Biometric lock enabled — active on next launch")
         }
+
+        // Voice Intelligence
+        rowVoiceIntelligence.switchToggle.setOnCheckedChangeListener { _, checked ->
+            if (isInternalUpdate) return@setOnCheckedChangeListener
+            if (checked) {
+                showVoiceKeyDialog()
+            } else {
+                SecurePrefs.saveVoiceIntelligenceEnabled(this, false)
+                stopVoiceService()
+            }
+        }
+    }
+
+    private fun showVoiceKeyDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Picovoice Access Key")
+        val input = android.widget.EditText(this)
+        input.hint = "Paste AccessKey from Picovoice Console"
+        builder.setView(input)
+        builder.setPositiveButton("Enable") { _, _ ->
+            val key = input.text.toString().trim()
+            if (key.isNotEmpty()) {
+                SecurePrefs.savePicovoiceKey(this, key)
+                SecurePrefs.saveVoiceIntelligenceEnabled(this, true)
+                startVoiceService(key)
+                showToast("Voice Intelligence enabled")
+            } else {
+                isInternalUpdate = true
+                rowVoiceIntelligence.switchToggle.isChecked = false
+                isInternalUpdate = false
+            }
+        }
+        builder.setNegativeButton("Cancel") { _, _ ->
+            isInternalUpdate = true
+            rowVoiceIntelligence.switchToggle.isChecked = false
+            isInternalUpdate = false
+        }
+        builder.show()
+    }
+
+    private fun startVoiceService(key: String) {
+        val intent = Intent(this, com.jarvisai.app.service.JarvisBackgroundService::class.java).apply {
+            putExtra("PICOVOICE_ACCESS_KEY", key)
+        }
+        androidx.core.content.ContextCompat.startForegroundService(this, intent)
+    }
+
+    private fun stopVoiceService() {
+        stopService(Intent(this, com.jarvisai.app.service.JarvisBackgroundService::class.java))
+    }
+
+    private fun toggleOverlayService(enable: Boolean) {
+        val intent = Intent(this, com.jarvisai.app.service.JarvisOverlayService::class.java)
+        if (enable) androidx.core.content.ContextCompat.startForegroundService(this, intent)
+        else stopService(intent)
     }
 
     // ── About ─────────────────────────────────────────────────────────────────
@@ -220,6 +283,7 @@ class SettingsActivity : AppCompatActivity() {
         isInternalUpdate = true
         rowTts.switchToggle.isChecked      = SecurePrefs.isTtsEnabled(this)
         rowBiometric.switchToggle.isChecked = SecurePrefs.isBiometricEnabled(this)
+        rowVoiceIntelligence.switchToggle.isChecked = SecurePrefs.isVoiceIntelligenceEnabled(this)
         rowOverlay.switchToggle.isChecked   = SecurePrefs.isOverlayEnabled(this) &&
                 Settings.canDrawOverlays(this)
         val accEnabled = isAccessibilityEnabled()

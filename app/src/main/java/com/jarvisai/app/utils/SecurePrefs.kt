@@ -1,4 +1,4 @@
-package com.jarvisai.app.util
+package com.jarvisai.app.utils
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -74,6 +74,12 @@ object SecurePrefs {
     fun getPicovoiceKey(context: Context): String =
         get(context).getString(KEY_PICOVOICE, "") ?: ""
 
+    fun saveVoiceIntelligenceEnabled(context: Context, enabled: Boolean) =
+        get(context).edit().putBoolean(KEY_VOICE_INTEL, enabled).apply()
+
+    fun isVoiceIntelligenceEnabled(context: Context): Boolean =
+        get(context).getBoolean(KEY_VOICE_INTEL, false)
+
     private const val KEY_API_KEY      = "api_key"
     private const val KEY_PROVIDER     = "ai_provider"
     private const val KEY_BIOMETRIC    = "biometric_enabled"
@@ -81,4 +87,5 @@ object SecurePrefs {
     private const val KEY_OVERLAY      = "overlay_enabled"
     private const val KEY_FIRST_LAUNCH = "first_launch"
     private const val KEY_PICOVOICE    = "picovoice_key"
+    private const val KEY_VOICE_INTEL  = "voice_intel_enabled"
 }

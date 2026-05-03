@@ -45,15 +45,15 @@
 
         <!-- ── Main Chat Activity ── -->
         <activity
-            android:name=".ui.chat.MainActivity"
+            android:name=".ui.activities.MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- ── Settings Activity ── -->
         <activity
-            android:name=".ui.settings.SettingsActivity"
+            android:name=".ui.activities.SettingsActivity"
             android:exported="false"
-            android:parentActivityName=".ui.chat.MainActivity" />
+            android:parentActivityName=".ui.activities.MainActivity" />
 
         <!-- ── Overlay Service ── -->
         <service

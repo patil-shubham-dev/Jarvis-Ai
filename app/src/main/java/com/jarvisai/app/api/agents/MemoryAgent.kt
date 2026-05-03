@@ -1,7 +1,7 @@
-package com.jarvisai.app.agents
+package com.jarvisai.app.api.agents
 
-import com.jarvisai.app.core.memory.MemoryManager
-import com.jarvisai.app.core.memory.VectorMemoryStore
+import com.jarvisai.app.data.repository.memory.MemoryManager
+import com.jarvisai.app.data.repository.memory.VectorMemoryStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -47,8 +47,7 @@ class MemoryAgent @Inject constructor(
     /**
      * Gets user-specific identity or patterns from JSON files.
      */
-    fun getStructuredContext(module: String, fileName: String): Any? {
-        // Bridge to MemoryManager for JSON access
-        return null // To be implemented with specific types as needed
+    fun getStructuredContext(module: String, fileName: String): String? {
+        return memoryManager.readFromJson(module, fileName)
     }
 }

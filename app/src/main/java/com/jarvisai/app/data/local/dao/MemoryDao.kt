@@ -1,7 +1,7 @@
 package com.jarvisai.app.data.local.dao
 
 import androidx.room.*
-import com.jarvisai.app.data.local.entity.MemorySnippetEntity
+import com.jarvisai.app.data.models.MemorySnippetEntity
 
 @Dao
 interface MemoryDao {

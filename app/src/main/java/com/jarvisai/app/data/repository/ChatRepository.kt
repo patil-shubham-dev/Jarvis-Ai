@@ -5,12 +5,17 @@ import com.jarvisai.app.api.ModelDetector
 import com.jarvisai.app.api.LlmClient
 import com.jarvisai.app.data.local.dao.ChatDao
 import com.jarvisai.app.data.local.dao.ChatSessionDao
-import com.jarvisai.app.data.local.entity.ChatMessageEntity
-import com.jarvisai.app.data.local.entity.ChatSessionEntity
+import com.jarvisai.app.data.models.ChatMessageEntity
+import com.jarvisai.app.data.models.ChatSessionEntity
 import com.jarvisai.app.data.models.ChatMessage
 import com.jarvisai.app.data.models.ChatSession
 import com.jarvisai.app.data.models.MessageRole
 import com.jarvisai.app.utils.SecurePrefs
+import com.jarvisai.app.data.repository.memory.MemoryManager
+import com.jarvisai.app.api.context.ContextEngine
+import com.jarvisai.app.api.agents.MemoryAgent
+import com.jarvisai.app.api.agents.CommunicationAgent
+import com.jarvisai.app.api.agents.PlannerAgent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -22,12 +27,13 @@ import javax.inject.Singleton
 class ChatRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val memoryManager: MemoryManager,
-    private val contextEngine: com.jarvisai.app.core.context.ContextEngine,
+    private val contextEngine: ContextEngine,
     private val chatDao: ChatDao,
     private val sessionDao: ChatSessionDao,
     private val llmClient: LlmClient,
-    private val memoryAgent: com.jarvisai.app.api.agents.MemoryAgent,
-    private val communicationAgent: com.jarvisai.app.api.agents.CommunicationAgent
+    private val memoryAgent: MemoryAgent,
+    private val communicationAgent: CommunicationAgent,
+    private val plannerAgent: PlannerAgent
 ) {
 
     fun getMessagesBySession(sessionId: String): Flow<List<ChatMessage>> {
@@ -85,7 +91,7 @@ class ChatRepository @Inject constructor(
      * JARVIS CORE INTELLIGENCE LOOP: 
      * 1. Semantic Recall 
      * 2. Context Aggregation 
-     * 3. AI Generation
+     * 3. AI Generation (with Tool Support)
      */
     fun listenToResponse(history: List<ChatMessage>, prompt: String): Flow<String> = kotlinx.coroutines.flow.flow {
         val apiKey = SecurePrefs.getApiKey(context)
@@ -109,7 +115,8 @@ class ChatRepository @Inject constructor(
             apiKey = apiKey,
             prompt = prompt,
             systemContext = systemPrompt,
-            model = modelName
+            model = modelName,
+            tools = plannerAgent.getToolDefinitions()
         ))
     }.flowOn(kotlinx.coroutines.Dispatchers.IO)
 
@@ -138,5 +145,13 @@ class ChatRepository @Inject constructor(
                 sessionDao.updateSessionTitle(sessionId, title)
             }
         } catch (e: Exception) {}
+    }
+
+    suspend fun processResponseIntents(fullResponse: String) {
+        val toolResults = plannerAgent.processIntent(fullResponse)
+        if (toolResults != null) {
+            // If tools were called, we could optionally send results back to LLM for a final summary
+            // For now, we execute them autonomously as requested.
+        }
     }
 }

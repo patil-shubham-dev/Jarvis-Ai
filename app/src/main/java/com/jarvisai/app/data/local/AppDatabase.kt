@@ -6,9 +6,9 @@ import androidx.room.TypeConverters
 import com.jarvisai.app.data.local.dao.ChatDao
 import com.jarvisai.app.data.local.dao.ChatSessionDao
 import com.jarvisai.app.data.local.dao.MemoryDao
-import com.jarvisai.app.data.local.entity.ChatMessageEntity
-import com.jarvisai.app.data.local.entity.ChatSessionEntity
-import com.jarvisai.app.data.local.entity.MemorySnippetEntity
+import com.jarvisai.app.data.models.ChatMessageEntity
+import com.jarvisai.app.data.models.ChatSessionEntity
+import com.jarvisai.app.data.models.MemorySnippetEntity
 
 @Database(
     entities = [
