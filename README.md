@@ -1,278 +1,105 @@
+# JARVIS AI — Personal Intelligence Operating System
 
-<div align="center">
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
+[![Version: 4.5.0 Premium](https://img.shields.io/badge/Version-4.5.0_Premium-blue.svg)](#)
 
-# ⚡ Jarvis AI
-
-### *A production-grade Android AI assistant with voice control, device automation, persistent memory, and a secure vault*
-
-**Built for people who want more than a chatbot on their phone.**
-
-<br/>
-
-<p>
-  <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Kotlin-1.9+-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white"/>
-  <img src="https://img.shields.io/badge/AI-Bring%20Your%20Own%20Key-FFD700?style=for-the-badge&logo=openai&logoColor=black"/>
-  <img src="https://img.shields.io/badge/Architecture-MVVM-00C853?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/Status-WIP-FF6B6B?style=for-the-badge"/>
-  <img src="https://img.shields.io/badge/License-MIT-4CAF50?style=for-the-badge"/>
-</p>
-
-</div>
+Jarvis is a sophisticated, local-first personal AI assistant for Android. It combines advanced on-device memory management, multi-agent intelligence orchestration, and professional device automation into a single, privacy-respecting ecosystem. Unlike cloud-dependent assistants, Jarvis keeps your data local, your intelligence distributed, and your autonomy intact.
 
 ---
 
-## 📖 Overview
+## ✨ Key Features
 
-Jarvis is a deeply personal AI assistant for Android. It goes beyond simple Q&A — it controls your phone, remembers your habits, speaks in Hindi/English/Hinglish, and stores sensitive data in an encrypted vault behind biometrics.
+### 🧠 Local-First Intelligence
+- **16-Module Memory System:** Persistent on-device storage for identity, social, behavioral, and life operations data.
+- **Semantic Search:** Vector-based memory recall for intelligent context aggregation using local embeddings.
+- **Zero Data Leaks:** All memory snippets and interaction logs stay on your device.
 
-**The core idea:** your assistant should get *smarter the longer you use it*, not reset every session.
+### 🤖 Multi-Agent Orchestration
+- **PlannerAgent:** Autonomous task planning and tool selection for device control.
+- **MemoryAgent:** Handles semantic recall and persistent context management.
+- **CommunicationAgent:** Maintains a professional, proactive "Jarvis" persona.
 
-> ⚠️ **Status:** Core features (chat, voice, memory, vault, accessibility automation) are functional. Some phone control capabilities and edge-case commands are still being refined.
+### 📱 Advanced Device Automation
+- **Screen Reading:** Vision intelligence to understand and assist with foreground applications.
+- **Autonomous Actions:** Support for clicking UI elements, opening apps, and sending messages.
+- **Always-On Voice:** Offline wake word detection ("Hey Jarvis") with minimal battery impact.
 
----
-
-## ✨ Features
-
-### 🧠 Conversational AI
-
-- **Bring Your Own API Key** — works with any OpenAI-compatible LLM provider (OpenAI, Groq, Together AI, OpenRouter, Mistral, etc.)
-- SSE streaming for word-by-word responses
-- Full **conversation history** maintained per session
-- **Multi-step commands** — *"Text Rahul I'm running late, then set an alarm for 9 PM"*
-
-### 🎙️ Voice
-
-- Wake word **"Jarvis"** — activates from any app via background foreground service
-- **Hinglish support** — natural Hindi + English mixed voice recognition
-- **TTS responses** — toggle voice per-session; always-on when triggered by voice or phone action
-
-### 📱 Phone Automation
-
-Via Android Accessibility Service:
-
-| Command | Action |
-|---------|--------|
-| `"Call mum"` | Makes a phone call |
-| `"Text Rahul on WhatsApp I'm on my way"` | Sends WhatsApp message (confirms first) |
-| `"Set alarm for 6 AM tomorrow"` | Creates an alarm |
-| `"Open Spotify"` | Launches the app |
-| `"Turn off WiFi"` | Opens WiFi panel |
-| `"Set volume to 60%"` | Adjusts media volume |
-| `"Navigate to CP Delhi"` | Opens Google Maps navigation |
-| `"Text mum I'm busy and remind me in 30 mins"` | Executes multi-step command |
-
-> **Note:** Sensitive actions (calls, messages) always surface a confirmation card before executing.
-
-### 🗃️ Persistent Memory
-
-- Extracts facts from every conversation (`<<<MEMORY>>>` blocks in AI responses)
-- Stores name, habits, relationships, preferences in **Room DB**
-- Last 30 memories injected into every system prompt automatically
-- **Memory Viewer** — browse, inspect, and delete what Jarvis knows about you
-
-### 🔐 Secure Vault
-
-- **AES-256-GCM** encryption via Android Keystore
-- Locked behind **Biometric / PIN** authentication
-- Stores passwords, API keys, private notes
+### 🎨 Top-Notch UI/UX
+- **Claude-Inspired Theme:** Warm, professional off-white palette with high-contrast typography.
+- **Glassmorphism Design:** Modern floating input bar with real-time streaming status.
+- **Intelligence Dashboard:** Visualize and interact with the 16 intelligence modules.
 
 ---
 
-## 🧠 Memory Architecture
-
-Jarvis uses a structured memory model — not a flat chat log.
-
-```
-JARVIS_MEMORY/
-├── CORE_IDENTITY/              ← who you are: name, goals, personality
-├── SOCIAL_GRAPH/               ← contacts, relationships, interaction history
-├── BEHAVIORAL_INTELLIGENCE/    ← habits, routines, distractions
-├── KNOWLEDGE_BASE/             ← skills, interests, projects
-├── MEMORY_TIMELINE/            ← daily logs, achievements, lessons
-├── PREFERENCES_ENGINE/         ← UI, content, decision styles
-├── LIFE_OPERATIONS/            ← tasks, reminders, scheduling
-├── COMMUNICATIONS/             ← chat history, message patterns
-├── DECISION_ENGINE/            ← past decisions, risk profile
-├── SECURITY_VAULT/             ← encrypted credentials, API keys
-└── CONTEXT_ENGINE/             ← current activity, real-time awareness
-```
-
-This architecture enables **semantic search**, **context injection**, and eventually — **vector-based memory retrieval**.
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Language** | Kotlin |
-| **Min SDK** | 26 (Android 8.0) |
-| **Target SDK** | 35 (Android 15) |
-| **Build System** | Gradle 8.11.1 + AGP 8.8.2 |
-| **Java Version** | 21 |
-| **AI Backend** | Any OpenAI-compatible API (SSE streaming) |
-| **Local Database** | Room 2.6.1 |
-| **Architecture** | MVVM + Repository |
-| **Encryption** | AES-256-GCM via Android Keystore |
-| **Biometrics** | AndroidX Biometric 1.1.0 |
-| **HTTP Client** | OkHttp 4.12.0 |
-| **UI** | Material Components 1.12.0 |
-
----
-
-## 📁 Project Structure
-
-```
-android/
-└── app/src/main/java/com/jarvis/assistant/
-    ├── core/
-    │   ├── api/AIApi.kt                  # Streaming AI API client (SSE)
-    │   ├── commands/CommandExecutor.kt   # Phone action dispatcher
-    │   ├── crypto/VaultCrypto.kt         # AES-256 encryption
-    │   └── prefs/Prefs.kt                # SharedPreferences wrapper
-    ├── data/
-    │   ├── db/                           # Room DAOs + Database
-    │   ├── models/Entities.kt            # Room entity data classes
-    │   └── repository/MemoryExtractor.kt
-    ├── services/
-    │   ├── JarvisAccessibilityService.kt # Phone control via accessibility
-    │   ├── JarvisListenerService.kt      # Wake word (foreground service)
-    │   └── BootReceiver.kt
-    └── ui/
-        ├── chat/          # ChatActivity + ChatViewModel + ChatAdapter
-        ├── memory/        # MemoryActivity
-        ├── settings/      # SettingsActivity
-        ├── vault/         # VaultActivity (biometric locked)
-        └── onboarding/    # SplashActivity + PermissionsActivity
-```
-
----
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
+- Android 8.0+ (API 26+)
+- API Key from a supported provider (OpenAI, Anthropic, Groq, Mistral, or Nvidia)
 
-- Android Studio Ladybug / Meerkat 2024+
-- JDK 21
-- Android device — USB Debugging enabled
-- An API key from **any supported LLM provider** (see below)
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
+   ```
+2. Build the APK:
+   ```bash
+   ./gradlew assembleDebug
+   ```
+3. Install the generated APK on your device.
 
-### 1. Clone the Repository
+### Configuration
+1. Open Jarvis and navigate to **Settings**.
+2. Paste your **API Key**. Jarvis will auto-detect the provider.
+3. Grant **Accessibility** and **Overlay** permissions when prompted.
+4. (Optional) Add a Picovoice AccessKey for always-on voice triggering.
 
-```bash
-git clone https://github.com/patil-shubham-dev/jarvis-ai.git
-cd jarvis-ai
+---
+
+## 📂 Repository Structure
+
 ```
-
-### 2. Open in Android Studio
-
-`File → Open → select the android/ folder`
-
-Wait for Gradle sync to complete.
-
-### 3. Run on Device
-
-Connect via USB, enable USB Debugging, click **Run ▶**.
-
-### 4. First Launch Setup
-
-Grant the following permissions on the onboarding screen:
-
-- ✅ Microphone
-- ✅ Contacts
-- ✅ Phone / Calls
-- ✅ Notifications
-- ✅ **Accessibility Service** ← required for WhatsApp and app automation
-
-### 5. Add Your API Key
-
-Jarvis works with **any OpenAI-compatible API**. Grab a key from whichever provider you prefer:
-
-| Provider | Free Tier | Get Key |
-|----------|-----------|---------|
-| [OpenAI](https://platform.openai.com) | ❌ No | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| [Groq](https://groq.com) | ✅ Fast | [console.groq.com](https://console.groq.com) |
-| [OpenRouter](https://openrouter.ai) | ✅ Credits | [openrouter.ai/keys](https://openrouter.ai/keys) |
-| [Together AI](https://together.ai) | ✅ Credits | [api.together.xyz](https://api.together.xyz) |
-| [Mistral](https://mistral.ai) | ✅ Trial | [console.mistral.ai](https://console.mistral.ai) |
-
-**In the app:**  
-`Settings (gear icon) → Paste your API key → Set Base URL → Select model → Save`
-
-> 💡 The **Base URL** field lets you point Jarvis at any OpenAI-compatible endpoint.
-
-### 6. One-Time ADB Permission (Optional)
-
-For brightness and system control:
-
-```bash
-adb shell pm grant com.jarvis.assistant android.permission.WRITE_SECURE_SETTINGS
-```
-
-### Build a Debug APK
-
-```bash
-cd android
-./gradlew assembleDebug
-# Output: app/build/outputs/apk/debug/app-debug.apk
+Jarvis-Ai/
+├── app/                # Android application module
+├── docs/               # Detailed documentation and guides
+│   ├── SETUP_GUIDE.md           # Step-by-step configuration
+│   ├── TECHNICAL_ARCHITECTURE.md # Deep dive for developers
+│   ├── IMPLEMENTATION_SUMMARY.md # Full feature list
+│   └── ...
+├── gradle/             # Gradle wrapper and configuration
+└── README.md           # This file
 ```
 
 ---
 
-## 🏗️ Architecture Notes
+## 🛠 Documentation
 
-**Streaming** — The AI API is called with `"stream": true`. `AIApi.streamChat()` returns a `Flow<String>` emitting each SSE chunk. `ChatViewModel` appends each chunk to the live message in real time.
+For more detailed information, please refer to our documentation suite:
 
-**Command Detection** — The model is prompted to return pure JSON for phone actions. `CommandExecutor.tryExecute()` checks if the response starts with `{` and dispatches accordingly.
-
-**Memory Extraction** — Every AI response is parsed for `<<<MEMORY>>>` blocks. Extracted facts are stored in Room DB and injected into every subsequent system prompt (last 30 entries).
+- [**Setup Guide**](docs/SETUP_GUIDE.md): Detailed instructions for installation and configuration.
+- [**Technical Architecture**](docs/TECHNICAL_ARCHITECTURE.md): Information on design patterns and code structure.
+- [**Implementation Summary**](docs/IMPLEMENTATION_SUMMARY.md): A complete list of implemented features and fixes.
+- [**Project Delivery Report**](docs/PROJECT_DELIVERY_REPORT.md): Executive summary of the upgrade.
 
 ---
 
-## 🗺️ Roadmap
+## 🔐 Privacy & Security
 
-- [x] Streaming chat with any OpenAI-compatible LLM
-- [x] Wake word activation
-- [x] Accessibility-based phone control
-- [x] Persistent Room DB memory
-- [x] AES-256 encrypted vault
-- [x] Hinglish voice recognition
-- [ ] Vector embeddings for semantic memory search
-- [ ] On-device ML for intent classification
-- [ ] Widget / lock screen overlay
-- [ ] Multi-device memory sync
+Jarvis is built with a **Privacy-First** philosophy. Sensitive data such as API keys are stored using Android's `EncryptedSharedPreferences`. Memory modules are stored locally as encrypted JSON files. Biometric protection ensures that only you can access your personal intelligence.
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit clearly: `git commit -m "feat: describe what you did"`
-4. Push and open a pull request
-
-> Please follow the existing code style — no unnecessary comments, clean abstractions, meaningful names.
+We welcome contributions! Please feel free to submit Pull Requests or open Issues for bugs and feature requests.
 
 ---
 
 ## 📄 License
 
-```
-MIT License — Copyright (c) 2025
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-<div align="center">
-  <sub>Built with curiosity. If this saves you time, drop a ⭐</sub>
-</div>
-```
+**Built with ❤️ by Manus AI**
