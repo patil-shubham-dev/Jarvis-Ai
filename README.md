@@ -6,168 +6,115 @@
 
 ---
 
-## Overview
+## 🌌 Overview
 
-Jarvis is a sophisticated, local-first personal AI assistant for Android. It combines advanced on-device memory management, multi-agent intelligence orchestration, and professional device automation into a single, privacy-respecting ecosystem. Unlike cloud-dependent assistants, Jarvis keeps your data local, your intelligence distributed, and your autonomy intact.
+**Jarvis AI** is a sophisticated, local-first personal intelligence layer for Android. It transforms your device from a tool into a proactive partner by combining **Long-term Episodic Memory**, **Autonomous Planning**, and **Professional Device Automation**. 
 
-### Key Differentiators
-
-**Local-First Architecture:** All memory, intelligence, and decision-making happens on your device. No data leaves unless you explicitly authorize it.
-
-**16-Module Memory System:** Jarvis maintains a sophisticated persistent memory architecture covering identity, social connections, behavioral patterns, financial data, health profiles, and more—all stored securely on your device.
-
-**Multi-Agent Intelligence:** The system employs specialized agents for planning, memory management, and communication, enabling autonomous decision-making and proactive assistance.
-
-**Universal AI Provider Support:** Bring your own API key from OpenAI, Anthropic, Groq, Mistral, or Nvidia. Jarvis auto-detects your provider and adapts seamlessly.
-
-**Advanced Device Automation:** Jarvis can read your screen, click UI elements, open apps, send messages, and search the web—all through a professional accessibility service.
-
-**Claude-Level UI/UX:** A warm, professional interface with glassmorphism design, real-time token streaming, and a memory dashboard for visualizing your intelligence modules.
+Unlike traditional assistants, Jarvis operates with a "Privacy-First" philosophy—all your memories, habits, and personal data stay on your device. It bridges the gap between a chatbot and a true AI Operating System.
 
 ---
 
-## Installation & Setup
+## 🚀 Key Features
 
-### Prerequisites
+### 1. Hybrid Learning & Episodic Memory (New)
+Jarvis doesn't just chat; it learns. The **Layer C: Continuous Learning Loop** implements a hybrid system:
+- **Lightweight Extraction:** Automatically distills facts, preferences, and successful workflows from every conversation.
+- **Deep Behavioral Analysis:** Periodically analyzes logs to identify recurring patterns (e.g., "Messaging boss at 9 AM when late").
+- **Proactive Routines:** Jarvis identifies habits and proactively proposes automation routines for user confirmation.
 
-- Android 8.0+ (API 26+)
-- 100 MB free storage
-- At least one AI provider API key (OpenAI, Anthropic, etc.)
+### 2. Futuristic "Orb" UI/UX (New)
+The interface has been redesigned to feel like a premium, intelligent entity:
+- **The Jarvis Orb:** A central, living element in the main screen with breathing animations and dynamic states (Idle, Thinking, Acting).
+- **Glassmorphism Design:** Subtle frosted-glass chat bubbles, thin borders, and soft shadows for a minimal, premium aesthetic.
+- **Ambient Glow:** Dark matte backgrounds with radial glows that react to the AI's state.
 
-### Quick Start
+### 3. 16-Module Core Memory
+A comprehensive persistent memory architecture covering every aspect of your life:
+- **Social Graph:** Relationships and communication history.
+- **Behavioral Intelligence:** Learned habits and routines.
+- **Financial & Health:** Securely tracked personal stats.
+- **Knowledge Base:** Learned facts and research insights.
 
-1. **Download the APK** from the Releases page or build from source.
-2. **Grant Permissions:** When prompted, enable Accessibility Services and Overlay permissions.
-3. **Configure Your AI Provider:** In Settings, paste your API key. Jarvis will auto-detect your provider.
-4. **Enable Voice Intelligence (Optional):** Add your Picovoice AccessKey for always-on wake word detection.
-5. **Start Chatting:** Open the main chat interface and begin interacting with Jarvis.
+### 4. Autonomous Multi-Agent Orchestration
+- **PlannerAgent:** Decomposes complex intents into executable task graphs.
+- **MemoryAgent:** Handles semantic recall and context injection.
+- **ActionEngine:** Executes human-like interactions (clicks, scrolls, typing) via Accessibility Services.
 
-### Building from Source
-
-```bash
-git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
-cd Jarvis-Ai
-./gradlew assembleDebug
-```
-
-The APK will be generated in `app/build/outputs/apk/debug/`.
-
----
-
-## Core Features
-
-### 1. Local-First Intelligence
-
-Jarvis operates entirely on your device. All memory modules (identity, social graph, behavioral intelligence, etc.) are stored as encrypted JSON files and vector embeddings. This ensures absolute privacy and zero external data leaks.
-
-### 2. 16-Module Memory System
-
-The intelligence backbone consists of sixteen specialized modules:
-
-| Module | Purpose |
-|--------|---------|
-| CORE_IDENTITY | User profile, name, preferences |
-| SOCIAL_GRAPH | Contacts, relationships, communication patterns |
-| BEHAVIORAL_INTELLIGENCE | Habits, routines, decision patterns |
-| KNOWLEDGE_BASE | Learned facts, research, and insights |
-| MEMORY_TIMELINE | Chronological events and milestones |
-| PREFERENCES_ENGINE | App preferences, UI settings, personalization |
-| LIFE_OPERATIONS | Calendar, tasks, deadlines |
-| COMMUNICATIONS | Chat history, message templates |
-| DIGITAL_FOOTPRINT | Browsing history, app usage |
-| DECISION_ENGINE | Past decisions and their outcomes |
-| HEALTH_PROFILE | Fitness, sleep, wellness data |
-| FINANCIAL_SYSTEM | Budget, transactions, financial goals |
-| SECURITY_VAULT | Encrypted credentials and sensitive data |
-| LEARNING_ENGINE | Continuous learning and model updates |
-| CONTEXT_ENGINE | Current device state and foreground app |
-| SYSTEM_LOGS | Audit trail and system events |
-
-### 3. Multi-Agent Orchestration
-
-Three specialized agents work in harmony:
-
-**PlannerAgent:** Analyzes user intent and selects the appropriate action (AI response, device control, memory update, or web search).
-
-**MemoryAgent:** Handles semantic recall, memory persistence, and context aggregation from the 16 modules.
-
-**CommunicationAgent:** Refines AI responses into the professional Jarvis persona and manages system prompts.
-
-### 4. Advanced Device Automation
-
-Through the Accessibility Service, Jarvis can:
-
-- Read screen content and understand the current app
-- Click UI elements and navigate the interface
-- Open applications by package name
-- Send WhatsApp messages and other communications
-- Manage calendar events
-- Control WiFi and Bluetooth settings
-- Adjust device volume and Do Not Disturb mode
-- Set screen brightness
-- Perform web searches
-- Execute any action available through Android intents
-
-### 5. Voice Intelligence
-
-With Picovoice Porcupine integration, Jarvis listens for the "Hey Jarvis" wake word offline, without draining battery. Once triggered, it streams audio to your configured AI provider for processing.
+### 5. Universal AI Provider (BYOK)
+Bring your own API key and switch between providers seamlessly:
+- **OpenAI** (GPT-4o, GPT-4o-mini)
+- **Anthropic** (Claude 3.5 Sonnet/Opus)
+- **Groq** (Ultra-fast Llama/Mixtral)
+- **Mistral & Nvidia** support included.
 
 ---
 
-## Recent Improvements
+## 🛠 Detailed Setup Manual
 
-This update focuses on enhancing Jarvis's core capabilities, making it more versatile and responsive:
+### 1. Prerequisites
+- **Android Device:** Android 8.0 (Oreo) or higher.
+- **Storage:** ~100MB free space.
+- **API Key:** At least one key from OpenAI, Anthropic, or Groq.
 
-- **Expanded Device Control:** Implemented direct control for WiFi, Bluetooth, Volume, and Do Not Disturb (DND) mode. Brightness control now intelligently opens display settings and attempts to adjust the slider via accessibility.
-- **Multi-App Skill Library:** Introduced new agents for Email (Gmail) and Calendar (Google Calendar) automation, allowing Jarvis to send emails and manage events directly. These are integrated through new `CommunicationSkill` and `PlanningSkill` modules.
-- **Dynamic Skill Discovery:** The `SkillManager` now dynamically advertises its capabilities to the `PlannerAgent`, enabling more robust and adaptable task planning. New skills are automatically learned by the planner without requiring manual code changes.
+### 2. Installation
+- **Option A (APK):** Download the latest release from the [Releases](https://github.com/patil-shubham-dev/Jarvis-Ai/releases) page.
+- **Option B (Source):**
+  ```bash
+  git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
+  cd Jarvis-Ai
+  ./gradlew assembleDebug
+  ```
 
----
+### 3. Essential Permissions
+For Jarvis to function as a "True Agent," you must enable:
+1. **Accessibility Service:** Required for Jarvis to "see" your screen and "act" on your behalf.
+   - *Settings > Accessibility > Installed Services > Jarvis AI > ON.*
+2. **Display Over Other Apps:** Required for the floating Jarvis Orb and status overlays.
+   - *Settings > Apps > Special Access > Display over other apps > Jarvis AI > ON.*
+3. **Microphone:** Required for voice commands and wake-word detection.
 
-## Configuration
-
-### API Keys
-
-1. Open **Settings** in the app.
-2. Paste your API key in the **API Key** field.
-3. Jarvis will auto-detect your provider and available models.
-4. Select your preferred model and tap **Save**.
-
-### Supported Providers
-
-- **OpenAI:** `sk-...` keys
-- **Anthropic:** `sk-ant-...` keys
-- **Groq:** `gsk_...` keys
-- **Mistral:** `sk-...` keys
-- **Nvidia:** `nvapi-...` keys
-
----
-
-## Privacy & Security
-
-**Encryption:** All sensitive data (API keys, credentials, memory) is encrypted using Android's EncryptedSharedPreferences.
-
-**Local Storage:** Memory modules are stored locally and never transmitted without explicit user action.
-
-**Biometric Protection:** Optional fingerprint/face unlock ensures only authorized users access Jarvis.
+### 4. Configuration (BYOK)
+1. Open Jarvis and tap the **Settings** (Gear) icon.
+2. Paste your API Key. Jarvis will **auto-detect** the provider.
+3. Select your preferred model (e.g., `gpt-4o`).
+4. (Optional) Add a **Picovoice AccessKey** in the Voice section for always-on "Hey Jarvis" detection.
 
 ---
 
-## Troubleshooting
+## 🧠 How it Works: The Architecture
 
-### "Could not detect provider"
-Ensure your API key is valid and at least 20 characters long. Check that you've entered the correct key format for your provider.
+Jarvis operates on a multi-layered brain architecture:
 
-### Accessibility Service not working
-Verify that Jarvis is enabled in Settings > Accessibility > Installed Services.
-
-### Voice Intelligence not triggering
-Ensure Picovoice AccessKey is correctly entered and the service is running.
+1.  **Perception Layer:** Uses `VisionSkill` and `ScreenStateEngine` to understand what's on your screen.
+2.  **Cognition Layer:** The `PlannerAgent` uses the LLM to decide the next step based on your goal and current context.
+3.  **Memory Layer:** `VectorMemoryStore` provides semantic search across your 16 modules, injecting relevant history into the prompt.
+4.  **Action Layer:** `ActionEngine` translates AI intents into actual Android gestures and system calls.
 
 ---
 
-## License
+## 🔒 Privacy & Security
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
+- **Local-First:** Your memory modules are stored as encrypted JSON files on your device.
+- **Zero Tracking:** No telemetry or personal data is sent to our servers.
+- **Biometric Lock:** Enable in settings to protect your conversations with fingerprint/face ID.
 
 ---
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's adding new `Skills`, improving the `LearningEngine`, or refining the `UI`.
+1. Fork the repo.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+**Jarvis AI — Not just a chatbot, but your digital twin.** 🚀
