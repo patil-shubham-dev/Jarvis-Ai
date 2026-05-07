@@ -5,29 +5,49 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Outer glow ring -->
+
+    <!-- Interlocking Organic Path 1 (Claude-inspired soft curve) -->
     <path
-        android:pathData="M54,14 A40,40 0 1,1 53.99,14 Z"
-        android:strokeColor="#4FC3F7"
-        android:strokeWidth="2.5"
-        android:fillColor="#00000000" />
-    <!-- Inner ring -->
+        android:pathData="M40,72 C40,84 56,84 60,84 C68,84 72,76 72,64 C72,44 56,32 52,32 C48,32 32,44 32,64"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="32"
+                android:startY="32"
+                android:endX="72"
+                android:endY="84"
+                android:type="linear">
+                <item android:color="#D97757" android:offset="0" />
+                <item android:color="#BF5B3B" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Interlocking Precise Path 2 (ChatGPT-inspired geometric knot) -->
     <path
-        android:pathData="M54,26 A28,28 0 1,1 53.99,26 Z"
-        android:strokeColor="#4FC3F7"
-        android:strokeAlpha="0.4"
-        android:strokeWidth="1.5"
-        android:fillColor="#00000000" />
-    <!-- J letterform -->
+        android:pathData="M52,32 C56,32 68,40 68,56 C68,68 60,76 52,76 C44,76 36,68 36,56 C36,44 48,32 52,32 Z"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="36"
+                android:startY="32"
+                android:endX="68"
+                android:endY="76"
+                android:type="linear">
+                <item android:color="#1D1D1D" android:offset="0" />
+                <item android:color="#4A4A4A" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Intelligent Node -->
     <path
-        android:pathData="M50,36 L58,36 L58,62 Q58,72 50,72 Q42,72 42,64 L42,60 L46,60 L46,64 Q46,68 50,68 Q54,68 54,62 L54,40 L50,40 Z"
-        android:fillColor="#4FC3F7" />
-    <!-- Accent dots -->
-    <path
-        android:pathData="M44,18 A2.5,2.5 0 1,1 43.99,18 Z"
-        android:fillColor="#4FC3F7" />
-    <path
-        android:pathData="M64,18 A2.5,2.5 0 1,1 63.99,18 Z"
-        android:fillColor="#4FC3F7"
-        android:fillAlpha="0.5" />
+        android:pathData="M52,56m-4,0a4,4 0 1,1 8,0a4,4 0 1,1 -8,0"
+        android:fillColor="#D97757" />
+
 </vector>
+

@@ -1,6 +1,7 @@
 package com.jarvisai.app.ui.activities
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.view.inputmethod.EditorInfo
@@ -34,6 +35,12 @@ class MainActivity : AppCompatActivity() {
         
         setupUI()
         observeState()
+
+        if (savedInstanceState == null) {
+            viewModel.startFreshChatForLaunch()
+        }
+
+        requestNotificationPermissionIfNeeded()
 
         handleIntent(intent)
 
@@ -209,7 +216,9 @@ class MainActivity : AppCompatActivity() {
                 // Observe Loading/Streaming
                 launch {
                     viewModel.isLoading.collect { loading ->
-                        // In Claude UI, we might use a subtle indicator or blinking cursor
+                        updateStatusPulse(loading)
+                        binding.btnSend.isEnabled = !loading
+                        binding.btnSend.alpha = if (loading) 0.45f else 1f
                     }
                 }
                 // Observe History Sessions in Sidebar
@@ -239,6 +248,23 @@ class MainActivity : AppCompatActivity() {
     private val speechLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull() ?: return@registerForActivityResult
         binding.editMessage.setText(spokenText)
+    }
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted) {
+                android.widget.Toast.makeText(
+                    this,
+                    "Enable notifications so Jarvis can send reminders and task updates.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return
+        if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
 
     override fun onResume() {

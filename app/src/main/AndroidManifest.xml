@@ -8,12 +8,26 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.spotify.music" />
+        <package android:name="com.instagram.android" />
+        <package android:name="com.google.android.youtube" />
+    </queries>
 
     <uses-feature
         android:name="android.hardware.microphone"
@@ -59,14 +73,21 @@
         <service
             android:name=".service.JarvisOverlayService"
             android:exported="false"
-            android:foregroundServiceType="microphone"
-            android:permission="android.permission.FOREGROUND_SERVICE" />
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="overlay_orb"/>
+        </service>
 
         <!-- ── Hotword Background Service ── -->
         <service
             android:name=".service.JarvisBackgroundService"
             android:exported="false"
-            android:foregroundServiceType="microphone"
+            android:foregroundServiceType="microphone" />
+
+        <!-- ── Screen Capture Service ── -->
+        <service
+            android:name=".service.ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"
             android:permission="android.permission.FOREGROUND_SERVICE" />
 
         <!-- ── Accessibility Service ── -->
@@ -85,12 +106,36 @@
 
         <!-- ── Boot Receiver ── -->
         <receiver
+            android:name=".notifications.ReminderReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- ── Notification Listener ── -->
+        <service
+            android:name=".service.JarvisNotificationListener"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

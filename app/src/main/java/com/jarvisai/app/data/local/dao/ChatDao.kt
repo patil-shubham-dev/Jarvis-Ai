@@ -29,4 +29,7 @@ interface ChatDao {
 
     @Query("DELETE FROM chat_messages")
     suspend fun clearChat()
+
+    @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastMessageForSession(sessionId: String): ChatMessageEntity?
 }

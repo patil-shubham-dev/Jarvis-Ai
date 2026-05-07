@@ -1,29 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:gravity="start"
-    android:paddingVertical="12dp"
-    android:paddingHorizontal="24dp">
+    android:orientation="horizontal"
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/textMessage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/text_primary"
-        android:textSize="16sp"
-        android:fontFamily="sans-serif"
-        android:lineSpacingExtra="8dp" />
+    <ImageView
+        android:id="@+id/imageAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_jarvis_avatar"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="2dp" />
 
-    <TextView
-        android:id="@+id/textTimestamp"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/text_hint"
-        android:textSize="11sp"
-        android:layout_marginTop="6dp"
-        android:alpha="0.6" />
+        app:cardBackgroundColor="#1AFFFFFF"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="#20FFFFFF"
+        app:strokeWidth="1dp">
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/textAssistantName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JARVIS"
+                android:textColor="@color/jarvis_accent"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif-black"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/textMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxWidth="280dp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"
+                android:lineSpacingExtra="3dp" />
+
+            <TextView
+                android:id="@+id/textTimestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_hint"
+                android:textSize="9sp"
+                android:layout_marginTop="6dp"
+                android:layout_gravity="end"
+                android:alpha="0.6" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

@@ -3,6 +3,7 @@ package com.jarvisai.app.data.repository.memory
 import android.util.Log
 import com.google.gson.Gson
 import com.jarvisai.app.api.LlmClient
+import com.jarvisai.app.api.ModelDetector
 import com.jarvisai.app.utils.SecurePrefs
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -44,7 +45,8 @@ class LearningEngine @Inject constructor(
         """.trimIndent()
 
         try {
-            val response = llmClient.getCompletion(apiKey, prompt, "You are the Jarvis Learning Engine.", "gpt-4o-mini")
+            val model = ModelDetector.resolveModel(apiKey, null).id
+            val response = llmClient.getCompletion(apiKey, prompt, "You are the Jarvis Learning Engine.", model)
             // Parse and update JSON modules
             parseAndApplyDiscovery(response)
         } catch (e: Exception) {

@@ -3,6 +3,7 @@ package com.jarvisai.app.data.repository.memory
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.jarvisai.app.core.security.SecurityEngine
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class MemoryManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val gson: Gson
+    private val gson: Gson,
+    private val securityEngine: SecurityEngine
 ) {
     private val memoryBaseDir = File(context.filesDir, "JARVIS").apply { mkdirs() }
 
@@ -53,7 +55,9 @@ class MemoryManager @Inject constructor(
     fun saveToJson(moduleName: String, fileName: String, data: Any) {
         val dir = moduleDirs[moduleName] ?: return
         val file = File(dir, if (fileName.endsWith(".json")) fileName else "$fileName.json")
-        file.writeText(gson.toJson(data))
+        val json = gson.toJson(data)
+        val encrypted = securityEngine.encrypt(json)
+        file.writeText(encrypted)
     }
 
     /**
@@ -64,7 +68,9 @@ class MemoryManager @Inject constructor(
         val file = File(dir, if (fileName.endsWith(".json")) fileName else "$fileName.json")
         if (!file.exists()) return null
         return try {
-            gson.fromJson(file.readText(), typeToken.type)
+            val encrypted = file.readText()
+            val decrypted = securityEngine.decrypt(encrypted)
+            gson.fromJson(decrypted, typeToken.type)
         } catch (e: Exception) {
             null
         }
@@ -78,7 +84,8 @@ class MemoryManager @Inject constructor(
         val file = File(dir, if (fileName.endsWith(".json")) fileName else "$fileName.json")
         if (!file.exists()) return null
         return try {
-            file.readText()
+            val encrypted = file.readText()
+            securityEngine.decrypt(encrypted)
         } catch (e: Exception) {
             null
         }

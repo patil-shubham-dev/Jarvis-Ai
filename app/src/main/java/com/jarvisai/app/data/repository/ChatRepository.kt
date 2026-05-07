@@ -1,6 +1,7 @@
 package com.jarvisai.app.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.jarvisai.app.api.ModelDetector
 import com.jarvisai.app.api.LlmClient
 import com.jarvisai.app.data.local.dao.ChatDao
@@ -12,14 +13,17 @@ import com.jarvisai.app.data.models.ChatSession
 import com.jarvisai.app.data.models.MessageRole
 import com.jarvisai.app.utils.SecurePrefs
 import com.jarvisai.app.data.repository.memory.MemoryManager
+import com.jarvisai.app.data.repository.memory.SemanticMemoryStore
 import com.jarvisai.app.api.context.ContextEngine
 import com.jarvisai.app.api.agents.MemoryAgent
 import com.jarvisai.app.api.agents.CommunicationAgent
 import com.jarvisai.app.api.agents.PlannerAgent
+import com.jarvisai.app.core.skills.ExecutionTracker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,13 +31,15 @@ import javax.inject.Singleton
 class ChatRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val memoryManager: MemoryManager,
+    private val semanticMemory: SemanticMemoryStore,
     private val contextEngine: ContextEngine,
     private val chatDao: ChatDao,
     private val sessionDao: ChatSessionDao,
     private val llmClient: LlmClient,
     private val memoryAgent: MemoryAgent,
     private val communicationAgent: CommunicationAgent,
-    private val plannerAgent: PlannerAgent
+    private val plannerAgent: PlannerAgent,
+    private val executionTracker: ExecutionTracker
 ) {
 
     fun getMessagesBySession(sessionId: String): Flow<List<ChatMessage>> {
@@ -58,100 +64,109 @@ class ChatRepository @Inject constructor(
             ChatMessageEntity(
                 sessionId = msg.sessionId,
                 role = msg.role,
-                content = msg.content
+                content = msg.content,
+                timestamp = msg.timestamp
             )
         )
-        // Auto-create/update session title
-        sessionDao.insertSession(
-            ChatSessionEntity(
-                id = msg.sessionId,
-                title = if (msg.content.length > 20) msg.content.take(20) + "..." else msg.content,
-                lastMessage = msg.content.take(40),
-                timestamp = System.currentTimeMillis()
-            )
-        )
-        if (msg.role == MessageRole.USER) {
-            memoryAgent.memorize("user_chat", msg.content, "COMMUNICATIONS")
-        }
-    }
-
-    fun analyzeVisualContext(sessionId: String, base64: String): Flow<String> {
-        val apiKey = SecurePrefs.getApiKey(context)
-        val prompt = "Analyze this screenshot. What app is this, and what's on the screen? Suggest how I can assist with this visual data."
-        
-        return llmClient.getCompletionStream(
-            apiKey = apiKey,
-            prompt = prompt,
-            systemContext = "You are Jarvis Vision. Describe accurately and proactively.",
-            model = "gpt-4o"
-        )
-    }
-
-    /**
-     * JARVIS CORE INTELLIGENCE LOOP: 
-     * 1. Semantic Recall 
-     * 2. Context Aggregation 
-     * 3. AI Generation (with Tool Support)
-     */
-    fun listenToResponse(history: List<ChatMessage>, prompt: String): Flow<String> = kotlinx.coroutines.flow.flow {
-        val apiKey = SecurePrefs.getApiKey(context)
-        val providerInfo = ModelDetector.detect(apiKey)
-        val modelName = context.getSharedPreferences("jarvis_prefs", Context.MODE_PRIVATE)
-            .getString("selected_model", "")?.split(" ")?.firstOrNull() 
-            ?: providerInfo.models.firstOrNull()?.id ?: "gpt-4o-mini"
-
-        val recalledMemory = if (apiKey.isNotEmpty()) {
-            try {
-                memoryAgent.recallSemanticContext(prompt)
-            } catch (e: Exception) { "" }
-        } else ""
-        
-        val systemPrompt = communicationAgent.buildSystemPrompt(
-            recalledMemory = recalledMemory,
-            currentContext = contextEngine.getCurrentContext()
-        )
-
-        emitAll(llmClient.getCompletionStream(
-            apiKey = apiKey,
-            prompt = prompt,
-            systemContext = systemPrompt,
-            model = modelName,
-            tools = plannerAgent.getToolDefinitions()
-        ))
-    }.flowOn(kotlinx.coroutines.Dispatchers.IO)
-
-    suspend fun updateLastMessage(sessionId: String, newContent: String) {
-        val lastAid = chatDao.getLastAssistantMessageId(sessionId)
-        if (lastAid != null) {
-            chatDao.updateMessageContent(lastAid, newContent)
-        }
+        sessionDao.updateSessionPreview(msg.sessionId, msg.content, msg.timestamp)
     }
 
     suspend fun generateAndSaveTitle(sessionId: String, userText: String, aiText: String) {
+        val existingSession = sessionDao.getSessionById(sessionId)
+        if (existingSession != null && existingSession.title != "New Chat") return
+
+        val prompt = "Generate a concise 3-5 word title for a chat starting with: '$userText'. Response: '$aiText'. Return ONLY the title text."
         val apiKey = SecurePrefs.getApiKey(context)
         if (apiKey.isEmpty()) return
 
-        val prompt = "Based on this first interaction, provide a 3-4 word title for this chat theme. ONLY output the title.\nUser: $userText\nAI: $aiText"
-        
         try {
             val title = llmClient.getCompletion(
                 apiKey = apiKey,
                 prompt = prompt,
-                systemContext = "You are a concise title generator.",
+                systemContext = "You are a chat title generator.",
                 model = "gpt-4o-mini"
-            ).removePrefix("\"").removeSuffix("\"").trim()
+            ).trim().removeSurrounding("\"")
             
-            if (title.isNotEmpty()) {
-                sessionDao.updateSessionTitle(sessionId, title)
-            }
-        } catch (e: Exception) {}
+            sessionDao.updateSessionTitle(sessionId, title)
+        } catch (e: Exception) {
+            sessionDao.updateSessionTitle(sessionId, userText.take(20) + "...")
+        }
     }
 
-    suspend fun processResponseIntents(fullResponse: String) {
-        val toolResults = plannerAgent.processIntent(fullResponse)
-        if (toolResults != null) {
-            // If tools were called, we could optionally send results back to LLM for a final summary
-            // For now, we execute them autonomously as requested.
+    suspend fun processResponseIntents(userInput: String): String {
+        return plannerAgent.processIntent(userInput)
+    }
+
+    private suspend fun getBaseSystemPrompt(userInput: String): String {
+        val relevantMemories = semanticMemory.search(userInput)
+        return buildString {
+            append("You are JARVIS, a sophisticated autonomous multimodal AI agent for Android.\n")
+            append("IDENTITY: You are a professional, proactive operating layer. You combine Perception, Memory, and Action.\n")
+            append("CAPABILITIES:\n")
+            append("- Eyes: Real-time screen analysis via MediaProjection.\n")
+            append("- Hands: Human-like accessibility interaction and gesture injection.\n")
+            append("- Memory: Long-term episodic memory for workflows and preferences.\n")
+            append("- Planning: Decomposing complex intents into structured task graphs.\n")
+            append("\nRELEVANT MEMORIES:\n")
+            relevantMemories.forEach { append("- ${it.text}\n") }
+            append("\nCURRENT DEVICE STATE:\n")
+            append(contextEngine.getCurrentContext())
+            append("\nEXECUTION HISTORY:\n")
+            append(executionTracker.getHistorySummary())
+        }
+    }
+
+    fun analyzeVisualContext(sessionId: String, base64Image: String): Flow<String> = flow {
+        val apiKey = SecurePrefs.getVisionApiKey(context).ifBlank { SecurePrefs.getApiKey(context) }
+        val baseUrl = SecurePrefs.getVisionBaseUrl(context).ifBlank { null }
+        val prompt = "Analyze the screen state. Identify active apps, navigation context, and interactive elements."
+        
+        val visionModel = SecurePrefs.getVisionModel(context).ifBlank { "gpt-4o" }
+        val resolvedModel = ModelDetector.resolveModel(apiKey, visionModel, isVision = true).id
+        
+        emitAll(llmClient.getCompletionStream(apiKey, prompt, "You are the JARVIS Vision Engine.", resolvedModel, baseUrl, base64Image))
+    }.flowOn(Dispatchers.IO)
+
+    fun listenToResponse(sessionId: String, history: List<ChatMessage>, prompt: String): Flow<String> = flow {
+        val apiKey = SecurePrefs.getApiKey(context)
+        val modelName = SecurePrefs.getSelectedModel(context) ?: "gpt-4o"
+        val baseUrl = SecurePrefs.getBaseUrl(context)
+        
+        val resolvedModel = ModelDetector.resolveModel(apiKey, modelName).id
+        try {
+            val systemPrompt = getBaseSystemPrompt(prompt)
+            val tools = plannerAgent.getToolDefinitions()
+
+            // Check if this intent requires autonomous execution
+            val response = if (isActionIntent(prompt)) {
+                plannerAgent.processIntent(prompt)
+            } else {
+                llmClient.getCompletion(
+                    apiKey = apiKey,
+                    prompt = prompt,
+                    systemContext = systemPrompt,
+                    model = resolvedModel,
+                    toolsJson = tools,
+                    customBaseUrl = baseUrl
+                )
+            }
+            emit(response)
+        } catch (e: Exception) {
+            Log.e("ChatRepository", "Primary model failed", e)
+            emit("I encountered an issue. Let me try a different approach.")
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private fun isActionIntent(prompt: String): Boolean {
+        val keywords = listOf("play", "open", "send", "message", "click", "type", "scroll", "find", "search")
+        return keywords.any { prompt.lowercase().contains(it) }
+    }
+
+    suspend fun updateLastMessage(sessionId: String, newContent: String) {
+        val lastMsg = chatDao.getLastMessageForSession(sessionId)
+        if (lastMsg != null) {
+            chatDao.updateMessageContent(lastMsg.id, newContent)
+            sessionDao.updateSessionPreview(sessionId, newContent, System.currentTimeMillis())
         }
     }
 }

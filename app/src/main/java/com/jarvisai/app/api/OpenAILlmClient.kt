@@ -16,39 +16,110 @@ import java.util.concurrent.TimeUnit
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
-import com.jarvisai.app.api.agents.PlannerAgent
 
 @Singleton
 class OpenAILlmClient @Inject constructor(
-    private val okHttpClient: OkHttpClient,
-    private val plannerAgent: PlannerAgent
+    private val okHttpClient: OkHttpClient
 ) : LlmClient {
+
+    private fun extractMessageContent(message: JSONObject): String {
+        // If it has tool calls, return them as a JSON string for the PlannerAgent
+        if (message.has("tool_calls")) {
+            return JSONObject().apply {
+                put("tool_calls", message.getJSONArray("tool_calls"))
+            }.toString()
+        }
+
+        // Handle Anthropic tool_use blocks in content
+        val contentValue = message.opt("content")
+        if (contentValue is JSONArray) {
+            val toolCalls = JSONArray()
+            var hasTools = false
+            for (i in 0 until contentValue.length()) {
+                val block = contentValue.optJSONObject(i) ?: continue
+                if (block.optString("type") == "tool_use") {
+                    hasTools = true
+                    toolCalls.put(JSONObject().apply {
+                        put("id", block.optString("id"))
+                        put("type", "function")
+                        put("function", JSONObject().apply {
+                            put("name", block.optString("name"))
+                            put("arguments", block.optJSONObject("input")?.toString() ?: "{}")
+                        })
+                    })
+                }
+            }
+            if (hasTools) {
+                return JSONObject().apply { put("tool_calls", toolCalls) }.toString()
+            }
+        }
+
+        return when (contentValue) {
+            is String -> contentValue
+            is JSONArray -> {
+                buildString {
+                    for (i in 0 until contentValue.length()) {
+                        when (val part = contentValue.opt(i)) {
+                            is String -> append(part)
+                            is JSONObject -> {
+                                val text = part.optString("text")
+                                if (text.isNotBlank()) append(text)
+                                else if (part.optString("type") == "text") append(part.optString("value"))
+                            }
+                        }
+                    }
+                }
+            }
+            is JSONObject -> contentValue.optString("text")
+            else -> ""
+        }.trim()
+    }
 
     override fun getCompletionStream(
         apiKey: String,
         prompt: String,
         systemContext: String,
-        model: String
+        model: String,
+        customBaseUrl: String?,
+        base64Image: String?
     ): Flow<String> = callbackFlow {
-        val provider = ModelDetector.detect(apiKey)
-        val baseUrl = provider.baseUrl.trimEnd('/')
+        val provider = ModelDetector.detect(apiKey, customBaseUrl)
+        val baseUrl = provider.effectiveBaseUrl.trim().trimEnd('/')
         
         val url = if (provider.provider == ModelDetector.Provider.ANTHROPIC) "$baseUrl/messages" else "$baseUrl/chat/completions"
         val bodyJson = JSONObject().apply {
             put("model", model)
+            put("max_tokens", if (provider.provider == ModelDetector.Provider.NVIDIA) 512 else 1024)
+            put("temperature", 0.1) // Lower temperature for more stable tool calls
             put("stream", true)
-            if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
-                put("max_tokens", 1024)
-                put("system", systemContext)
-                put("messages", JSONArray().apply { put(JSONObject().put("role", "user").put("content", prompt)) })
-            } else {
-                put("messages", JSONArray().apply {
+            
+            val msgs = JSONArray().apply {
+                if (provider.provider != ModelDetector.Provider.ANTHROPIC) {
                     put(JSONObject().put("role", "system").put("content", systemContext))
-                    put(JSONObject().put("role", "user").put("content", prompt))
+                }
+                put(JSONObject().apply {
+                    put("role", "user")
+                    if (base64Image != null) {
+                        put("content", JSONArray().apply {
+                            put(JSONObject().put("type", "text").put("text", prompt))
+                            if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
+                                put(JSONObject().put("type", "image").put("source", JSONObject().apply {
+                                    put("type", "base64")
+                                    put("media_type", "image/jpeg")
+                                    put("data", base64Image)
+                                }))
+                            } else {
+                                put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$base64Image")))
+                            }
+                        })
+                    } else {
+                        put("content", prompt)
+                    }
                 })
-                // Add tools for non-Anthropic providers
-                put("tools", plannerAgent.getToolDefinitions())
-                put("tool_choice", "auto")
+            }
+            put("messages", msgs)
+            if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
+                put("system", systemContext)
             }
         }
 
@@ -60,63 +131,29 @@ class OpenAILlmClient @Inject constructor(
             .build()
 
         val listener = object : EventSourceListener() {
-            private var toolCallBuilder = JSONObject().apply { put("tool_calls", JSONArray()) }
-
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
-                if (data == "[DONE]") {
-                    if (toolCallBuilder.getJSONArray("tool_calls").length() > 0) {
-                        trySend(toolCallBuilder.toString())
-                    }
-                    close()
-                    return
-                }
+                if (data == "[DONE]") { close(); return }
                 try {
                     val json = JSONObject(data)
-                    val choices = json.optJSONArray("choices")
-                    if (choices != null && choices.length() > 0) {
-                        val delta = choices.getJSONObject(0).optJSONObject("delta")
-                        
-                        // Handle Content
-                        val content = delta?.optString("content")
-                        if (!content.isNullOrEmpty()) {
-                            trySend(content)
+                    if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
+                        if (json.optString("type") == "content_block_delta") {
+                            val text = json.optJSONObject("delta")?.optString("text")
+                            if (!text.isNullOrEmpty()) trySend(text)
                         }
-
-                        // Handle Tool Calls (Accumulate)
-                        val toolCalls = delta?.optJSONArray("tool_calls")
-                        if (toolCalls != null) {
-                            for (i in 0 until toolCalls.length()) {
-                                val call = toolCalls.getJSONObject(i)
-                                val index = call.optInt("index", 0)
-                                val existingCalls = toolCallBuilder.getJSONArray("tool_calls")
-                                
-                                if (index >= existingCalls.length()) {
-                                    existingCalls.put(call)
-                                } else {
-                                    val existing = existingCalls.getJSONObject(index)
-                                    val func = call.optJSONObject("function")
-                                    if (func != null) {
-                                        val existingFunc = existing.getJSONObject("function")
-                                        existingFunc.put("arguments", existingFunc.optString("arguments", "") + func.optString("arguments", ""))
-                                    }
-                                }
-                            }
+                    } else {
+                        val choices = json.optJSONArray("choices")
+                        if (choices != null && choices.length() > 0) {
+                            val content = choices.getJSONObject(0).optJSONObject("delta")?.optString("content")
+                            if (!content.isNullOrEmpty()) trySend(content)
                         }
                     }
-                } catch (e: Exception) {
-                    Log.e("OpenAILlmClient", "Stream parse error", e)
-                }
+                } catch (e: Exception) { Log.e("OpenAILlmClient", "Stream error", e) }
             }
-
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: okhttp3.Response?) {
-                close(t)
+                close(Exception("Stream failed: ${t?.message}"))
             }
-
-            override fun onClosed(eventSource: EventSource) {
-                close()
-            }
+            override fun onClosed(eventSource: EventSource) { close() }
         }
-
         val eventSource = EventSources.createFactory(okHttpClient).newEventSource(request, listener)
         awaitClose { eventSource.cancel() }
     }
@@ -125,25 +162,72 @@ class OpenAILlmClient @Inject constructor(
         apiKey: String,
         prompt: String,
         systemContext: String,
-        model: String
+        model: String,
+        toolsJson: JSONArray?,
+        customBaseUrl: String?,
+        base64Image: String?
     ): String {
-        val provider = ModelDetector.detect(apiKey)
-        val baseUrl = provider.baseUrl.trimEnd('/')
-        
+        val provider = ModelDetector.detect(apiKey, customBaseUrl)
+        val baseUrl = provider.effectiveBaseUrl.trimEnd('/')
         val url = if (provider.provider == ModelDetector.Provider.ANTHROPIC) "$baseUrl/messages" else "$baseUrl/chat/completions"
+        
         val bodyJson = JSONObject().apply {
             put("model", model)
+            put("max_tokens", if (provider.provider == ModelDetector.Provider.NVIDIA) 512 else 1024)
+            put("temperature", 0.0) // Deterministic for tool calls
+            
+            if (toolsJson != null && toolsJson.length() > 0) {
+                if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
+                    val anthropicTools = JSONArray()
+                    for (i in 0 until toolsJson.length()) {
+                        val tool = toolsJson.getJSONObject(i).getJSONObject("function")
+                        anthropicTools.put(JSONObject().apply {
+                            put("name", tool.getString("name"))
+                            put("description", tool.getString("description"))
+                            put("input_schema", tool.optJSONObject("parameters") ?: JSONObject().put("type", "object").put("properties", JSONObject()))
+                        })
+                    }
+                    put("tools", anthropicTools)
+                } else {
+                    put("tools", toolsJson)
+                    put("tool_choice", "auto")
+                }
+            }
+
             if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
-                put("max_tokens", 1024)
                 put("system", systemContext)
-                put("messages", JSONArray().apply { put(JSONObject().put("role", "user").put("content", prompt)) })
+                put("messages", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("role", "user")
+                        if (base64Image != null) {
+                            put("content", JSONArray().apply {
+                                put(JSONObject().put("type", "text").put("text", prompt))
+                                put(JSONObject().put("type", "image").put("source", JSONObject().apply {
+                                    put("type", "base64")
+                                    put("media_type", "image/jpeg")
+                                    put("data", base64Image)
+                                }))
+                            })
+                        } else {
+                            put("content", prompt)
+                        }
+                    })
+                })
             } else {
                 put("messages", JSONArray().apply {
                     put(JSONObject().put("role", "system").put("content", systemContext))
-                    put(JSONObject().put("role", "user").put("content", prompt))
+                    put(JSONObject().apply {
+                        put("role", "user")
+                        if (base64Image != null) {
+                            put("content", JSONArray().apply {
+                                put(JSONObject().put("type", "text").put("text", prompt))
+                                put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$base64Image")))
+                            })
+                        } else {
+                            put("content", prompt)
+                        }
+                    })
                 })
-                put("tools", plannerAgent.getToolDefinitions())
-                put("tool_choice", "auto")
             }
         }
 
@@ -160,23 +244,22 @@ class OpenAILlmClient @Inject constructor(
             if (!response.isSuccessful) throw Exception("API Error: $body")
             
             val json = JSONObject(body)
-            val message = json.getJSONArray("choices").getJSONObject(0).getJSONObject("message")
-            
-            if (message.has("tool_calls")) {
-                message.toString() // Return the whole message JSON if it contains tool calls
+            val message = if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
+                // Map Anthropic response to common format
+                val content = json.getJSONArray("content")
+                JSONObject().put("content", content)
             } else {
-                message.getString("content")
+                json.getJSONArray("choices").getJSONObject(0).getJSONObject("message")
             }
+
+            extractMessageContent(message)
         }
     }
 
     override suspend fun getEmbeddings(apiKey: String, text: String, model: String): List<Float> {
         val provider = ModelDetector.detect(apiKey)
         val url = "${provider.baseUrl.trimEnd('/')}/embeddings"
-        val bodyJson = JSONObject().apply {
-            put("model", model)
-            put("input", text)
-        }
+        val bodyJson = JSONObject().apply { put("model", model); put("input", text) }
         val request = Request.Builder()
             .url(url)
             .post(bodyJson.toString().toRequestBody("application/json".toMediaType()))

@@ -1,32 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="96dp"
     android:height="96dp"
     android:viewportWidth="96"
     android:viewportHeight="96">
-    <!-- Outer ring -->
+
+    <!-- Outer Glow -->
     <path
-        android:pathData="M48,8 A40,40 0 1,1 47.99,8 Z"
-        android:strokeColor="#4FC3F7"
-        android:strokeWidth="2"
-        android:fillColor="#00000000" />
-    <!-- Inner ring -->
+        android:pathData="M48,48m-42,0a42,42 0 1,1 84,0a42,42 0 1,1 -84,0"
+        android:fillAlpha="0.1">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="48"
+                android:centerY="48"
+                android:gradientRadius="42"
+                android:type="radial">
+                <item android:color="#00E5FF" android:offset="0" />
+                <item android:color="#00000000" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Outer Ring (Concentric) -->
     <path
-        android:pathData="M48,20 A28,28 0 1,1 47.99,20 Z"
-        android:strokeColor="#4FC3F7"
+        android:pathData="M48,48m-38,0a38,38 0 1,1 76,0a38,38 0 1,1 -76,0"
         android:strokeWidth="1.5"
-        android:strokeAlpha="0.5"
-        android:fillColor="#00000000" />
-    <!-- J letter -->
+        android:strokeAlpha="0.4"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="10"
+                android:startY="10"
+                android:endX="86"
+                android:endY="86"
+                android:type="linear">
+                <item android:color="#00E5FF" android:offset="0" />
+                <item android:color="#2979FF" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Mid Ring (Sashed) -->
     <path
-        android:pathData="M44,30 L52,30 L52,54 Q52,64 44,64 Q36,64 36,56 L36,52 L40,52 L40,56 Q40,60 44,60 Q48,60 48,54 L48,34 L44,34 Z"
-        android:fillColor="#4FC3F7" />
-    <!-- Top accent dots -->
+        android:pathData="M48,18 L48,24 M78,48 L72,48 M48,78 L48,72 M18,48 L24,48 M69.2,26.8 L65,31 M69.2,69.2 L65,65 M26.8,69.2 L31,65 M26.8,26.8 L31,31"
+        android:strokeWidth="2"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="18"
+                android:startY="18"
+                android:endX="78"
+                android:endY="78"
+                android:type="linear">
+                <item android:color="#00E5FF" android:offset="0" />
+                <item android:color="#0D47A1" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Main Arc Reactor Core -->
     <path
-        android:pathData="M38,14 A2,2 0 1,1 37.99,14 Z"
-        android:fillColor="#4FC3F7" />
+        android:pathData="M48,48m-22,0a22,22 0 1,1 44,0a22,22 0 1,1 -44,0"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="26"
+                android:startY="26"
+                android:endX="70"
+                android:endY="70"
+                android:type="linear">
+                <item android:color="#00E5FF" android:offset="0" />
+                <item android:color="#2979FF" android:offset="0.5" />
+                <item android:color="#0D47A1" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Pulse -->
     <path
-        android:pathData="M58,14 A2,2 0 1,1 57.99,14 Z"
-        android:fillColor="#4FC3F7"
-        android:fillAlpha="0.6" />
+        android:pathData="M48,48m-12,0a12,12 0 1,1 24,0a12,12 0 1,1 -24,0"
+        android:fillAlpha="0.3">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="48"
+                android:centerY="48"
+                android:gradientRadius="12"
+                android:type="radial">
+                <item android:color="#00E5FF" android:offset="0" />
+                <item android:color="#2979FF" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Central Intelligence Node (Glowing Dot) -->
+    <path
+        android:pathData="M48,48m-5,0a5,5 0 1,1 10,0a5,5 0 1,1 -10,0"
+        android:fillColor="#00E5FF" />
+
+    <!-- Sharp Tech Accents -->
+    <path
+        android:pathData="M48,32 L52,28 L44,28 Z M64,48 L68,52 L68,44 Z M48,64 L44,68 L52,68 Z M32,48 L28,44 L28,52 Z"
+        android:fillColor="#00E5FF"
+        android:fillAlpha="0.8" />
+
 </vector>

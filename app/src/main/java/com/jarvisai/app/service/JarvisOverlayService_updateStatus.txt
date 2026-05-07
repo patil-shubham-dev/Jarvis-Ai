@@ -1,0 +1,33 @@
+    fun updateStatus(message: String) {
+        handler.post {
+            val bubble = overlayView?.findViewById<View>(R.id.status_bubble) ?: return@post
+            val textView = overlayView?.findViewById<TextView>(R.id.status_text) ?: return@post
+            
+            if (message.isBlank()) {
+                bubble.animate().alpha(0f).setDuration(300).withEndAction { 
+                    bubble.visibility = View.GONE 
+                }.start()
+                return@post
+            }
+
+            bubble.visibility = View.VISIBLE
+            bubble.alpha = 1f
+            
+            // Clear previous typing effect
+            typingRunnable?.let { handler.removeCallbacks(it) }
+            
+            textView.text = ""
+            var charIndex = 0
+            
+            typingRunnable = object : Runnable {
+                override fun run() {
+                    if (charIndex <= message.length) {
+                        textView.text = message.substring(0, charIndex)
+                        charIndex++
+                        handler.postDelayed(this, 20)
+                    }
+                }
+            }
+            handler.post(typingRunnable!!)
+        }
+    }

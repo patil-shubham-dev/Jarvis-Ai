@@ -44,6 +44,12 @@ object SecurePrefs {
     fun getProvider(context: Context): String =
         get(context).getString(KEY_PROVIDER, "") ?: ""
 
+    fun saveBaseUrl(context: Context, url: String) =
+        get(context).edit().putString(KEY_BASE_URL, url.trim()).apply()
+
+    fun getBaseUrl(context: Context): String =
+        get(context).getString(KEY_BASE_URL, "https://api.openai.com/v1/") ?: "https://api.openai.com/v1/"
+
     fun saveBiometricEnabled(context: Context, enabled: Boolean) =
         get(context).edit().putBoolean(KEY_BIOMETRIC, enabled).apply()
 
@@ -80,6 +86,36 @@ object SecurePrefs {
     fun isVoiceIntelligenceEnabled(context: Context): Boolean =
         get(context).getBoolean(KEY_VOICE_INTEL, false)
 
+    fun saveSelectedModel(context: Context, model: String) =
+        get(context).edit().putString(KEY_MODEL, model).apply()
+
+    fun getSelectedModel(context: Context): String? =
+        get(context).getString(KEY_MODEL, null)
+
+    fun saveVisionApiKey(context: Context, key: String) =
+        get(context).edit().putString(KEY_VISION_API_KEY, key.trim()).apply()
+
+    fun getVisionApiKey(context: Context): String =
+        get(context).getString(KEY_VISION_API_KEY, "") ?: ""
+
+    fun saveVisionBaseUrl(context: Context, url: String) =
+        get(context).edit().putString(KEY_VISION_BASE_URL, url.trim()).apply()
+
+    fun getVisionBaseUrl(context: Context): String =
+        get(context).getString(KEY_VISION_BASE_URL, "") ?: ""
+
+    fun saveVisionModel(context: Context, model: String) =
+        get(context).edit().putString(KEY_VISION_MODEL, model).apply()
+
+    fun getVisionModel(context: Context): String =
+        get(context).getString(KEY_VISION_MODEL, "gpt-4o") ?: "gpt-4o"
+
+    fun saveVisionProvider(context: Context, provider: String) =
+        get(context).edit().putString(KEY_VISION_PROVIDER, provider).apply()
+
+    fun getVisionProvider(context: Context): String =
+        get(context).getString(KEY_VISION_PROVIDER, "") ?: ""
+
     private const val KEY_API_KEY      = "api_key"
     private const val KEY_PROVIDER     = "ai_provider"
     private const val KEY_BIOMETRIC    = "biometric_enabled"
@@ -88,4 +124,10 @@ object SecurePrefs {
     private const val KEY_FIRST_LAUNCH = "first_launch"
     private const val KEY_PICOVOICE    = "picovoice_key"
     private const val KEY_VOICE_INTEL  = "voice_intel_enabled"
+    private const val KEY_MODEL        = "selected_model"
+    private const val KEY_BASE_URL     = "base_url"
+    private const val KEY_VISION_API_KEY = "vision_api_key"
+    private const val KEY_VISION_BASE_URL = "vision_base_url"
+    private const val KEY_VISION_MODEL    = "vision_model"
+    private const val KEY_VISION_PROVIDER = "vision_provider"
 }

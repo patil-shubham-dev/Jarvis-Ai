@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.jarvisai.app.R
+import com.jarvisai.app.notifications.JarvisNotificationManager
 import com.jarvisai.app.ui.activities.MainActivity
 
 /**
@@ -28,7 +29,7 @@ class JarvisBackgroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        JarvisNotificationManager.ensureChannels(this)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIF_ID, buildNotification(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
         } else {
@@ -108,6 +109,12 @@ class JarvisBackgroundService : Service() {
 
     private fun onWakeWordDetected() {
         Log.i(TAG, "Wake word detected!")
+        JarvisNotificationManager.showStatusNotification(
+            context = this,
+            notificationId = NOTIF_ID + 100,
+            title = "Jarvis is awake",
+            message = "Wake word detected. Ready for your next command."
+        )
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("WAKE_WORD_TRIGGERED", true)
@@ -129,30 +136,16 @@ class JarvisBackgroundService : Service() {
         }
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID, "Jarvis Hotword Service",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply { description = "Listening for wake word" }
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
-            .createNotificationChannel(channel)
-    }
-
-    private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_mic)
-        .setContentTitle("Jarvis Listening...")
-        .setContentText("Say 'Jarvis' to wake me up.")
-        .setOngoing(true)
-        .setContentIntent(
-            PendingIntent.getActivity(this, 0,
-                Intent(this, MainActivity::class.java),
-                PendingIntent.FLAG_IMMUTABLE)
-        )
-        .build()
+    private fun buildNotification() = JarvisNotificationManager.buildServiceNotification(
+        context = this,
+        title = "Jarvis Listening",
+        text = "Wake word monitoring is active.",
+        channelId = JarvisNotificationManager.CHANNEL_SERVICES,
+        iconRes = R.drawable.ic_mic
+    )
 
     companion object {
         private const val TAG = "JarvisBackgroundService"
-        private const val CHANNEL_ID = "jarvis_hotword"
         private const val NOTIF_ID = 2002
     }
 }

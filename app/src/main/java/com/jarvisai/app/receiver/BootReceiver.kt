@@ -4,8 +4,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import androidx.room.Room
+import com.jarvisai.app.data.local.AppDatabase
+import com.jarvisai.app.notifications.ReminderScheduler
 import com.jarvisai.app.service.JarvisOverlayService
 import com.jarvisai.app.utils.SecurePrefs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -23,6 +30,23 @@ class BootReceiver : BroadcastReceiver() {
                 putExtra("PICOVOICE_ACCESS_KEY", SecurePrefs.getPicovoiceKey(context))
             }
             ContextCompat.startForegroundService(context, voiceIntent)
+        }
+
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val database = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "jarvis_db"
+                ).fallbackToDestructiveMigration().build()
+                val scheduler = ReminderScheduler(context.applicationContext)
+                database.reminderDao().getPendingReminders().first().forEach { reminder ->
+                    scheduler.schedule(reminder.id, reminder.triggerAtMillis)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 }

@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ═══════════════════════════════════════ -->
-    <!--        JARVIS AI — CLAUDE THEME         -->
+    <!--        JARVIS AI — MODERN TECH THEME    -->
     <!-- ═══════════════════════════════════════ -->
 
-    <!-- Backgrounds — Warm Off-White -->
-    <color name="bg_main">#F7F7F5</color>
-    <color name="bg_surface">#FFFFFF</color>
-    <color name="bg_surface_elevated">#F0F0EE</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_overlay">#80F7F7F5</color>
-    <color name="bg_pill_input">#F0F0EE</color>
+    <!-- Backgrounds — Deep Modern Dark -->
+    <color name="bg_main">#0A0B10</color>
+    <color name="bg_surface">#12141C</color>
+    <color name="bg_surface_elevated">#1A1D29</color>
+    <color name="bg_card">#1A1D29</color>
+    <color name="bg_overlay">#CC0A0B10</color>
+    <color name="bg_pill_input">#1A1D29</color>
 
-    <!-- Primary Brand -->
-    <color name="jarvis_primary">#1D1D1D</color>
-    <color name="jarvis_accent">#D97757</color> <!-- Claude-style orange accent -->
+    <!-- Primary Brand — Tech Cyan & Electric Blue -->
+    <color name="jarvis_primary">#00E5FF</color>
+    <color name="jarvis_accent">#00E5FF</color>
     
-    <!-- Text — High Contrast Neutral -->
-    <color name="text_primary">#1D1D1D</color>
-    <color name="text_secondary">#6B6B6B</color>
-    <color name="text_hint">#A0A0A0</color>
-    <color name="text_error">#D93025</color>
+    <!-- Text — Clean High-Contrast -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B3B8</color>
+    <color name="text_hint">#606770</color>
+    <color name="text_error">#FF5252</color>
 
     <!-- Chat Elements -->
-    <color name="bubble_user">#F0F0EE</color>
-    <color name="bubble_jarvis">#00000000</color> <!-- Plain text for Jarvis -->
+    <color name="bubble_user">#2979FF</color>
+    <color name="bubble_jarvis">#00000000</color>
     
     <!-- Icons -->
-    <color name="icon_primary">#1D1D1D</color>
-    <color name="icon_secondary">#6B6B6B</color>
+    <color name="icon_primary">#00E5FF</color>
+    <color name="icon_secondary">#B0B3B8</color>
 
     <!-- Dividers & Borders -->
-    <color name="divider">#E0E0DE</color>
-    <color name="border_subtle">#E0E0DE</color>
-    <color name="border_active">#1D1D1D</color>
+    <color name="divider">#2A2E3E</color>
+    <color name="border_subtle">#2A2E3E</color>
+    <color name="border_active">#00E5FF</color>
 
     <!-- Status -->
-    <color name="status_success">#1E8E3E</color>
-    <color name="status_warning">#F9AB00</color>
-    <color name="status_error">#D93025</color>
-    <color name="status_info">#1A73E8</color>
+    <color name="status_success">#00C853</color>
+    <color name="status_warning">#FFD600</color>
+    <color name="status_error">#FF5252</color>
+    <color name="status_info">#2979FF</color>
 
     <!-- Transparent -->
     <color name="transparent">#00000000</color>

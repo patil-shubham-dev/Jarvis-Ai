@@ -2,6 +2,7 @@ package com.jarvisai.app.ui.activities
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -10,9 +11,9 @@ import com.jarvisai.app.data.models.MessageRole
 import com.jarvisai.app.databinding.ItemMessageUserBinding
 import com.jarvisai.app.databinding.ItemMessageAssistantBinding
 import io.noties.markwon.Markwon
+import android.animation.ValueAnimator
 
 class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessageDiffCallback()) {
-    
     private var markwon: Markwon? = null
 
     override fun getItemViewType(position: Int): Int {
@@ -53,6 +54,8 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessag
 
     inner class AssistantViewHolder(private val binding: ItemMessageAssistantBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        private var thinkingAnimator: ValueAnimator? = null
+
         fun bind(message: ChatMessage) {
             if (markwon == null) {
                 markwon = Markwon.create(binding.root.context)
@@ -60,13 +63,45 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessag
             
             // Professional UX: Hide raw tool-call JSON from the user
             val displayContent = if (message.content.startsWith("{") && message.content.contains("tool_calls")) {
-                "Processing system actions..."
+                "I couldn't complete that device action."
             } else {
                 message.content
             }
-            
-            markwon?.setMarkdown(binding.textMessage, displayContent)
+
+            if (displayContent == THINKING_PLACEHOLDER) {
+                startThinkingAnimation(binding.textMessage)
+            } else {
+                stopThinkingAnimation()
+                binding.textMessage.alpha = 1f
+                markwon?.setMarkdown(binding.textMessage, displayContent)
+            }
             binding.textTimestamp.text = formatTime(message.timestamp)
+        }
+
+        private fun startThinkingAnimation(textView: TextView) {
+            stopThinkingAnimation()
+
+            val frames = listOf(
+                "Jarvis is thinking.",
+                "Jarvis is thinking..",
+                "Jarvis is thinking..."
+            )
+
+            thinkingAnimator = ValueAnimator.ofInt(0, frames.lastIndex).apply {
+                duration = 1200L
+                repeatCount = ValueAnimator.INFINITE
+                addUpdateListener { animator ->
+                    val index = animator.animatedValue as Int
+                    textView.text = frames[index]
+                    textView.alpha = 0.75f + (0.25f * (index + 1) / frames.size)
+                }
+                start()
+            }
+        }
+
+        private fun stopThinkingAnimation() {
+            thinkingAnimator?.cancel()
+            thinkingAnimator = null
         }
     }
 
@@ -86,6 +121,7 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessag
     }
 
     companion object {
+        private const val THINKING_PLACEHOLDER = "Jarvis is thinking"
         private const val VIEW_TYPE_USER = 1
         private const val VIEW_TYPE_ASSISTANT = 2
     }

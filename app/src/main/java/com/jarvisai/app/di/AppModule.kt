@@ -4,13 +4,14 @@ import android.content.Context
 import androidx.room.Room
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-    import com.jarvisai.app.api.LlmClient
+import com.jarvisai.app.api.LlmClient
 import com.jarvisai.app.api.OpenAILlmClient
-import com.jarvisai.app.api.agents.PlannerAgent
 import com.jarvisai.app.data.local.AppDatabase
 import com.jarvisai.app.data.local.dao.ChatDao
 import com.jarvisai.app.data.local.dao.ChatSessionDao
 import com.jarvisai.app.data.local.dao.MemoryDao
+import com.jarvisai.app.data.local.dao.ReminderDao
+import com.jarvisai.app.data.local.dao.RoutineDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,9 +34,9 @@ object AppModule {
         }
         return OkHttpClient.Builder()
             .addInterceptor(logging)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(90, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(40, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
     }
 
@@ -46,8 +47,8 @@ object AppModule {
     /** LlmClient now uses raw OkHttp to support dynamic base URLs per provider */
     @Provides
     @Singleton
-    fun provideLlmClient(okHttpClient: OkHttpClient, plannerAgent: PlannerAgent): LlmClient {
-        return OpenAILlmClient(okHttpClient, plannerAgent)
+    fun provideLlmClient(okHttpClient: OkHttpClient): LlmClient {
+        return OpenAILlmClient(okHttpClient)
     }
 
     @Provides
@@ -70,4 +71,10 @@ object AppModule {
 
     @Provides
     fun provideMemoryDao(db: AppDatabase): MemoryDao = db.memoryDao()
+
+    @Provides
+    fun provideReminderDao(db: AppDatabase): ReminderDao = db.reminderDao()
+
+    @Provides
+    fun provideRoutineDao(db: AppDatabase): RoutineDao = db.routineDao()
 }

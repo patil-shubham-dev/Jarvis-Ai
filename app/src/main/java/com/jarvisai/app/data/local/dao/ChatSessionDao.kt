@@ -26,4 +26,7 @@ interface ChatSessionDao {
 
     @Query("UPDATE chat_sessions SET title = :newTitle WHERE id = :sessionId")
     suspend fun updateSessionTitle(sessionId: String, newTitle: String)
+
+    @Query("UPDATE chat_sessions SET lastMessage = :lastMessage, timestamp = :timestamp WHERE id = :sessionId")
+    suspend fun updateSessionPreview(sessionId: String, lastMessage: String, timestamp: Long)
 }

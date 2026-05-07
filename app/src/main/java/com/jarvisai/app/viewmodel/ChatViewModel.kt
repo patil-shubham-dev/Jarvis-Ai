@@ -6,6 +6,7 @@ import com.jarvisai.app.data.models.ChatMessage
 import com.jarvisai.app.data.models.MessageRole
 import com.jarvisai.app.data.repository.ChatRepository
 import com.jarvisai.app.utils.SecurePrefs
+import com.jarvisai.app.core.voice.VoiceEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -16,10 +17,14 @@ import android.app.Application
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val application: Application,
-    private val repository: ChatRepository
+    private val repository: ChatRepository,
+    private val voiceEngine: VoiceEngine
 ) : ViewModel() {
+    private companion object {
+        const val THINKING_PLACEHOLDER = "Jarvis is thinking"
+    }
 
-    private val _activeSessionId = MutableStateFlow("DEFAULT_SESSION")
+    private val _activeSessionId = MutableStateFlow(UUID.randomUUID().toString())
     val activeSessionId: StateFlow<String> = _activeSessionId.asStateFlow()
 
     // Dynamically switch message history based on active session
@@ -53,13 +58,15 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             repository.saveMessage(userMsg)
             _isLoading.value = true
+            var displayedResponse = ""
 
             // Create placeholder
-            val assistantMsg = ChatMessage(sessionId = currentSession, role = MessageRole.JARVIS, content = "")
+            val assistantMsg = ChatMessage(
+                sessionId = currentSession,
+                role = MessageRole.JARVIS,
+                content = THINKING_PLACEHOLDER
+            )
             repository.saveMessage(assistantMsg)
-            
-            val accumulated = StringBuilder()
-            var lastUpdate = System.currentTimeMillis()
 
             val apiKey = SecurePrefs.getApiKey(application)
             if (apiKey.isEmpty()) {
@@ -69,15 +76,36 @@ class ChatViewModel @Inject constructor(
             }
 
             try {
-                repository.listenToResponse(messages.value, text)
-                    .collect { token ->
-                        accumulated.append(token)
-                        
-                        if (System.currentTimeMillis() - lastUpdate > 200) {
-                            repository.updateLastMessage(currentSession, accumulated.toString())
-                            lastUpdate = System.currentTimeMillis()
-                        }
-                    }
+                val fullResponse = withTimeout(45000) {
+                    repository.listenToResponse(currentSession, messages.value, text).firstOrNull().orEmpty().trim()
+                }
+
+                if (fullResponse.isBlank()) {
+                    _isLoading.value = false
+                    repository.updateLastMessage(currentSession, "No response received. Please check your API key and internet connection.")
+                    return@launch
+                }
+
+                repository.updateLastMessage(currentSession, fullResponse)
+                
+                if (SecurePrefs.isTtsEnabled(application)) {
+                    voiceEngine.speak(fullResponse)
+                }
+
+                val toolSummary = repository.processResponseIntents(fullResponse)?.trim().orEmpty()
+                if (toolSummary.isNotEmpty()) {
+                    displayedResponse = toolSummary
+                    repository.updateLastMessage(currentSession, toolSummary)
+                } else if (fullResponse.startsWith("{") && fullResponse.contains("tool_calls")) {
+                    displayedResponse = "I couldn't complete that device action."
+                    repository.updateLastMessage(currentSession, displayedResponse)
+                } else {
+                    displayedResponse = fullResponse
+                }
+            } catch (e: TimeoutCancellationException) {
+                _isLoading.value = false
+                repository.updateLastMessage(currentSession, "Request timed out. Please try again or switch model in Settings.")
+                return@launch
             } catch (e: Exception) {
                 _isLoading.value = false
                 val errorMsg = "Error: ${e.message}"
@@ -86,13 +114,8 @@ class ChatViewModel @Inject constructor(
             }
             
             // Final update to persist full response (only if successful)
-            if (accumulated.isNotEmpty()) {
-                val fullResponse = accumulated.toString()
-                repository.updateLastMessage(currentSession, fullResponse)
-                repository.processResponseIntents(fullResponse)
-            }
             _isLoading.value = false
-            generateSmartTitle(currentSession, text, accumulated.toString().take(100))
+            generateSmartTitle(currentSession, text, displayedResponse.take(100))
         }
     }
 
@@ -108,6 +131,10 @@ class ChatViewModel @Inject constructor(
 
     fun startNewChat() {
         _activeSessionId.value = UUID.randomUUID().toString()
+    }
+
+    fun startFreshChatForLaunch() {
+        startNewChat()
     }
 
     fun clearAllHistory() {
