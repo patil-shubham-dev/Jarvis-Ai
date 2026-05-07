@@ -6,6 +6,8 @@ import com.jarvisai.app.core.skills.impl.WhatsAppSkill
 import com.jarvisai.app.core.skills.impl.VisionSkill
 import com.jarvisai.app.core.skills.impl.GenericControlSkill
 import com.jarvisai.app.core.skills.impl.SpotifySkill
+import com.jarvisai.app.core.skills.impl.CommunicationSkill
+import com.jarvisai.app.core.skills.impl.PlanningSkill
 import com.jarvisai.app.service.JarvisOverlayService
 import com.jarvisai.app.api.LlmClient
 import javax.inject.Inject
@@ -40,6 +42,8 @@ class SkillManager @Inject constructor(
         skills["play_music"] = SpotifySkill(context, acc)
         skills["see_screen"] = VisionSkill(context, acc, localVisionEngine)
         skills["generic_control"] = GenericControlSkill(context, acc)
+        skills["communication"] = CommunicationSkill(context, acc)
+        skills["planning"] = PlanningSkill(context, acc)
     }
 
     suspend fun runSkill(name: String, params: Map<String, Any>): SkillResult {
@@ -60,10 +64,10 @@ class SkillManager @Inject constructor(
      */
     fun getToolDefinitions(): String {
         return buildString {
-            append("- send_whatsapp(recipient, message): Send a message to a contact.\n")
-            append("- play_music(query): Search and play music on Spotify.\n")
-            append("- see_screen(): Analyze the current screen state (Fast, Local).\n")
-            append("- generic_control(command): Execute system commands like 'press back', 'open settings'.\n")
+            skills.values.forEach { skill ->
+                append("- ${skill.getDefinition()}\n")
+            }
+            // Add core system actions that aren't formal skills yet
             append("- open_app(package_name): Launch a specific Android application.\n")
             append("- click_element(query): Click a UI element based on text or description.\n")
             append("- type_text(query, text): Type text into a focused input field.\n")

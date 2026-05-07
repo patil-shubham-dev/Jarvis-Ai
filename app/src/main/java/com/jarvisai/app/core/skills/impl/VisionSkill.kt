@@ -36,5 +36,9 @@ class VisionSkill(
         )
     }
 
+    override fun getDefinition(): String {
+        return "see_screen(): Analyze the current screen state (Fast, Local)."
+    }
+
     override suspend fun verifyState(): Boolean = true
 }

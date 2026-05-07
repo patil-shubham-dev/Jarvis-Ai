@@ -163,5 +163,14 @@ class PlannerAgent @Inject constructor(
         }
     }
 
-    fun getToolDefinitions(): JSONArray = JSONArray()
+    fun getToolDefinitions(): JSONArray {
+        val jsonArray = JSONArray()
+        val tools = skillManager.getToolDefinitions().split("\n")
+        tools.forEach { tool ->
+            if (tool.isNotBlank()) {
+                jsonArray.put(tool.removePrefix("- ").trim())
+            }
+        }
+        return jsonArray
+    }
 }

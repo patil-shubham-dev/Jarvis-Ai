@@ -69,5 +69,9 @@ class GenericControlSkill(
         else SkillResult(false, "Scroll failed")
     }
 
+    override fun getDefinition(): String {
+        return "generic_control(tool_action, query?, text?, package_name?, direction?): Execute system commands like 'open_app', 'click_element', 'type_text', 'scroll'."
+    }
+
     override suspend fun verifyState(): Boolean = true
 }

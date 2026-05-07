@@ -73,6 +73,10 @@ class SpotifySkill(
         return SkillResult(true, "Started $query (Verification pending)")
     }
 
+    override fun getDefinition(): String {
+        return "play_music(query): Search and play music on Spotify."
+    }
+
     override suspend fun verifyState(): Boolean {
         // Spotify has a 'Now Playing' bar or specific play/pause buttons
         return accessibility.findNode("Pause") != null || 

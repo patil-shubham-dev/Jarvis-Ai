@@ -24,6 +24,11 @@ abstract class BaseSkill(
     abstract suspend fun execute(params: Map<String, Any>): SkillResult
 
     /**
+     * Returns a description of the skill for the LLM.
+     */
+    abstract fun getDefinition(): String
+
+    /**
      * Verifies if the action was successful by checking the screen state.
      */
     abstract suspend fun verifyState(): Boolean

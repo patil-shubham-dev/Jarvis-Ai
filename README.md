@@ -101,12 +101,26 @@ Through the Accessibility Service, Jarvis can:
 - Click UI elements and navigate the interface
 - Open applications by package name
 - Send WhatsApp messages and other communications
+- Manage calendar events
+- Control WiFi and Bluetooth settings
+- Adjust device volume and Do Not Disturb mode
+- Set screen brightness
 - Perform web searches
 - Execute any action available through Android intents
 
 ### 5. Voice Intelligence
 
 With Picovoice Porcupine integration, Jarvis listens for the "Hey Jarvis" wake word offline, without draining battery. Once triggered, it streams audio to your configured AI provider for processing.
+
+---
+
+## Recent Improvements
+
+This update focuses on enhancing Jarvis's core capabilities, making it more versatile and responsive:
+
+- **Expanded Device Control:** Implemented direct control for WiFi, Bluetooth, Volume, and Do Not Disturb (DND) mode. Brightness control now intelligently opens display settings and attempts to adjust the slider via accessibility.
+- **Multi-App Skill Library:** Introduced new agents for Email (Gmail) and Calendar (Google Calendar) automation, allowing Jarvis to send emails and manage events directly. These are integrated through new `CommunicationSkill` and `PlanningSkill` modules.
+- **Dynamic Skill Discovery:** The `SkillManager` now dynamically advertises its capabilities to the `PlannerAgent`, enabling more robust and adaptable task planning. New skills are automatically learned by the planner without requiring manual code changes.
 
 ---
 
@@ -157,5 +171,3 @@ Ensure Picovoice AccessKey is correctly entered and the service is running.
 This project is licensed under the MIT License. See [LICENSE](LICENSE) file for details.
 
 ---
-
-

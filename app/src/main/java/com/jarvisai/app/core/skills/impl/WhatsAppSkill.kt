@@ -81,6 +81,10 @@ class WhatsAppSkill(
         return SkillResult(false, "Could not find message input field", errorType = ErrorType.SELECTOR_NOT_FOUND)
     }
 
+    override fun getDefinition(): String {
+        return "send_whatsapp(contact, message): Search for a contact and send a WhatsApp message."
+    }
+
     override suspend fun verifyState(): Boolean {
         // We are in a chat if the 'Message' or 'Entry' field is visible
         return accessibility.findNode("Message") != null || 

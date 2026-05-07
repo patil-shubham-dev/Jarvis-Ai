@@ -242,38 +242,69 @@ class ActionEngine @Inject constructor(
         }
     }
 
-    private fun executeSetBrightness(value: Int): Boolean {
+    private suspend fun executeSetBrightness(value: Int): Boolean {
         Log.d(TAG, "Setting brightness to: $value")
         return try {
             val intent = Intent(android.provider.Settings.ACTION_DISPLAY_SETTINGS).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-            // In a real flow, SettingsAgent would then take over
+            SettingsAgent.toggleSetting("Brightness", value > 50) // Fallback to toggle if direct slider fails
             true
         } catch (e: Exception) {
             false
         }
     }
 
-    private fun executeControlWifi(enable: Boolean): Boolean {
+    private suspend fun executeControlWifi(enable: Boolean): Boolean {
         Log.d(TAG, "Setting WiFi to: $enable")
-        return true
+        val intent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        return SettingsAgent.toggleSetting("Wi-Fi", enable)
     }
 
-    private fun executeControlBluetooth(enable: Boolean): Boolean {
+    private suspend fun executeControlBluetooth(enable: Boolean): Boolean {
         Log.d(TAG, "Setting Bluetooth to: $enable")
-        return true
+        val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        return SettingsAgent.toggleSetting("Bluetooth", enable)
     }
 
     private fun executeSetVolume(value: Int): Boolean {
         Log.d(TAG, "Setting volume to: $value")
-        return true
+        return try {
+            val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            val maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+            val targetVolume = (value / 100.0 * maxVolume).toInt()
+            audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, targetVolume, android.media.AudioManager.FLAG_SHOW_UI)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun executeEnableDND(enable: Boolean): Boolean {
         Log.d(TAG, "Setting DND to: $enable")
-        return true
+        return try {
+            val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            if (mNotificationManager.isNotificationPolicyAccessGranted) {
+                val filter = if (enable) android.app.NotificationManager.INTERRUPTION_FILTER_NONE else android.app.NotificationManager.INTERRUPTION_FILTER_ALL
+                mNotificationManager.setInterruptionFilter(filter)
+                true
+            } else {
+                val intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun executeSetAlarm(triggerAtMillis: Long, label: String): Boolean {
