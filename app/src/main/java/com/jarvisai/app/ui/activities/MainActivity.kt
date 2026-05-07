@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        startPulseAnimation()
+        startOrbBreathingAnimation()
         setupMemoryDashboard()
 
         // Adapter setup
@@ -150,23 +150,53 @@ class MainActivity : AppCompatActivity() {
         binding.cardMemoryDashboard.animate().translationY(-targetY).setDuration(500).start()
     }
 
-    private fun startPulseAnimation() {
-        val pulse = binding.statusPulse
-        val anim = android.view.animation.AlphaAnimation(0.2f, 1.0f).apply {
-            duration = 1500
+    private fun startOrbBreathingAnimation() {
+        val orb = binding.orbGlow
+        val anim = android.view.animation.AlphaAnimation(0.4f, 0.8f).apply {
+            duration = 3000
             repeatMode = android.view.animation.Animation.REVERSE
             repeatCount = android.view.animation.Animation.INFINITE
         }
-        pulse.startAnimation(anim)
+        orb.startAnimation(anim)
+        
+        // Also animate the core slightly
+        binding.orbCore.animate()
+            .scaleX(1.1f)
+            .scaleY(1.1f)
+            .setDuration(3000)
+            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+            .withEndAction {
+                binding.orbCore.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(3000)
+                    .start()
+            }
+            .start()
     }
 
-    private fun updateStatusPulse(isThinking: Boolean) {
-        val statusColor = if (isThinking) {
-            getColor(com.jarvisai.app.R.color.status_warning)
+    private fun updateOrbState(isThinking: Boolean) {
+        if (isThinking) {
+            binding.orbGlow.animate()
+                .scaleX(1.3f)
+                .scaleY(1.3f)
+                .alpha(1.0f)
+                .setDuration(500)
+                .start()
+            binding.orbCore.animate()
+                .rotationBy(360f)
+                .setDuration(2000)
+                .setInterpolator(android.view.animation.LinearInterpolator())
+                .start()
         } else {
-            getColor(com.jarvisai.app.R.color.status_success)
+            binding.orbGlow.animate()
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .alpha(0.6f)
+                .setDuration(500)
+                .start()
+            binding.orbCore.animate().cancel()
         }
-        binding.statusPulse.backgroundTintList = android.content.res.ColorStateList.valueOf(statusColor)
     }
 
     private fun captureAndAnalyzeScreen() {
@@ -216,7 +246,7 @@ class MainActivity : AppCompatActivity() {
                 // Observe Loading/Streaming
                 launch {
                     viewModel.isLoading.collect { loading ->
-                        updateStatusPulse(loading)
+                        updateOrbState(loading)
                         binding.btnSend.isEnabled = !loading
                         binding.btnSend.alpha = if (loading) 0.45f else 1f
                     }

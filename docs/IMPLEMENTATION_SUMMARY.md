@@ -497,3 +497,40 @@ The project is ready for deployment, further development, and commercial use.
 **Implementation Date:** May 2026  
 **Lead Architect:** Manus AI  
 **Status:** Production Ready ✓
+
+---
+
+## 10. Long-term Episodic Memory & Proactive Learning (V4.5 Update)
+
+### Hybrid Learning System
+
+Implemented a sophisticated learning pipeline that balances resource efficiency with intelligence:
+
+1. **Lightweight Extraction:** Triggered after every conversation turn to distill preferences, facts, and successful workflows into structured JSON modules.
+2. **Deep Behavioral Analysis:** A periodic process that analyzes long-term logs to identify recurring patterns and suggest automation routines.
+3. **Significant Event Learning:** Immediate persistence of critical milestones, failed automations, or emotional cues into the `MEMORY_TIMELINE`.
+
+### Proactive Routine Engine
+
+- **Pattern Detection:** Identifies habits (e.g., "Messaging boss at 9 AM when late") with confidence scoring.
+- **Confirmation-First Automation:** Jarvis proactively proposes new routines to the user instead of silent execution, ensuring trust and control.
+- **Gradual Autonomy:** Moves from "Reminder Only" to "One-tap Approval" and finally "Fully Automatic" based on successful repetition.
+
+---
+
+## 11. Futuristic UI Refinement (V4.5 Update)
+
+### The Jarvis Orb
+
+The central identity of the app is now the **Jarvis Orb**, a living, breathing element in `MainActivity`:
+
+- **Breathing Animation:** Subtle glow while idle to signify presence.
+- **Thinking State:** Expanded scale, increased glow intensity, and core rotation during AI processing.
+- **Glassmorphism Style:** Refined chat bubbles with semi-transparent frosted-glass effects, thin borders, and soft shadows.
+- **Ambient UI:** Dark matte backgrounds with subtle radial glows to create a premium, futuristic atmosphere.
+
+### Information Architecture
+
+- **Conversation-First:** The primary focus remains on the interaction between the user and Jarvis.
+- **Contextual Memory:** The Memory Dashboard is now a peek-feature, accessible via the title bar, keeping the main interface clean and minimal.
+- **Fluid Motion:** All state transitions (Thinking -> Responding) are handled with smooth animations.

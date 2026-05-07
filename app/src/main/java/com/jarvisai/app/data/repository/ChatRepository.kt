@@ -39,7 +39,8 @@ class ChatRepository @Inject constructor(
     private val memoryAgent: MemoryAgent,
     private val communicationAgent: CommunicationAgent,
     private val plannerAgent: PlannerAgent,
-    private val executionTracker: ExecutionTracker
+    private val executionTracker: ExecutionTracker,
+    private val learningEngine: com.jarvisai.app.data.repository.memory.LearningEngine
 ) {
 
     fun getMessagesBySession(sessionId: String): Flow<List<ChatMessage>> {
@@ -69,6 +70,24 @@ class ChatRepository @Inject constructor(
             )
         )
         sessionDao.updateSessionPreview(msg.sessionId, msg.content, msg.timestamp)
+        
+        // Trigger lightweight learning if it's an assistant message (end of turn)
+        if (msg.role == MessageRole.ASSISTANT || msg.role == MessageRole.JARVIS) {
+            triggerLightweightLearning(msg.sessionId)
+        }
+    }
+
+    private suspend fun triggerLightweightLearning(sessionId: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val messages = chatDao.getMessagesBySessionOnce(sessionId).takeLast(10).map { 
+                    "${it.role}: ${it.content}"
+                }
+                learningEngine.extractLightweightMemory(sessionId, messages)
+            } catch (e: Exception) {
+                Log.e("ChatRepository", "Learning trigger failed", e)
+            }
+        }
     }
 
     suspend fun generateAndSaveTitle(sessionId: String, userText: String, aiText: String) {

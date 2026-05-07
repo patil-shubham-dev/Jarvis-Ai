@@ -13,6 +13,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Background Ambient Glow -->
+        <View
+            android:id="@+id/ambientGlow"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:background="@drawable/bg_radial_glow"
+            android:alpha="0.15"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="-100dp"
+            android:layout_marginEnd="-100dp" />
+
         <!-- Header -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutHeader"
@@ -26,7 +38,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:src="@drawable/ic_menu"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -43,14 +55,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <View
-                    android:id="@+id/statusPulse"
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:background="@drawable/bg_avatar"
-                    android:backgroundTint="@color/status_success"
-                    android:layout_marginEnd="8dp" />
-
                 <TextView
                     android:id="@+id/textTitle"
                     android:layout_width="wrap_content"
@@ -58,7 +62,8 @@
                     android:text="Jarvis"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.1" />
             </LinearLayout>
 
             <ImageButton
@@ -74,6 +79,32 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- Central Jarvis Orb -->
+        <FrameLayout
+            android:id="@+id/orbContainer"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="20dp"
+            app:layout_constraintTop_toBottomOf="@id/layoutHeader"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <View
+                android:id="@+id/orbGlow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_jarvis_orb"
+                android:alpha="0.6" />
+
+            <ImageView
+                android:id="@+id/orbCore"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_jarvis_logo"
+                app:tint="@color/jarvis_primary" />
+        </FrameLayout>
+
         <!-- Chat Area -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerMessages"
@@ -82,20 +113,22 @@
             android:clipToPadding="false"
             android:paddingTop="8dp"
             android:paddingBottom="100dp"
-            app:layout_constraintTop_toBottomOf="@id/layoutHeader"
+            app:layout_constraintTop_toBottomOf="@id/orbContainer"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Floating Memory Dashboard (Hidden by default) -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardMemoryDashboard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             app:cardCornerRadius="24dp"
-            app:cardElevation="12dp"
-            app:cardBackgroundColor="@color/bg_surface"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/border_subtle"
+            app:cardBackgroundColor="#1AFFFFFF"
             android:translationY="600dp"
             app:layout_constraintBottom_toTopOf="@id/inputContainer">
             
@@ -104,7 +137,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="240dp"
                 android:padding="12dp" />
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Glassmorphism Input Bar -->
         <LinearLayout
