@@ -10,12 +10,20 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Release-v4.1.0--Stable-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Version">
-  <img src="https://img.shields.io/badge/Architecture-Action--Think--Observe-blue?style=for-the-badge" alt="Architecture">
-  <img src="https://img.shields.io/badge/Security-Biometric%20Encrypted-red?style=for-the-badge" alt="Security">
+  <img src="https://img.shields.io/badge/Community-Join%20Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">
+  <img src="https://img.shields.io/badge/Twitter-Follow%20Us-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" alt="Twitter">
 </p>
 
 <p align="center">
   <img src="docs/assets/typing.svg" width="500" alt="Jarvis Typing Effect">
+</p>
+
+<p align="center">
+  <a href="#-why-jarvis">Why Jarvis?</a> •
+  <a href="#-key-features">Features</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-setup-guide">Setup</a> •
+  <a href="#-contributing">Contribute</a>
 </p>
 
 ---
@@ -41,59 +49,91 @@ Jarvis isn't just a chatbot; it's a **Sentinel**. It observes your screen, under
 
 ---
 
-## 🏗 Deep Dive: How It Works
+## ❓ Why Jarvis?
 
-Jarvis operates on a high-fidelity **Multi-Agent Orchestration** model. Unlike simple automation scripts, Jarvis dynamically generates strategies based on real-time visual feedback.
+Traditional assistants (Siri, Google Assistant) are "walled gardens"—they only work with apps that have specific integrations. **Jarvis breaks those walls.**
 
-### 🧠 The Cognitive Reasoning Loop
-Every user request triggers a recursive cycle designed to handle ambiguity and environment shifts:
-
-1.  **Intent Parsing:** The `TemporalCommandParser` decomposes natural language into time-bound objectives.
-2.  **Observe (Sentinel Vision):** The `VisionSkill` captures the screen state, passing it through the `LocalVisionEngine` (OCR + Icon Recognition) to build a semantic map of the UI.
-3.  **Think (Strategic Planning):** The `PlanningSkill` selects the optimal `Agent` (Spotify, WhatsApp, etc.) and calculates the necessary gestures.
-4.  **Act (Action Engine):** The `ActionEngine` executes precise taps and swipes via the `AccessibilityHelper`, simulating human interaction.
-5.  **Verify:** Jarvis re-scans the screen to ensure the action had the intended effect. If an app hangs or a popup appears, Jarvis adapts instantly.
-
----
-
-## 🔬 Technical Logics & "Minute Details"
-
-### 🛠 1. The ActionEngine Mechanics
-The `ActionEngine` is the bridge between AI and Hardware. It doesn't just "click buttons"—it understands spatial geometry.
-*   **Coordinate Normalization:** Maps LLM-generated relative coordinates (0-1000) to actual device pixel densities (DP/PX).
-*   **Adaptive Gestures:** Uses bezier curves for swipes to avoid detection by anti-bot mechanisms in banking or security apps.
-*   **Collision Detection:** Ensures the "Jarvis Orb" overlay doesn't block critical UI elements during a task.
-
-### 📁 2. Memory Hierarchy (RAG v4)
-Jarvis uses a tiered memory system to maintain context over weeks, not just minutes:
-*   **L1 (Reactive):** The current conversation window (GPT-4o/Claude context).
-*   **L2 (Episodic):** A local vector store (ChromaDB) containing the last 500 interactions, indexed by sentiment and task type.
-*   **L3 (Routine):** The `RoutinePredictor` identifies patterns (e.g., "User always checks Email after Spotify") and pre-warms the necessary agents.
-
-### 🛡 3. Safety & Sentinel Guardrails
-The `SafetyEngine` acts as a real-time monitor for all autonomous actions:
-*   **PII Masking:** Automatically blurs sensitive fields (passwords, credit cards) in the vision buffer before processing.
-*   **Root Detection:** Refuses to execute high-privileged actions on compromised devices to protect the user.
-*   **Execution Tracker:** Maintains a transparent, human-readable log of every gesture made by the AI.
-
----
-
-## 🔧 Pro Tech Stack
-
-| Layer | Technology | Key Component |
+| Feature | Jarvis AI | Traditional Assistants |
 | :--- | :--- | :--- |
-| **Logic** | Kotlin 1.9, Hilt | `SkillManager`, `BaseSkill` |
-| **Vision** | ML Kit + TFLite | `LocalVisionEngine` |
-| **Action** | Android Accessibility API | `ActionEngine`, `AccessibilityHelper` |
-| **Memory** | ChromaDB + ONNX | `EpisodicMemoryDao` |
-| **Strategy** | Multi-Agent LLM | `PlannerAgent`, `RoutineEngine` |
+| **Vision** | See & Understands any UI | Limited to API-supported apps |
+| **Autonomy** | Executes multi-step workflows | Single-command responses |
+| **Privacy** | 100% Local Episodic Memory | Cloud-based data harvesting |
+| **Control** | Human-like gestures (Tap/Swipe) | Intent-based API calls |
 
 ---
 
-## 🚀 Future Roadmap: Phase 5
-- [ ] **Whisper Integration:** Real-time, low-latency voice pipeline.
-- [ ] **Document Intelligence:** Ingesting PDFs/Docs for contextual assistance.
-- [ ] **Cross-Device Sync:** Unified Jarvis brain across Mobile and Desktop.
+## 🧠 The Cognitive Loop
+
+Jarvis operates on a high-fidelity **Multi-Agent Orchestration** model.
+
+```mermaid
+graph TD
+    User([User Intent]) --> Orb[Jarvis Reactive Orb]
+    Orb --> Planner{PlannerAgent}
+    
+    subgraph "The Cognitive Engine"
+        Planner --> Observe[VisionSkill: UI Analysis]
+        Observe --> Think[LLM Decision: Strategy]
+        Think --> Memory[Memory: Context Injection]
+        Memory --> Think
+        Think --> Act[ActionEngine: Interaction]
+    end
+    
+    Act --> Feedback[State Verification]
+    Feedback --> Observe
+```
+
+---
+
+## 🔬 Technical Logics
+
+### 🛠 ActionEngine Mechanics
+The `ActionEngine` translates AI strategy into hardware reality.
+*   **Coordinate Normalization:** Maps relative coordinates (0-1000) to device-specific pixel densities.
+*   **Adaptive Gestures:** Uses Bezier curves for natural, human-like swipes.
+
+### 📁 Memory Hierarchy (RAG v4)
+*   **L1 (Reactive):** Current conversation context.
+*   **L2 (Episodic):** Local vector store (ChromaDB) for historical recall.
+*   **L3 (Routine):** Predictive engine for habit-based task pre-warming.
+
+---
+
+## 🤖 Model Compatibility Matrix
+
+Jarvis supports any OpenAI-compatible API, but is optimized for the following:
+
+| Model | Role | Performance |
+| :--- | :--- | :--- |
+| **GPT-4o** | Primary Reasoning | ⭐⭐⭐⭐⭐ |
+| **Claude 3.5 Sonnet** | Vision/Strategy | ⭐⭐⭐⭐⭐ |
+| **Llama 3.1 (Local)** | Routine Prediction | ⭐⭐⭐⭐ |
+| **Gemini 1.5 Pro** | Long-context Memory | ⭐⭐⭐⭐ |
+
+---
+
+## 🤝 Contributing
+
+We are building the future of mobile intelligence, and we need your help!
+- **Build a Skill:** Want Jarvis to control a new app? Write a `Skill` in Kotlin.
+- **Improve Vision:** Help us tune our TFLite models for better icon recognition.
+- **Memory Refinement:** Optimize our vector retrieval logic.
+
+Check out our [**Contributing Guide**](docs/internal/CONTRIBUTING.md) to get started.
+
+---
+
+## 🔧 Setup & Quickstart
+
+```bash
+# Clone and build the Sentinel
+git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
+cd Jarvis-Ai/app
+./gradlew installDebug
+```
+
+> [!IMPORTANT]
+> Jarvis requires **Accessibility Service** permissions to observe and interact with your device.
 
 ---
 
