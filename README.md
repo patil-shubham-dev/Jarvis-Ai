@@ -1,136 +1,124 @@
 <p align="center">
-  <img src="docs/assets/logo.png" width="200" alt="Jarvis AI Logo">
+  <img src="docs/assets/logo.png" width="220" alt="Jarvis AI Logo">
 </p>
 
-<h1 align="center">🌌 JARVIS AI</h1>
+<h1 align="center">🌌 JARVIS AI: SENTINEL OS</h1>
 <p align="center">
-  <b>The Autonomous Mobile Intelligence Operating System</b><br>
-  <i>Not just an assistant, but your digital twin.</i>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Version-4.1.0--Sentinel-purple?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform">
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+  <b>The Future of Autonomous Mobile Interaction</b><br>
+  <i>A professional-grade personal intelligence layer for Android.</i>
 </p>
 
 <p align="center">
-  <a href="#-key-features">Features</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-setup-guide">Setup</a> •
-  <a href="#-privacy">Privacy</a> •
-  <a href="docs/SETUP_GUIDE.md">Documentation</a>
+  <img src="https://img.shields.io/badge/Release-v4.1.0--Stable-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Version">
+  <img src="https://img.shields.io/badge/Architecture-Action--Think--Observe-blue?style=for-the-badge" alt="Architecture">
+  <img src="https://img.shields.io/badge/Security-Biometric%20Encrypted-red?style=for-the-badge" alt="Security">
+</p>
+
+<p align="center">
+  <img src="docs/assets/typing.svg" width="500" alt="Jarvis Typing Effect">
 </p>
 
 ---
 
-## ✨ Experience Autonomy
+## 📱 Experience True Autonomy
 
-Jarvis AI is a high-fidelity autonomous agent that operates directly on your Android device. It uses advanced visual reasoning and a multi-agent cognitive loop to understand your screen and execute tasks on your behalf.
+Jarvis isn't just a chatbot; it's a **Sentinel**. It observes your screen, understands your intent, and executes tasks with human-like precision. By removing the friction between thought and action, Jarvis becomes your digital twin.
 
 <p align="center">
-  <img src="docs/assets/ui_1.jpg" width="45%" alt="Jarvis UI 1">
-  <img src="docs/assets/ui_2.jpg" width="45%" alt="Jarvis UI 2">
+  <table align="center">
+    <tr>
+      <td align="center">
+        <img src="docs/assets/ui_1.jpg" width="250" style="border-radius: 15px; border: 2px solid #333;" alt="Jarvis UI 1"><br>
+        <i>Intelligent Conversation</i>
+      </td>
+      <td align="center">
+        <img src="docs/assets/ui_2.jpg" width="250" style="border-radius: 15px; border: 2px solid #333;" alt="Jarvis UI 2"><br>
+        <i>Autonomous Control</i>
+      </td>
+    </tr>
+  </table>
 </p>
 
-### ⚡ Professional Task Execution
-> "Jarvis, find a upbeat song on Spotify and play it."
-> <br>— *Jarvis: Observing screen... Analyzing UI... Found Spotify... Playing 'Happy' by Pharrell Williams.*
+### ⚡ Professional Workflow Orchestration
+> **User:** "Jarvis, I'm feeling happy, play something matching."
+> <br>**Jarvis:** Opening Spotify... Analyzing Library... Playing **'Happy'** by Pharrell Williams. 🚀
 
 ---
 
-## 🚀 Key Features
+## 🚀 Advanced Capabilities
 
-### 🔍 1. Visual Spatial Reasoning (Sentinel Engine)
-Jarvis "sees" your screen just like a human does.
-*   **Hybrid Vision:** Combines Google ML Kit (OCR) with Custom TFLite models for icon recognition.
-*   **Contextual Understanding:** Identifies buttons, menus, and interactive elements even without accessibility IDs.
-*   **Real-time Scanning:** Adaptive scan rates that optimize for both speed and battery life.
+### 👁️ 1. Visionary Screen Perception
+The **Sentinel Vision Engine** uses a dual-layer approach to understand your device:
+- **Spatial Reasoning:** Locates UI elements based on visual patterns, not just static IDs.
+- **Icon Intelligence:** Custom TFLite models recognize your favorite apps and actions instantly.
+- **Live Context:** Understands the "State" of an app to decide the next logical step.
 
-### 🧠 2. Long-term Episodic Memory
-A persistent 16-module memory architecture that evolves with you.
-*   **Habit Learning:** Automatically identifies recurring workflows and proposes optimizations.
-*   **Semantic Recall:** Instant retrieval of past conversations, preferences, and social context.
-*   **Encrypted Local Store:** All memories stay on-device, protected by the Android Keystore.
+### 🧠 2. Continuous Learning Memory
+Your Jarvis grows smarter every day through its **16-Module Core**:
+- **Episodic Memory:** Recalls complex task sequences you've performed before.
+- **Preference Mapping:** Automatically learns your music, social, and professional habits.
+- **Semantic Search:** Instant context retrieval via a local vector database.
 
-### 🎮 3. Universal Control Layer
-Jarvis interacts with any app through the **ActionEngine**.
-*   **Precise Interaction:** Human-like taps, swipes, and scrolls.
-*   **Multi-App Orchestration:** Seamlessly move data between different applications.
-*   **System Mastery:** Control WiFi, Bluetooth, DND, and more without opening Settings.
+### 🛡️ 3. Hardened Security & Privacy
+- **Zero-Cloud Memory:** Your personal data never leaves your device.
+- **Biometric Vault:** Protect your agentic capabilities with Fingerprint or Face ID.
+- **Encrypted Secrets:** API keys and sensitive tokens are managed by the Android Keystore.
 
 ---
 
-## 🏗 System Architecture: The Cognitive Loop
-
-Jarvis operates on a recursive **Action-Observe-Think** cycle:
+## 🏗 System Architecture
 
 ```mermaid
 graph TD
-    User([User Intent]) --> Orb[Jarvis Orb / Overlay]
+    User([User Intent]) --> Orb[Jarvis Reactive Orb]
     Orb --> Planner{PlannerAgent}
     
-    subgraph "Cognitive Loop"
-        Planner --> Observe[VisionSkill: UI Scan]
-        Observe --> Think[LLM Reasoning: GPT-4o/Claude]
-        Think --> Memory[Vector Store: Context Recall]
+    subgraph "The Cognitive Engine"
+        Planner --> Observe[VisionSkill: Real-time UI Analysis]
+        Observe --> Think[LLM Decision: Strategy Mapping]
+        Think --> Memory[MemoryAgent: Context Injection]
         Memory --> Think
-        Think --> Act[ActionEngine: Execute Gesture]
+        Think --> Act[ActionEngine: OS-Level Interaction]
     end
     
-    Act --> Feedback[Screen State Change]
+    Act --> Feedback[State Verification]
     Feedback --> Observe
     
-    Planner --> Success([Task Complete])
+    Planner --> Success([Mission Accomplished])
 ```
 
 ---
 
-## 🔧 Technology Stack
+## 🔧 Pro Tech Stack
 
-| Layer | Technologies |
+| Layer | Technology |
 | :--- | :--- |
-| **Mobile Core** | Kotlin, Hilt, Coroutines |
-| **AI Vision** | ML Kit, TFLite (MobileNet V3) |
-| **Brain** | GPT-4o, Claude 3.5 Sonnet, Llama 3 |
-| **Memory** | ChromaDB, ONNX Runtime |
-| **UI/UX** | Glassmorphism, Lottie Animations |
+| **Logic** | Kotlin 1.9, Coroutines, Hilt |
+| **Vision** | Google ML Kit + MobileNet V3 |
 | **Backend** | Python 3.11, FastAPI, WebSockets |
+| **Memory** | ChromaDB + ONNX Embeddings |
+| **Interface** | Framer Motion & Lottie Animations |
 
 ---
 
-## 🛠 Setup Guide
+## 🛠 Quick Deployment
 
-### 1. Prerequisites
-- **Device:** Android 8.0+ (Oreo)
-- **Permissions:** Accessibility Service, Display Over Other Apps.
-- **Keys:** OpenAI or Anthropic API Key.
-
-### 2. Quick Install
 ```bash
 # Clone the repository
 git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
 
-# Build & Install
+# Initialize the Sentinel
 cd Jarvis-Ai/app
 ./gradlew installDebug
 ```
 
-> [!TIP]
-> For a detailed guide on configuring local memory and custom voice models, see our [Full Setup Guide](docs/SETUP_GUIDE.md).
-
----
-
-## 🔒 Privacy First
-
-We believe your AI should be your own.
-- **On-Device Memory:** We never upload your personal memories to our servers.
-- **Biometric Protection:** Enable Fingerprint/Face ID to lock your AI agent.
-- **Transparency:** All interactions are logged locally for your review.
+> [!IMPORTANT]
+> Ensure **Accessibility Services** are enabled for Jarvis to perform autonomous actions. See the [Setup Guide](docs/SETUP_GUIDE.md) for more.
 
 ---
 
 <p align="center">
-  <b>Developed with ❤️ by <a href="https://github.com/patil-shubham-dev">Shubham Patil</a></b><br>
-  <i>Empowering humans with autonomous intelligence.</i>
+  <b>Jarvis AI: Sentinel OS</b><br>
+  Developed with ❤️ by <a href="https://github.com/patil-shubham-dev">Shubham Patil</a><br>
+  <i>Leading the transition to Agentic Computing.</i>
 </p>
