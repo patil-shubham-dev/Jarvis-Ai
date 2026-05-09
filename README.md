@@ -1,112 +1,150 @@
-# JARVIS AI — Personal Intelligence Operating System
+# 🌌 JARVIS AI — The Autonomous Mobile Intelligence OS
+
+![Jarvis Banner](https://raw.githubusercontent.com/patil-shubham-dev/Jarvis-Ai/main/docs/assets/banner.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform: Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
-[![Version: 4.5.0 Premium](https://img.shields.io/badge/Version-4.5.0_Premium-blue.svg)](#)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://www.android.com/)
+[![Stack: Kotlin & FastAPI](https://img.shields.io/badge/Stack-Kotlin%20%7C%20FastAPI%20%7C%20Next.js-blue)](https://nextjs.org/)
+[![Version: 4.1.0 Sentinel](https://img.shields.io/badge/Version-4.1.0_Sentinel-purple.svg)](#)
+
+**Jarvis AI** is a professional-grade, autonomous mobile agent designed to transform your Android device into a self-operating personal assistant. By combining **Visual Reasoning (OCR + Labeling)**, **Multi-Step Task Planning**, and **Long-term Episodic Memory**, Jarvis doesn't just chat—it *acts*.
 
 ---
 
-## 🌌 Overview
+## 🚀 Vision: Beyond Chatbots
 
-**Jarvis AI** is a sophisticated, local-first personal intelligence layer for Android. It transforms your device from a tool into a proactive partner by combining **Long-term Episodic Memory**, **Autonomous Planning**, and **Professional Device Automation**. 
+Most AI assistants are confined to a text box. Jarvis breaks these barriers by operating directly on the OS layer, capable of navigating apps, managing system settings, and executing complex workflows through human-like interaction.
 
-Unlike traditional assistants, Jarvis operates with a "Privacy-First" philosophy—all your memories, habits, and personal data stay on your device. It bridges the gap between a chatbot and a true AI Operating System.
-
----
-
-## 🚀 Key Features
-
-### 1. Hybrid Learning & Episodic Memory (New)
-Jarvis doesn't just chat; it learns. The **Layer C: Continuous Learning Loop** implements a hybrid system:
-- **Lightweight Extraction:** Automatically distills facts, preferences, and successful workflows from every conversation.
-- **Deep Behavioral Analysis:** Periodically analyzes logs to identify recurring patterns (e.g., "Messaging boss at 9 AM when late").
-- **Proactive Routines:** Jarvis identifies habits and proactively proposes automation routines for user confirmation.
-
-### 2. Futuristic "Orb" UI/UX (New)
-The interface has been redesigned to feel like a premium, intelligent entity:
-- **The Jarvis Orb:** A central, living element in the main screen with breathing animations and dynamic states (Idle, Thinking, Acting).
-- **Glassmorphism Design:** Subtle frosted-glass chat bubbles, thin borders, and soft shadows for a minimal, premium aesthetic.
-- **Ambient Glow:** Dark matte backgrounds with radial glows that react to the AI's state.
-
-### 3. 16-Module Core Memory
-A comprehensive persistent memory architecture covering every aspect of your life:
-- **Social Graph:** Relationships and communication history.
-- **Behavioral Intelligence:** Learned habits and routines.
-- **Financial & Health:** Securely tracked personal stats.
-- **Knowledge Base:** Learned facts and research insights.
-
-### 4. Autonomous Multi-Agent Orchestration
-- **PlannerAgent:** Decomposes complex intents into executable task graphs.
-- **MemoryAgent:** Handles semantic recall and context injection.
-- **ActionEngine:** Executes human-like interactions (clicks, scrolls, typing) via Accessibility Services.
-
-### 5. Universal AI Provider (BYOK)
-Bring your own API key and switch between providers seamlessly:
-- **OpenAI** (GPT-4o, GPT-4o-mini)
-- **Anthropic** (Claude 3.5 Sonnet/Opus)
-- **Groq** (Ultra-fast Llama/Mixtral)
-- **Mistral & Nvidia** support included.
+### 🌟 Key Pillars
+*   **Observe:** Real-time screen analysis using Google ML Kit and Custom TFLite models.
+*   **Think:** Intelligent reasoning via GPT-4o, Claude 3.5, or local LLMs.
+*   **Act:** Precision control through Android Accessibility Services (Tap, Swipe, Type).
+*   **Remember:** A 16-module vector memory system that stores habits, preferences, and social graphs.
 
 ---
 
-## 🛠 Detailed Setup Manual
+## 🛠 Features Breakdown
+
+### 📱 1. Autonomous Mobile Control (Sentinel Engine)
+The core of Jarvis is the **Sentinel V4.1** engine, which enables:
+- **App Navigation:** "Open WhatsApp and tell Mom I'll be late."
+- **System Automation:** Managing WiFi, Bluetooth, DND, and Volume based on context.
+- **Visual Spatial Reasoning:** Locating buttons and icons even when their internal IDs are obfuscated.
+
+### 🧠 2. Hyper-Personalized Memory
+Jarvis maintains a persistent "Digital Twin" of your digital life:
+- **Episodic Memory:** Remembers past conversations and successful workflows.
+- **Habit Detection:** Learns your routines (e.g., "Playing Spotify when the gym WiFi connects").
+- **Semantic Retrieval:** Uses ChromaDB/Vector store to inject relevant user context into every prompt.
+
+### 🎨 3. Futuristic Glassmorphism UI
+A premium interface designed for the next generation of computing:
+- **The Jarvis Orb:** A central, reactive entity with smooth Lottie animations for different AI states.
+- **Overlay Mode:** A non-intrusive floating bubble that allows Jarvis to assist you while you use other apps.
+- **Dynamic Theming:** Deep matte aesthetics with vibrant radial glows.
+
+---
+
+## 🏗 System Architecture
+
+```mermaid
+graph TD
+    User((User Intent)) --> UI[Jarvis Overlay / Orb]
+    UI --> Planner[PlannerAgent]
+    
+    subgraph "The Cognitive Loop"
+        Planner --> Observe[VisionSkill / ML Kit]
+        Observe --> Think[LLM Engine: GPT-4o/Claude]
+        Think --> Memory[Vector Memory Store]
+        Memory --> Think
+        Think --> Act[ActionEngine / Accessibility]
+    end
+    
+    Act --> Feedback[Screen State Change]
+    Feedback --> Observe
+    
+    subgraph "Backend Services"
+        FastAPI[FastAPI Gateway]
+        Chroma[ChromaDB Vector Store]
+        Whisper[Speech-to-Text]
+    end
+    
+    Planner -.-> FastAPI
+    FastAPI <--> Chroma
+```
+
+---
+
+## 🔧 Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Mobile Core** | Kotlin, Coroutines, Jetpack Lifecycle |
+| **Dependency Injection** | Hilt |
+| **AI Vision** | Google ML Kit (OCR/Labeling), TFLite (MobileNet V3) |
+| **Backend** | Python, FastAPI, WebSockets |
+| **Vector DB** | ChromaDB, ONNX Runtime |
+| **Web UI** | Next.js 14, TailwindCSS, Framer Motion |
+| **Automation** | Android Accessibility Service |
+
+---
+
+## 🚀 Detailed Setup Guide
 
 ### 1. Prerequisites
-- **Android Device:** Android 8.0 (Oreo) or higher.
-- **Storage:** ~100MB free space.
-- **API Key:** At least one key from OpenAI, Anthropic, or Groq.
+- **Android Device:** Android 8.0+ (API 26+)
+- **Storage:** 150MB+
+- **API Keys:** OpenAI (Recommended), Anthropic, or Nvidia NIM.
 
 ### 2. Installation
-- **Option A (APK):** Download the latest release from the [Releases](https://github.com/patil-shubham-dev/Jarvis-Ai/releases) page.
-- **Option B (Source):**
-  ```bash
-  git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
-  cd Jarvis-Ai
-  ./gradlew assembleDebug
-  ```
+**From Source:**
+```bash
+# Clone the repository
+git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
 
-### 3. Essential Permissions
-For Jarvis to function as a "True Agent," you must enable:
-1. **Accessibility Service:** Required for Jarvis to "see" your screen and "act" on your behalf.
-   - *Settings > Accessibility > Installed Services > Jarvis AI > ON.*
-2. **Display Over Other Apps:** Required for the floating Jarvis Orb and status overlays.
-   - *Settings > Apps > Special Access > Display over other apps > Jarvis AI > ON.*
-3. **Microphone:** Required for voice commands and wake-word detection.
+# Build the Android APK
+cd Jarvis-Ai/app
+./gradlew assembleDebug
 
-### 4. Configuration (BYOK)
-1. Open Jarvis and tap the **Settings** (Gear) icon.
-2. Paste your API Key. Jarvis will **auto-detect** the provider.
-3. Select your preferred model (e.g., `gpt-4o`).
-4. (Optional) Add a **Picovoice AccessKey** in the Voice section for always-on "Hey Jarvis" detection.
+# Start the Backend (Optional for local memory)
+cd ../backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
----
-
-## 🧠 How it Works: The Architecture
-
-Jarvis operates on a multi-layered brain architecture:
-
-1.  **Perception Layer:** Uses `VisionSkill` and `ScreenStateEngine` to understand what's on your screen.
-2.  **Cognition Layer:** The `PlannerAgent` uses the LLM to decide the next step based on your goal and current context.
-3.  **Memory Layer:** `VectorMemoryStore` provides semantic search across your 16 modules, injecting relevant history into the prompt.
-4.  **Action Layer:** `ActionEngine` translates AI intents into actual Android gestures and system calls.
+### 3. Permissions Checklist
+To enable full autonomy, Jarvis requires:
+1.  **Accessibility Service:** Allows Jarvis to "see" and "click."
+2.  **Display Over Other Apps:** Enables the floating Jarvis Orb.
+3.  **Background Execution:** Prevents the OS from killing the agent during long tasks.
 
 ---
 
 ## 🔒 Privacy & Security
 
-- **Local-First:** Your memory modules are stored as encrypted JSON files on your device.
-- **Zero Tracking:** No telemetry or personal data is sent to our servers.
-- **Biometric Lock:** Enable in settings to protect your conversations with fingerprint/face ID.
+*   **Local-First Design:** Sensitive memory modules are stored on-device.
+*   **Encrypted Storage:** Uses Android Keystore and EncryptedSharedPreferences for API keys.
+*   **Biometric Guard:** Secure your personal AI with fingerprint or face ID.
+*   **No Data Selling:** Your interaction data belongs to you. Period.
+
+---
+
+## 🗺 Roadmap
+
+- [ ] **Phase 1:** Stable "Observe-Think-Act" loop (Done)
+- [ ] **Phase 2:** Multi-device sync & Browser control (In Progress)
+- [ ] **Phase 3:** Full Offline LLM integration (Planned)
+- [ ] **Phase 4:** proactive Habit execution (Planned)
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Whether it's adding new `Skills`, improving the `LearningEngine`, or refining the `UI`.
-1. Fork the repo.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
+We love contributors! 
+1. Fork the Project.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
 5. Open a Pull Request.
 
 ---
@@ -117,4 +155,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-**Jarvis AI — Not just a chatbot, but your digital twin.** 🚀
+<p align="center">
+  <b>Jarvis AI — Not just an assistant, but your digital twin.</b><br>
+  Developed with ❤️ by <a href="https://github.com/patil-shubham-dev">Shubham Patil</a>
+</p>

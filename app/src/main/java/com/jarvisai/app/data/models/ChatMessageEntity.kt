@@ -15,5 +15,6 @@ data class ChatMessageEntity(
     val sessionId: String = "DEFAULT_SESSION",
     val role: MessageRole,
     val content: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val isSystemUpdate: Boolean = false
 )

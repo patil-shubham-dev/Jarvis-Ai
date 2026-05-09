@@ -28,7 +28,12 @@ class CommunicationSkill(
                 val success = WhatsAppAgent.sendMessage(recipient, content)
                 SkillResult(success, if (success) "WhatsApp message sent" else "Failed to send WhatsApp message")
             }
-            else -> SkillResult(false, "Unknown communication type: $type", errorType = ErrorType.UNKNOWN)
+            "post_status" -> {
+                val text = params["text"] as? String ?: ""
+                skillManager?.postStatus(text)
+                SkillResult(true, "Status posted")
+            }
+            else -> SkillResult(false, "Unknown communication type: ${params["type"]}", errorType = ErrorType.UNKNOWN)
         }
     }
 

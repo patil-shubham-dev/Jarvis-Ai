@@ -12,16 +12,13 @@ object WhatsAppAgent {
         val accessibility = JarvisAccessibilityService.instance ?: return false
         val overlay = JarvisOverlayService.instance
 
-        overlay?.setExecutionMode(true)
-        overlay?.updateStatus("Opening WhatsApp...")
+        overlay?.setOrbState(JarvisOverlayService.OrbState.EXECUTING)
         
         try {
             // Wait for app to load
             delay(1500) 
 
             // Search for contact
-            overlay?.updateStatus("Finding $contactName...")
-            // WhatsApp's newer versions use "Ask Meta AI or Search" or just "Search"
             val searchSelectors = listOf("Search", "menu_search", "Ask Meta AI or Search", "Search…")
             var searchNodeFound = false
             for (selector in searchSelectors) {
@@ -33,7 +30,6 @@ object WhatsAppAgent {
             }
             
             if (!searchNodeFound) {
-                // Fallback to searching by ID if text fails
                 accessibility.performActionClick("com.whatsapp:id/menu_search")
             }
             delay(1000)
@@ -55,8 +51,6 @@ object WhatsAppAgent {
                 delay(1000)
 
                 // Type and send message
-                overlay?.updateStatus("Typing message...")
-                // Verification: ensure we are actually in a chat (look for "Message" input)
                 val messageInputSelectors = listOf("Message", "Entry", "com.whatsapp:id/entry")
                 var messageTyped = false
                 for (selector in messageInputSelectors) {
@@ -69,7 +63,6 @@ object WhatsAppAgent {
                 
                 if (messageTyped) {
                     delay(800)
-                    overlay?.updateStatus("Sending...")
                     val sendSelectors = listOf("Send", "send_button", "com.whatsapp:id/send")
                     for (selector in sendSelectors) {
                         if (accessibility.performActionClick(selector)) break
@@ -80,21 +73,17 @@ object WhatsAppAgent {
                 }
             }
 
-            overlay?.updateStatus("Task Complete")
+            overlay?.setOrbState(JarvisOverlayService.OrbState.SUCCESS)
             delay(1000)
-            overlay?.updateStatus("")
             
             // Return to Jarvis
             accessibility.returnToJarvis()
             return true
         } catch (e: Exception) {
             Log.e(TAG, "WhatsApp automation failed", e)
-            overlay?.updateStatus("Failed")
+            overlay?.setOrbState(JarvisOverlayService.OrbState.ERROR)
             delay(1500)
-            overlay?.updateStatus("")
             return false
-        } finally {
-            overlay?.setExecutionMode(false)
         }
     }
 }

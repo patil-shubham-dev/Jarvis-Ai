@@ -11,8 +11,8 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.jarvisai.app.api.context.ContextEngine
+import com.jarvisai.app.api.vision.LocalVisionEngine
 import com.jarvisai.app.api.context.ScreenStateEngine
-import com.jarvisai.app.core.visual.VisualEngine
 import com.jarvisai.app.core.skills.SkillManager
 import com.jarvisai.app.ui.activities.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,7 +32,7 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     lateinit var contextEngine: ContextEngine
 
     @Inject
-    lateinit var visualEngine: VisualEngine
+    lateinit var localVisionEngine: LocalVisionEngine
 
     @Inject
     lateinit var skillManager: SkillManager
@@ -67,6 +67,7 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
                 val pkg = event.packageName?.toString() ?: ""
                 contextEngine.updateForegroundApp(pkg)
                 screenStateEngine.updateState(packageName = pkg)
+                checkProactiveTriggers(pkg)
             }
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, 
             AccessibilityEvent.TYPE_VIEW_FOCUSED,
@@ -78,11 +79,70 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     }
 
     // ══════════════ ACTIONS & GESTURES ══════════════
+ 
+    /**
+     * Hybrid Click Engine: Tries node-based click first, then falls back to OCR/Visual Tap.
+     */
+    override suspend fun performHybridClick(query: String): Boolean {
+        Log.d(TAG, "Hybrid Click Attempt: $query")
+        
+        // 1. Try standard Accessibility Node click
+        val nodeClickSuccess = performActionClick(query)
+        if (nodeClickSuccess) {
+            Log.d(TAG, "Node-based click successful for: $query")
+            return verifyActionSuccess(query)
+        }
+
+        // 2. Fallback: Visual OCR Tap (MobileNet V3 + OCR)
+        Log.d(TAG, "Node-based click failed, falling back to Visual Tap for: $query")
+        val visualClickSuccess = performOcrClick(query)
+        if (visualClickSuccess) {
+            return verifyActionSuccess(query)
+        }
+
+        return false
+    }
+
+    /**
+     * Autonomous Verification Loop: Confirms UI changed after action.
+     */
+    private suspend fun verifyActionSuccess(query: String): Boolean {
+        delay(1000) // Wait for UI transition
+        
+        // Simple verification: Is the button still there and clickable?
+        val node = findNode(query)
+        val isStillThere = node != null && node.isVisibleToUser
+        
+        if (isStillThere) {
+            Log.w(TAG, "Verification failed: $query still visible. Retrying with raw tap.")
+            // Try one last raw tap if it's still there
+            val rect = Rect()
+            node?.getBoundsInScreen(rect)
+            return performTap(rect.centerX().toFloat(), rect.centerY().toFloat())
+        }
+        
+        Log.d(TAG, "Action verified: $query is no longer the primary focus.")
+        return true
+    }
+
+    /**
+     * Proactive Contextual Awareness: Detects specific app contexts.
+     */
+    private fun checkProactiveTriggers(packageName: String) {
+        val meetingApps = listOf("com.google.android.apps.meetings", "com.microsoft.teams", "us.zoom.videomeetings")
+        if (meetingApps.contains(packageName)) {
+            Log.i(TAG, "Meeting detected! Offering proactive assistance.")
+            JarvisOverlayService.instance?.showMeetingPill(true)
+        } else {
+            // Hide if we leave the meeting app
+            JarvisOverlayService.instance?.showMeetingPill(false)
+        }
+    }
 
     private suspend fun performOcrClick(text: String): Boolean {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             val bitmap = captureScreenshot() ?: return false
-            val point = visualEngine.findTextCoordinates(bitmap, text)
+            val point = localVisionEngine.findTextCoordinates(bitmap, text)
             if (point != null) {
                 return performTap(point.x.toFloat(), point.y.toFloat())
             }
@@ -185,34 +245,44 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
         return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
     }
 
-    override suspend fun captureScreenshot(): android.graphics.Bitmap? = suspendCancellableCoroutine { cont ->
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            takeScreenshot(android.view.Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
-                override fun onSuccess(screenshot: ScreenshotResult) {
-                    val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(
-                        screenshot.hardwareBuffer,
-                        screenshot.colorSpace
-                    )
-                    cont.resume(bitmap)
-                }
+    override suspend fun captureScreenshot(): android.graphics.Bitmap? = withTimeoutOrNull(5000) {
+        suspendCancellableCoroutine { cont ->
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                try {
+                    takeScreenshot(android.view.Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
+                        override fun onSuccess(screenshot: ScreenshotResult) {
+                            val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(
+                                screenshot.hardwareBuffer,
+                                screenshot.colorSpace
+                            )
+                            cont.resume(bitmap)
+                        }
 
-                override fun onFailure(errorCode: Int) {
-                    Log.e(TAG, "Screenshot failed: $errorCode")
+                        override fun onFailure(errorCode: Int) {
+                            Log.e(TAG, "Screenshot capture failed: $errorCode")
+                            cont.resume(null)
+                        }
+                    })
+                } catch (e: Exception) {
+                    Log.e(TAG, "takeScreenshot exception", e)
                     cont.resume(null)
                 }
-            })
-        } else {
-            cont.resume(null)
+            } else {
+                cont.resume(null)
+            }
         }
     }
 
     override fun performTap(x: Float, y: Float): Boolean {
+        Log.d(TAG, "Performing tap at ($x, $y)")
         val path = Path()
         path.moveTo(x, y)
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, 100))
             .build()
-        return dispatchGesture(gesture, null, null)
+        val result = dispatchGesture(gesture, null, null)
+        Log.d(TAG, "Tap result: $result")
+        return result
     }
 
     override fun performSwipe(startX: Float, startY: Float, endX: Float, endY: Float, duration: Long): Boolean {
@@ -233,16 +303,26 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     }
 
     private fun traverseNode(node: AccessibilityNodeInfo?, sb: StringBuilder, depth: Int) {
-        if (node == null) return
+        if (node == null || depth > 25) return // Safety depth cap
         
+        val className = node.className?.toString() ?: ""
         val text = node.text?.toString() ?: node.contentDescription?.toString() ?: ""
+        
+        // Skip common layout containers that don't add semantic value unless they have text
+        val isLayout = className.contains("Layout") || className.contains("ViewGroup") || className.contains("Frame")
+        
         if (text.isNotBlank()) {
-            repeat(depth) { sb.append("  ") }
-            sb.append("- [${node.className}] $text (ID: ${node.viewIdResourceName ?: "none"})\n")
+            repeat(depth % 10) { sb.append("  ") } // Limit indent
+            sb.append("- [${className.substringAfterLast('.')}] $text\n")
         }
 
+        // Only traverse children if it's not a leaf or if it's a layout
         for (i in 0 until node.childCount) {
-            traverseNode(node.getChild(i), sb, depth + 1)
+            val child = node.getChild(i)
+            if (child != null) {
+                traverseNode(child, sb, depth + 1)
+                child.recycle() // Important for performance/memory
+            }
         }
     }
 }

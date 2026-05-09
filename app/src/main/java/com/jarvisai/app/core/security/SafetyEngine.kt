@@ -22,7 +22,7 @@ class SafetyEngine @Inject constructor() {
     fun isActionSafe(step: TaskStep): SafetyResult {
         // 1. Check tool name
         if (step.toolName == "click_element") {
-            val query = (step.params["query"] as? String)?.lowercase() ?: ""
+            val query = (step.params?.get("query") as? String)?.lowercase() ?: ""
             if (dangerousKeywords.any { query.contains(it) }) {
                 return SafetyResult(false, "This action might perform a sensitive operation (e.g., $query).")
             }
@@ -30,15 +30,16 @@ class SafetyEngine @Inject constructor() {
 
         // 2. Check package name
         if (step.toolName == "open_app") {
-            val pkg = (step.params["package_name"] as? String) ?: ""
+            val pkg = (step.params?.get("package_name") as? String) ?: ""
             if (dangerousPackages.any { pkg.contains(it) }) {
                 return SafetyResult(false, "Opening this app ($pkg) is restricted for autonomous control.")
             }
         }
 
-        // 3. Financial keywords in descriptions
-        if (dangerousKeywords.any { step.description.lowercase().contains(it) }) {
-            return SafetyResult(false, "The task involves a potentially dangerous operation: ${step.description}")
+        // 3. Financial keywords in descriptions (Null-safe)
+        val description = step.description ?: ""
+        if (dangerousKeywords.any { description.lowercase().contains(it) }) {
+            return SafetyResult(false, "The task involves a potentially dangerous operation: $description")
         }
 
         return SafetyResult(true)

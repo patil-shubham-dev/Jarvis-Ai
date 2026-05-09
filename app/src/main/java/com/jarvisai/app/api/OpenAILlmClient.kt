@@ -80,6 +80,7 @@ class OpenAILlmClient @Inject constructor(
         prompt: String,
         systemContext: String,
         model: String,
+        toolsJson: JSONArray?,
         customBaseUrl: String?,
         base64Image: String?
     ): Flow<String> = callbackFlow {
@@ -120,6 +121,10 @@ class OpenAILlmClient @Inject constructor(
             put("messages", msgs)
             if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
                 put("system", systemContext)
+            }
+            
+            if (toolsJson != null && toolsJson.length() > 0) {
+                put("tools", toolsJson)
             }
         }
 

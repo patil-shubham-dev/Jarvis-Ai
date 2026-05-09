@@ -3,6 +3,7 @@ package com.jarvisai.app.ui.activities
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.speech.RecognizerIntent
 import android.view.inputmethod.EditorInfo
 import androidx.activity.result.contract.ActivityResultContracts
@@ -71,7 +72,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        startOrbBreathingAnimation()
         setupMemoryDashboard()
 
         // Adapter setup
@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Click on title to show/hide dashboard
-        binding.layoutCenterTitle.setOnClickListener {
+        binding.textTitle.setOnClickListener {
             toggleMemoryDashboard()
         }
     }
@@ -150,53 +150,10 @@ class MainActivity : AppCompatActivity() {
         binding.cardMemoryDashboard.animate().translationY(-targetY).setDuration(500).start()
     }
 
-    private fun startOrbBreathingAnimation() {
-        val orb = binding.orbGlow
-        val anim = android.view.animation.AlphaAnimation(0.4f, 0.8f).apply {
-            duration = 3000
-            repeatMode = android.view.animation.Animation.REVERSE
-            repeatCount = android.view.animation.Animation.INFINITE
-        }
-        orb.startAnimation(anim)
-        
-        // Also animate the core slightly
-        binding.orbCore.animate()
-            .scaleX(1.1f)
-            .scaleY(1.1f)
-            .setDuration(3000)
-            .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
-            .withEndAction {
-                binding.orbCore.animate()
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(3000)
-                    .start()
-            }
-            .start()
-    }
+
 
     private fun updateOrbState(isThinking: Boolean) {
-        if (isThinking) {
-            binding.orbGlow.animate()
-                .scaleX(1.3f)
-                .scaleY(1.3f)
-                .alpha(1.0f)
-                .setDuration(500)
-                .start()
-            binding.orbCore.animate()
-                .rotationBy(360f)
-                .setDuration(2000)
-                .setInterpolator(android.view.animation.LinearInterpolator())
-                .start()
-        } else {
-            binding.orbGlow.animate()
-                .scaleX(1.0f)
-                .scaleY(1.0f)
-                .alpha(0.6f)
-                .setDuration(500)
-                .start()
-            binding.orbCore.animate().cancel()
-        }
+        // Orb removed, no-op or handle other loading indicators if needed
     }
 
     private fun captureAndAnalyzeScreen() {
@@ -209,11 +166,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getScreenBitmap(): android.graphics.Bitmap? {
-        val v = window.decorView.rootView
-        v.isDrawingCacheEnabled = true
-        val bitmap = android.graphics.Bitmap.createBitmap(v.drawingCache)
-        v.isDrawingCacheEnabled = false
-        return bitmap
+        val window = window ?: return null
+        val view = window.decorView.rootView
+        val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+        val locationOfViewInWindow = IntArray(2)
+        view.getLocationInWindow(locationOfViewInWindow)
+        
+        try {
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            val latch = java.util.concurrent.CountDownLatch(1)
+            var success = false
+            
+            android.view.PixelCopy.request(
+                window,
+                android.graphics.Rect(
+                    locationOfViewInWindow[0],
+                    locationOfViewInWindow[1],
+                    locationOfViewInWindow[0] + view.width,
+                    locationOfViewInWindow[1] + view.height
+                ),
+                bitmap,
+                { copyResult ->
+                    success = copyResult == android.view.PixelCopy.SUCCESS
+                    latch.countDown()
+                },
+                handler
+            )
+            
+            latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
+            return if (success) bitmap else null
+        } catch (e: Exception) {
+            Log.e("MainActivity", "PixelCopy failed", e)
+            return null
+        }
     }
 
     private fun bitmapToBase64(bitmap: android.graphics.Bitmap): String {
@@ -236,9 +221,10 @@ class MainActivity : AppCompatActivity() {
                 // Observe Messages
                 launch {
                     viewModel.messages.collect { messages ->
-                        adapter.submitList(messages) {
-                            if (messages.isNotEmpty()) {
-                                binding.recyclerMessages.scrollToPosition(messages.size - 1)
+                        adapter.submitList(messages)
+                        if (messages.isNotEmpty()) {
+                            binding.recyclerMessages.post {
+                                binding.recyclerMessages.smoothScrollToPosition(messages.size - 1)
                             }
                         }
                     }
@@ -246,7 +232,6 @@ class MainActivity : AppCompatActivity() {
                 // Observe Loading/Streaming
                 launch {
                     viewModel.isLoading.collect { loading ->
-                        updateOrbState(loading)
                         binding.btnSend.isEnabled = !loading
                         binding.btnSend.alpha = if (loading) 0.45f else 1f
                     }
@@ -299,7 +284,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        checkAccessibilityStatus()
         updateStatus()
+    }
+
+    private fun checkAccessibilityStatus() {
+        if (com.jarvisai.app.service.JarvisAccessibilityService.instance == null) {
+            com.google.android.material.snackbar.Snackbar.make(
+                binding.root,
+                "Accessibility Service is OFF. Jarvis cannot see or control the screen.",
+                com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
+            ).setAction("ENABLE") {
+                startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }.show()
+        }
     }
 
     private fun updateStatus() {

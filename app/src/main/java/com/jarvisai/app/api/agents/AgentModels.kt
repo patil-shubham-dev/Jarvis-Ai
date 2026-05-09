@@ -11,9 +11,9 @@ data class ExecutionGraph(
 )
 
 data class TaskStep(
-    val id: String,
-    val description: String,
-    val toolName: String,
-    val params: Map<String, Any>,
-    val critical: Boolean = true
+    val id: String?,
+    val description: String?,
+    val toolName: String?,
+    val params: Map<String, Any>?,
+    val critical: Boolean? = true
 )

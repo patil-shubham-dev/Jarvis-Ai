@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ═══════════════════════════════════════ -->
-    <!--        JARVIS AI — MODERN TECH THEME    -->
+    <!--        JARVIS AI — MINIMALIST LIGHT THEME -->
     <!-- ═══════════════════════════════════════ -->
 
-    <!-- Backgrounds — Deep Modern Dark -->
-    <color name="bg_main">#0A0B10</color>
-    <color name="bg_surface">#12141C</color>
-    <color name="bg_surface_elevated">#1A1D29</color>
-    <color name="bg_card">#1A1D29</color>
-    <color name="bg_overlay">#CC0A0B10</color>
-    <color name="bg_pill_input">#1A1D29</color>
+    <!-- Backgrounds — Pure Light (ChatGPT/Claude Style) -->
+    <color name="bg_main">#FFFFFF</color>
+    <color name="bg_surface">#F9F9F9</color>
+    <color name="bg_surface_elevated">#FFFFFF</color>
+    <color name="bg_card">#F7F7F8</color>
+    <color name="bg_overlay">#80FFFFFF</color>
+    <color name="bg_pill_input">#FFFFFF</color>
 
-    <!-- Primary Brand — Tech Cyan & Electric Blue -->
-    <color name="jarvis_primary">#00E5FF</color>
-    <color name="jarvis_accent">#00E5FF</color>
+    <!-- Primary Brand — Sophisticated Teal & Blue -->
+    <color name="jarvis_primary">#007AFF</color> <!-- iOS Blue for primary -->
+    <color name="jarvis_accent">#00A67E</color>  <!-- ChatGPT Green for accent -->
     
-    <!-- Text — Clean High-Contrast -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0B3B8</color>
-    <color name="text_hint">#606770</color>
-    <color name="text_error">#FF5252</color>
+    <!-- Text — Modern High-Contrast -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#4D4D4D</color>
+    <color name="text_hint">#8E8E93</color>
+    <color name="text_error">#FF3B30</color>
 
     <!-- Chat Elements -->
-    <color name="bubble_user">#2979FF</color>
-    <color name="bubble_jarvis">#00000000</color>
+    <color name="bubble_user">#F4F4F4</color>
+    <color name="bubble_jarvis">#FFFFFF</color>
     
     <!-- Icons -->
-    <color name="icon_primary">#00E5FF</color>
-    <color name="icon_secondary">#B0B3B8</color>
+    <color name="icon_primary">#4D4D4D</color>
+    <color name="icon_secondary">#8E8E93</color>
 
     <!-- Dividers & Borders -->
-    <color name="divider">#2A2E3E</color>
-    <color name="border_subtle">#2A2E3E</color>
-    <color name="border_active">#00E5FF</color>
+    <color name="divider">#E5E5E5</color>
+    <color name="border_subtle">#E5E5E5</color>
+    <color name="border_active">#007AFF</color>
 
     <!-- Status -->
-    <color name="status_success">#00C853</color>
-    <color name="status_warning">#FFD600</color>
-    <color name="status_error">#FF5252</color>
-    <color name="status_info">#2979FF</color>
+    <color name="status_success">#34C759</color>
+    <color name="status_warning">#FFCC00</color>
+    <color name="status_error">#FF3B30</color>
+    <color name="status_info">#007AFF</color>
 
     <!-- Transparent -->
     <color name="transparent">#00000000</color>

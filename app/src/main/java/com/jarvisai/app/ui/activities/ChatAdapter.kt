@@ -68,11 +68,39 @@ class ChatAdapter : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatMessag
                 message.content
             }
 
+            // Styling for system updates (autonomous logs)
+            if (message.isSystemUpdate) {
+                binding.imageAvatar.visibility = android.view.View.GONE
+                binding.textAssistantName.visibility = android.view.View.GONE
+                binding.textTimestamp.visibility = android.view.View.GONE
+                binding.root.setPadding(48, 4, 16, 4) // Indent log entries
+                
+                // Use a more subtle style for logs
+                binding.textMessage.textSize = 13f
+                binding.textMessage.alpha = 0.7f
+                (binding.textMessage.parent.parent as? com.google.android.material.card.MaterialCardView)?.apply {
+                    setCardBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    strokeWidth = 0
+                }
+            } else {
+                binding.imageAvatar.visibility = android.view.View.VISIBLE
+                binding.textAssistantName.visibility = android.view.View.VISIBLE
+                binding.textTimestamp.visibility = android.view.View.VISIBLE
+                binding.root.setPadding(16, 16, 16, 16)
+                binding.textMessage.textSize = 15f
+                binding.textMessage.alpha = 1f
+                (binding.textMessage.parent.parent as? com.google.android.material.card.MaterialCardView)?.apply {
+                    setCardBackgroundColor(android.graphics.Color.WHITE)
+                    strokeColor = android.graphics.Color.parseColor("#E5E5E5")
+                    strokeWidth = 1
+                }
+            }
+
             if (displayContent == THINKING_PLACEHOLDER) {
                 startThinkingAnimation(binding.textMessage)
             } else {
                 stopThinkingAnimation()
-                binding.textMessage.alpha = 1f
+                binding.textMessage.alpha = if (message.isSystemUpdate) 0.7f else 1f
                 markwon?.setMarkdown(binding.textMessage, displayContent)
             }
             binding.textTimestamp.text = formatTime(message.timestamp)

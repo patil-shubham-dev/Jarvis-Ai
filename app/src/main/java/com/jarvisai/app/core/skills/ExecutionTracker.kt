@@ -19,8 +19,8 @@ class ExecutionTracker @Inject constructor() {
     )
 
     data class Step(
-        val description: String,
-        val skillName: String,
+        val description: String?,
+        val skillName: String?,
         val result: SkillResult? = null,
         val timestamp: Long = System.currentTimeMillis()
     )
@@ -36,8 +36,8 @@ class ExecutionTracker @Inject constructor() {
         Log.d("ExecutionTracker", "New Goal: $goal")
     }
 
-    fun addStep(description: String, skillName: String) {
-        currentState?.steps?.add(Step(description, skillName))
+    fun addStep(description: String?, skillName: String?) {
+        currentState?.steps?.add(Step(description ?: "Action", skillName ?: "unknown"))
     }
 
     fun updateLastStep(result: SkillResult) {

@@ -20,6 +20,7 @@ interface LlmClient {
         prompt: String,
         systemContext: String,
         model: String,
+        toolsJson: JSONArray? = null,
         customBaseUrl: String? = null,
         base64Image: String? = null
     ): Flow<String>

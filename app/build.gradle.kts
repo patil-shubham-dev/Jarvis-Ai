@@ -135,9 +135,10 @@ dependencies {
     // Animations - Lottie
     implementation("com.airbnb.android:lottie:6.3.0")
 
-    // Google ML Kit - Text Recognition (OCR) for on-device semantic awareness
-    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.0")
-    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
+    // Google ML Kit - Bundled versions for zero-dependency local vision
+    implementation("com.google.mlkit:text-recognition:16.0.0") 
+    implementation("com.google.mlkit:image-labeling:17.0.9")
+    implementation("com.google.mlkit:image-labeling-custom:17.0.3")
 
     // Testing
 

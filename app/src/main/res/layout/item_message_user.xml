@@ -13,8 +13,8 @@
         android:layout_height="wrap_content"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:cardBackgroundColor="#2AFFFFFF"
-        app:strokeColor="#30FFFFFF"
+        app:cardBackgroundColor="@color/bubble_user"
+        app:strokeColor="@color/divider"
         app:strokeWidth="1dp">
 
         <TextView

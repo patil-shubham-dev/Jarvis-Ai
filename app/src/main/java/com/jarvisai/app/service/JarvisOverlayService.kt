@@ -16,19 +16,31 @@ import android.view.animation.AnimationSet
 import com.jarvisai.app.R
 import com.jarvisai.app.notifications.JarvisNotificationManager
 import com.jarvisai.app.ui.activities.MainActivity
+import kotlinx.coroutines.*
 
+import com.jarvisai.app.core.skills.SkillManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
 class JarvisOverlayService : Service() {
+
+    @Inject
+    lateinit var skillManager: SkillManager
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
     private var borderView: View? = null
     private var visualizerView: com.jarvisai.app.ui.views.ExecutionVisualizerView? = null
     private var timelineView: View? = null
+    private var meetingPillView: View? = null
     private var isTaskRunning = false
-    private var currentOrbState = OrbState.IDLE
+    private var currentOrbState = OrbState.HIDDEN
 
     enum class OrbState {
-        IDLE, LISTENING, THINKING, ANALYZING, EXECUTING, ERROR
+        HIDDEN, IDLE, LISTENING, THINKING, ANALYZING, EXECUTING, SUCCESS, ERROR
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -46,16 +58,18 @@ class JarvisOverlayService : Service() {
             startForeground(NOTIF_ID, buildNotification())
         }
         
-        try {
-            showOverlay()
-        } catch (e: Exception) {
-            android.util.Log.e("JarvisOverlay", "Failed to show overlay: ${e.message}")
-            stopSelf()
-        }
+        // Overlay is hidden by default now
+        skillManager.setOverlay(this)
     }
 
+    private var hideRunnable: Runnable? = null
+
     private fun showOverlay() {
-        if (overlayView != null) return // Already showing
+        if (overlayView != null) {
+            overlayView?.animate()?.alpha(1f)?.setDuration(300)?.start()
+            resetAutoHideTimer()
+            return
+        }
 
         overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_bubble, null)
 
@@ -63,7 +77,10 @@ class JarvisOverlayService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.BOTTOM or Gravity.END
@@ -77,6 +94,7 @@ class JarvisOverlayService : Service() {
         var initialTouchY = 0f
 
         overlayView?.setOnTouchListener { _, event ->
+            resetAutoHideTimer()
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> {
                     initialX = params.x
@@ -107,9 +125,24 @@ class JarvisOverlayService : Service() {
 
         try {
             windowManager?.addView(overlayView, params)
+            resetAutoHideTimer()
         } catch (e: Exception) {
             overlayView = null
         }
+    }
+
+    private fun resetAutoHideTimer() {
+        hideRunnable?.let { handler.removeCallbacks(it) }
+        
+        // Don't hide if task is running or Jarvis is talking/listening
+        if (isTaskRunning || currentOrbState == OrbState.LISTENING || currentOrbState == OrbState.THINKING || currentOrbState == OrbState.ANALYZING || currentOrbState == OrbState.EXECUTING) return
+
+        hideRunnable = Runnable {
+            overlayView?.animate()?.alpha(0f)?.setDuration(1000)?.withEndAction {
+                hideOverlay()
+            }?.start()
+        }
+        handler.postDelayed(hideRunnable!!, 5000)
     }
 
     /**
@@ -131,37 +164,74 @@ class JarvisOverlayService : Service() {
         }
     }
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
     fun setOrbState(state: OrbState) {
         currentOrbState = state
-        val orbGlow = overlayView?.findViewById<View>(R.id.orb_glow) ?: return
-        val orbCore = overlayView?.findViewById<View>(R.id.orb_core) ?: return
-
-        orbGlow.clearAnimation()
-        
-        when (state) {
-            OrbState.IDLE -> {
-                orbGlow.alpha = 0.6f
+        handler.post {
+            val currentOverlay = overlayView
+            if (state == OrbState.HIDDEN) {
+                hideOverlay()
+                return@post
             }
-            OrbState.LISTENING -> {
-                startBreathingAnimation(orbGlow)
+            
+            if (currentOverlay == null) {
+                showOverlay()
             }
-            OrbState.THINKING -> {
-                startPulseAnimation(orbGlow, 1.2f)
-                showBorder(android.graphics.Color.parseColor("#BB86FC")) // Purple for thinking
+            
+            val orbGlow = overlayView?.findViewById<View>(R.id.orb_glow) ?: return@post
+            orbGlow.clearAnimation()
+            
+            when (state) {
+                OrbState.IDLE -> {
+                    orbGlow.alpha = 0.6f
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
+                }
+                OrbState.LISTENING -> {
+                    startBreathingAnimation(orbGlow)
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
+                }
+                OrbState.THINKING -> {
+                    startPulseAnimation(orbGlow, 1.2f)
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#BB86FC"))
+                    showBorder(android.graphics.Color.parseColor("#BB86FC"))
+                }
+                OrbState.ANALYZING -> {
+                    startPulseAnimation(orbGlow, 1.3f)
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#03DAC5"))
+                    showBorder(android.graphics.Color.parseColor("#03DAC5"))
+                }
+                OrbState.EXECUTING -> {
+                    startPulseAnimation(orbGlow, 1.4f)
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
+                    showBorder(android.graphics.Color.parseColor("#00D4FF"))
+                }
+                OrbState.SUCCESS -> {
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.GREEN)
+                    startPulseAnimation(orbGlow, 1.2f)
+                    handler.postDelayed({ hideOverlay() }, 2000)
+                }
+                OrbState.ERROR -> {
+                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.RED)
+                    startPulseAnimation(orbGlow, 1.1f)
+                }
+                OrbState.HIDDEN -> {
+                    hideOverlay()
+                }
             }
-            OrbState.ANALYZING -> {
-                startPulseAnimation(orbGlow, 1.3f)
-                showBorder(android.graphics.Color.parseColor("#03DAC5")) // Teal for vision
-            }
-            OrbState.EXECUTING -> {
-                startPulseAnimation(orbGlow, 1.4f)
-                showBorder(android.graphics.Color.parseColor("#00D4FF")) // Blue for execution
-            }
-            OrbState.ERROR -> {
-                orbGlow.setBackgroundColor(android.graphics.Color.RED)
-                startPulseAnimation(orbGlow, 1.1f)
-            }
+            resetAutoHideTimer()
         }
+    }
+
+    private fun hideOverlay() {
+        overlayView?.animate()?.alpha(0f)?.setDuration(500)?.withEndAction {
+            try {
+                windowManager?.removeView(overlayView)
+            } catch (e: Exception) { /* Ignore */ }
+            overlayView = null
+        }?.start()
+        hideBorder()
+        hideTimeline()
     }
 
     private fun startBreathingAnimation(view: View) {
@@ -252,9 +322,56 @@ class JarvisOverlayService : Service() {
     }
 
     /**
-     * Updates the status message shown on the overlay bubble.
+     * Proactive Meeting Intelligence: Shows a pill when a meeting is detected.
      */
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    fun showMeetingPill(active: Boolean) {
+        handler.post {
+            if (active) {
+                if (meetingPillView != null) return@post
+                
+                meetingPillView = LayoutInflater.from(this).inflate(R.layout.layout_proactive_pill, null)
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                    y = 60
+                }
+                
+                meetingPillView?.findViewById<TextView>(R.id.pill_text)?.text = "Start Meeting Memo?"
+                meetingPillView?.setOnClickListener {
+                    startMeetingMemo()
+                }
+                
+                try {
+                    windowManager?.addView(meetingPillView, params)
+                    meetingPillView?.alpha = 0f
+                    meetingPillView?.animate()?.alpha(1f)?.setDuration(500)?.start()
+                } catch (e: Exception) {
+                    meetingPillView = null
+                }
+            } else {
+                meetingPillView?.animate()?.alpha(0f)?.setDuration(500)?.withEndAction {
+                    try {
+                        windowManager?.removeView(meetingPillView)
+                    } catch (e: Exception) { }
+                    meetingPillView = null
+                }?.start()
+            }
+        }
+    }
+
+    private fun startMeetingMemo() {
+        showMeetingPill(false)
+        updateStatus("Initializing Meeting Memo...")
+        // Call Skill via SkillManager
+        serviceScope.launch {
+            skillManager.runSkill("meeting_memo", emptyMap())
+        }
+    }
     private var typingRunnable: Runnable? = null
 
     fun updateStatus(message: String) {
@@ -365,6 +482,7 @@ class JarvisOverlayService : Service() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         overlayView?.let { 
             try {
                 windowManager?.removeView(it)

@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Outer Glow -->
+    <!-- Sophisticated Outer Glow -->
     <item>
         <shape android:shape="oval">
             <gradient
                 android:type="radial"
-                android:gradientRadius="40dp"
-                android:startColor="#4000D4FF"
-                android:endColor="#0000D4FF" />
+                android:gradientRadius="48dp"
+                android:startColor="#2000D4FF"
+                android:endColor="#00000000" />
         </shape>
     </item>
     
-    <!-- Inner Core -->
-    <item android:top="8dp" android:bottom="8dp" android:left="8dp" android:right="8dp">
+    <!-- Dark Premium Core -->
+    <item android:top="6dp" android:bottom="6dp" android:left="6dp" android:right="6dp">
         <shape android:shape="oval">
             <gradient
-                android:type="radial"
-                android:gradientRadius="24dp"
-                android:startColor="#FF00D4FF"
-                android:centerColor="#8000D4FF"
-                android:endColor="#4000D4FF" />
-            <stroke android:width="1dp" android:color="#80FFFFFF" />
+                android:type="linear"
+                android:angle="45"
+                android:startColor="#FF0A0A0A"
+                android:centerColor="#FF121212"
+                android:endColor="#FF1A1A1A" />
+            <stroke android:width="1dp" android:color="#3300D4FF" />
+        </shape>
+    </item>
+
+    <!-- Center Pulse Layer (Tinted dynamically in code) -->
+    <item android:top="16dp" android:bottom="16dp" android:left="16dp" android:right="16dp">
+        <shape android:shape="oval">
+            <solid android:color="#4000D4FF" />
         </shape>
     </item>
 </layer-list>

@@ -28,7 +28,7 @@ import kotlinx.coroutines.delay
 class PlannerAgent @Inject constructor(
     @ApplicationContext private val context: Context,
     private val llmClient: LlmClient,
-    private val skillManager: SkillManager,
+    private val skillManager: dagger.Lazy<SkillManager>,
     private val executionTracker: ExecutionTracker,
     private val screenStateEngine: ScreenStateEngine,
     private val safetyEngine: SafetyEngine,
@@ -47,65 +47,91 @@ class PlannerAgent @Inject constructor(
         val maxIterations = 15 // Safety cap
 
         try {
-            updateOverlay("Analyzing goal: $userInput")
+            if (com.jarvisai.app.service.JarvisAccessibilityService.instance == null) {
+                isRunning = false
+                return "The Accessibility Service is not active. Please enable Jarvis in your device settings."
+            }
+            JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.THINKING)
             
             while (iteration < maxIterations) {
                 iteration++
-                Log.d("PlannerAgent", "Starting iteration $iteration")
+                Log.d("PlannerAgent", "Iteration $iteration")
 
-                // 1. Observe (Local Fast Vision)
-                updateOverlay("Observing screen state...")
-                val screenContent = skillManager.runSkill("see_screen", emptyMap()).message
+                // 1. Observe
+                JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.ANALYZING)
+                val screenContent = skillManager.get().runSkill("see_screen", emptyMap()).message
                 val deviceState = screenStateEngine.getCurrentContextSummary()
                 
                 // 2. Think
-                updateOverlay("Thinking about next step...")
+                JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.THINKING)
                 val nextStep = decideNextStep(userInput, screenContent, deviceState)
                     ?: break // Goal achieved or stuck
 
                 if (nextStep.toolName == "DONE") {
                     executionTracker.completeGoal()
-                    updateOverlay("Task complete! ✅")
-                    returnToJarvis(nextStep.description)
-                    return nextStep.description
+                    JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.SUCCESS)
+                    val finalDesc = nextStep.description ?: "Goal achieved."
+                    returnToJarvis(finalDesc)
+                    return finalDesc
                 }
 
                 // 3. Safety Check
                 val safetyCheck = safetyEngine.isActionSafe(nextStep)
                 if (!safetyCheck.isSafe) {
-                    updateOverlay("Safety Block: ${safetyCheck.reason}")
+                    JarvisOverlayService.instance?.updateStatus("Safety Block: ${safetyCheck.reason}")
                     executionTracker.failGoal("Safety Block: ${safetyCheck.reason}")
+                    JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.ERROR)
                     return "Safety Pause: ${safetyCheck.reason}"
                 }
 
                 // 4. Act
-                updateOverlay("Acting: ${nextStep.description}")
-                executionTracker.addStep(nextStep.description, nextStep.toolName)
-                val result = skillManager.runSkill(nextStep.toolName, nextStep.params)
-                executionTracker.updateLastStep(result)
-
-                // 5. Verify & Adapt (Improvement 4: Diagnosis)
-                if (!result.success) {
-                    updateOverlay("Step failed. Diagnosing...")
-                    Log.w("PlannerAgent", "Step failed: ${result.message}. Attempting recovery...")
-                    
-                    // Call vision specifically to see why it failed
-                    val diagnosis = skillManager.runSkill("see_screen", emptyMap()).message
-                    updateOverlay("Attempting recovery based on visual state.")
-                    delay(1000)
-                    actionEngine.execute("press back")
+                if (nextStep.toolName.isNullOrBlank()) {
+                    Log.w("PlannerAgent", "Received step with missing toolName")
+                    break
                 }
                 
-                delay(800) // Fast enough but visible
+                JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.EXECUTING)
+                executionTracker.addStep(nextStep.description, nextStep.toolName)
+                
+                // Add to chat as a status update
+                skillManager.get().runSkill("communication", mapOf(
+                    "type" to "post_status",
+                    "text" to "• ${nextStep.description ?: "Executing ${nextStep.toolName}"}"
+                ))
+
+                val tool = nextStep.toolName ?: "unknown"
+                val params = nextStep.params ?: emptyMap()
+                val result = skillManager.get().runSkill(tool, params)
+                executionTracker.updateLastStep(result)
+
+                // 5. Verify & Adapt
+                if (!result.success) {
+                    Log.w("PlannerAgent", "Step failed: ${result.message}. Attempting recovery...")
+                    skillManager.get().runSkill("communication", mapOf(
+                        "type" to "post_status",
+                        "text" to "⚠️ ${result.message}. Retrying..."
+                    ))
+                    JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.ANALYZING)
+                    delay(1000)
+                    actionEngine.execute("press back")
+                } else {
+                    // Update the status to show success
+                    skillManager.get().runSkill("communication", mapOf(
+                        "type" to "post_status",
+                        "text" to "✅ ${nextStep.description}"
+                    ))
+                }
+                
+                delay(800)
             }
         } catch (e: Exception) {
-            updateOverlay("Error: ${e.message}")
+            JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.ERROR)
             return "Execution Error: ${e.message}"
         } finally {
             isRunning = false
         }
 
-        return "Task finished or reached maximum steps."
+        return "Task finished."
     }
 
     private fun updateOverlay(msg: String) {
@@ -113,11 +139,10 @@ class PlannerAgent @Inject constructor(
     }
 
     private suspend fun returnToJarvis(summary: String) {
-        delay(1000)
+        delay(1500)
         actionEngine.execute("press home")
         delay(500)
-        skillManager.setOverlay(JarvisOverlayService.instance)
-        updateOverlay("Done: $summary")
+        JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.SUCCESS)
     }
 
     private suspend fun decideNextStep(
@@ -129,25 +154,43 @@ class PlannerAgent @Inject constructor(
         val baseUrl = SecurePrefs.getBaseUrl(context)
         
         // Improvement 1: Dynamic Tooling
-        val availableTools = skillManager.getToolDefinitions()
+        val availableTools = skillManager.get().getToolDefinitions()
 
         val systemPrompt = """
-            You are the JARVIS Autonomous Brain.
+            You are the JARVIS Autonomous Brain (Sentinel V4.1).
+            You are a REAL Android Agent, not a simulator.
+            
             GOAL: $goal
-            $deviceState
-            OBSERVATION: $screenObservation
+            DEVICE STATE: $deviceState
+            
+            SCREEN OBSERVATION (Accessibility + Vision):
+            $screenObservation
             
             HISTORY:
             ${executionTracker.getHistorySummary()}
             
-            Decide the SINGLE next atomic action to get closer to the goal.
-            If the goal is achieved, return toolName: "DONE".
+            INSTRUCTIONS:
+            1. Analyze the screen. Identify the coordinates of elements you need to interact with.
+            2. If you need to find a contact, look for the Search icon or search bar.
+            3. If you are in the correct app but not on the target screen, navigate (click/swipe).
+            4. If the task is completed, return toolName: "DONE" with a concise success summary.
+            5. Return ONLY a JSON TaskStep.
             
-            Available Tools:
+            AVAILABLE TOOLS:
             $availableTools
+            - tap_at(x, y): Click specific coordinates.
+            - type_at(content, x, y): Click then type text.
+            - swipe_at(x, y, x2, y2): Scroll or swipe.
+            - DONE: Goal reached.
             
-            Return ONLY a JSON TaskStep:
-            { "id": "next", "description": "Short description of why", "toolName": "tool", "params": { ... } }
+            RESPONSE FORMAT (JSON ONLY):
+            { 
+              "id": "next", 
+              "thought": "I see the search bar at [500, 120]. I will click it to find the contact.",
+              "description": "Searching for contact...", 
+              "toolName": "tool", 
+              "params": { ... } 
+            }
         """.trimIndent()
 
         val model = SecurePrefs.getSelectedModel(context) ?: "gpt-4o"
@@ -165,12 +208,16 @@ class PlannerAgent @Inject constructor(
 
     fun getToolDefinitions(): JSONArray {
         val jsonArray = JSONArray()
-        val tools = skillManager.getToolDefinitions().split("\n")
+        val tools = skillManager.get().getToolDefinitions().split("\n")
         tools.forEach { tool ->
             if (tool.isNotBlank()) {
                 jsonArray.put(tool.removePrefix("- ").trim())
             }
         }
         return jsonArray
+    }
+
+    fun getToolDefinitionsText(): String {
+        return skillManager.get().getToolDefinitions()
     }
 }

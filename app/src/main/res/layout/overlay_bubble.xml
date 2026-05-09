@@ -6,16 +6,16 @@
     android:layout_height="wrap_content"
     android:clipChildren="false">
 
-    <!-- Status Bubble (Appears when JARVIS is working) -->
+    <!-- Premium Status Bubble (Glassmorphism effect) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/status_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="16dp"
         android:visibility="gone"
-        app:cardBackgroundColor="#CC000000"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
+        app:cardBackgroundColor="#AA0A0A0A"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="@id/icon_container"
         app:layout_constraintEnd_toStartOf="@id/icon_container"
         app:layout_constraintTop_toTopOf="@id/icon_container">
@@ -25,8 +25,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="10dp"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="12dp"
             android:background="@drawable/bg_status_pill">
 
             <TextView
@@ -34,35 +34,38 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Thinking..."
-                android:textColor="#FFFFFF"
+                android:textColor="#E0FFFFFF"
                 android:textSize="14sp"
+                android:letterSpacing="0.02"
                 android:fontFamily="sans-serif-medium" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
     <FrameLayout
         android:id="@+id/icon_container"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <!-- Outer Breathing/Glow Layer -->
         <View
             android:id="@+id/orb_glow"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:background="@drawable/bg_jarvis_orb"
-            android:alpha="0.8" />
+            android:alpha="0.7" />
 
+        <!-- Static Core Logo (Minimal) -->
         <ImageView
             android:id="@+id/orb_core"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_jarvis_logo"
-            android:padding="8dp"
-            android:tint="#FFFFFF"
-            android:elevation="10dp" />
+            android:padding="4dp"
+            android:alpha="0.9"
+            android:elevation="12dp" />
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

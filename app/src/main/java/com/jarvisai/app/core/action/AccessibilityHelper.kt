@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 interface AccessibilityHelper {
     fun findNode(query: String): AccessibilityNodeInfo?
     fun performActionClick(query: String): Boolean
+    suspend fun performHybridClick(query: String): Boolean
     fun typeText(node: AccessibilityNodeInfo, text: String): Boolean
     suspend fun captureScreenshot(): android.graphics.Bitmap?
     fun performTap(x: Float, y: Float): Boolean

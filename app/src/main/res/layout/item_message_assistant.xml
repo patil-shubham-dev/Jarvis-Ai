@@ -18,10 +18,10 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="#1AFFFFFF"
+        app:cardBackgroundColor="@color/bubble_jarvis"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:strokeColor="#20FFFFFF"
+        app:strokeColor="@color/divider"
         app:strokeWidth="1dp">
 
         <LinearLayout

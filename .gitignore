@@ -115,3 +115,32 @@ build_log.txt
 build_log_full.txt
 build_output.txt
 logcat_output.txt
+
+# ──── Python / Backend ────
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache/
+
+# ──── Frontend / Node ────
+node_modules/
+.next/
+out/
+dist/
+.npm
+.eslintcache
+.stylelintcache
+*.tsbuildinfo

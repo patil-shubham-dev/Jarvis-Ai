@@ -17,6 +17,7 @@ import com.jarvisai.app.core.action.agents.FileAgent
 import com.jarvisai.app.core.routines.RoutineEngine
 import com.jarvisai.app.service.JarvisAccessibilityService
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
@@ -46,6 +47,9 @@ class ActionEngine @Inject constructor(
         ROUTINE,
         SHARE_FILE,
         VISUAL_SEARCH,
+        TAP_AT,
+        SWIPE_AT,
+        TYPE_AT,
         UNKNOWN
     }
 
@@ -55,7 +59,11 @@ class ActionEngine @Inject constructor(
         val content: String? = null,
         val timeOrDate: String? = null,
         val triggerAtMillis: Long? = null,
-        val sessionId: String? = null
+        val sessionId: String? = null,
+        val x: Float? = null,
+        val y: Float? = null,
+        val x2: Float? = null,
+        val y2: Float? = null
     )
 
     suspend fun execute(command: String): Boolean {
@@ -97,6 +105,30 @@ class ActionEngine @Inject constructor(
                 ActionType.ROUTINE -> routineEngine.get().executeRoutine(intent.target ?: return false)
                 ActionType.SHARE_FILE -> executeShareFile(intent.target, intent.content)
                 ActionType.VISUAL_SEARCH -> executeVisualSearch(intent.content ?: return false)
+                ActionType.TAP_AT -> {
+                    val service = JarvisAccessibilityService.instance ?: return false
+                    service.performTap(intent.x ?: 0f, intent.y ?: 0f)
+                }
+                ActionType.SWIPE_AT -> {
+                    val service = JarvisAccessibilityService.instance ?: return false
+                    service.performSwipe(intent.x ?: 0f, intent.y ?: 0f, intent.x2 ?: 0f, intent.y2 ?: 0f, 500)
+                }
+                ActionType.TYPE_AT -> {
+                    val service = JarvisAccessibilityService.instance ?: return false
+                    // If coordinate is provided, tap then type
+                    if (intent.x != null && intent.y != null) {
+                        service.performTap(intent.x, intent.y)
+                        delay(300)
+                    }
+                    // For now, use global text entry or focused node
+                    val root = service.rootInActiveWindow ?: return false
+                    val focused = root.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+                    if (focused != null) {
+                        service.typeText(focused, intent.content ?: "")
+                    } else {
+                        false
+                    }
+                }
                 ActionType.UNKNOWN -> {
                     Log.w(TAG, "Unknown action type")
                     false

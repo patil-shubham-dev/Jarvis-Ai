@@ -5,6 +5,9 @@ import android.util.Log
 import com.jarvisai.app.core.action.AccessibilityHelper
 import com.jarvisai.app.service.JarvisOverlayService
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * Foundation for all autonomous skills in Sentinel V2.
@@ -16,6 +19,8 @@ abstract class BaseSkill(
 ) {
     protected val TAG = this::class.java.simpleName
     internal var overlay: JarvisOverlayService? = null
+    internal var skillManager: SkillManager? = null
+    internal var currentSkillName: String? = null
 
     /**
      * Executes the skill with the given parameters.
@@ -56,6 +61,10 @@ abstract class BaseSkill(
 
     protected fun updateStatus(msg: String) {
         overlay?.updateStatus(msg)
+        // Also pipe to chat history if it's a significant update
+        CoroutineScope(Dispatchers.IO).launch {
+            skillManager?.postStatus(msg)
+        }
     }
 }
 
