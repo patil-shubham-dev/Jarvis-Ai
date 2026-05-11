@@ -55,6 +55,10 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
         Log.d(TAG, "Service Connected")
         instance = this
         mainExecutor = androidx.core.content.ContextCompat.getMainExecutor(this)
+        
+        // Keep service alive with a notification (Crucial for Realme/Oppo)
+        showForegroundNotification()
+
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPES_ALL_MASK
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
@@ -67,6 +71,23 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
         serviceInfo = info
         
         skillManager.initialize(this)
+    }
+
+    private fun showForegroundNotification() {
+        val channelId = "jarvis_service"
+        val notification = androidx.core.app.NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Jarvis Sentinel Active")
+            .setContentText("Vision and device control are active.")
+            .setSmallIcon(com.jarvisai.app.R.drawable.ic_launcher_foreground)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+        
+        // We use a high ID to avoid conflicts
+        // Note: Accessibility services don't strictly require startForeground to stay alive,
+        // but showing a notification makes the system treat it as "Active".
+        val nm = getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        nm.notify(991, notification)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
