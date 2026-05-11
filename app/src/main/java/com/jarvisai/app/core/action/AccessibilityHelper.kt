@@ -14,4 +14,5 @@ interface AccessibilityHelper {
     fun performTap(x: Float, y: Float): Boolean
     fun performSwipe(startX: Float, startY: Float, endX: Float, endY: Float, duration: Long = 300): Boolean
     fun getScreenContent(): String
+    fun getScreenNodes(): List<com.jarvisai.app.api.context.ScreenStateEngine.NodeSummary>
 }

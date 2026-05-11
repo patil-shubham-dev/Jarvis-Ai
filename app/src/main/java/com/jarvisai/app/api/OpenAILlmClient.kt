@@ -163,14 +163,13 @@ class OpenAILlmClient @Inject constructor(
         awaitClose { eventSource.cancel() }
     }
 
-    override suspend fun getCompletion(
+    override suspend fun getChatCompletion(
         apiKey: String,
-        prompt: String,
+        messages: List<Message>,
         systemContext: String,
         model: String,
         toolsJson: JSONArray?,
-        customBaseUrl: String?,
-        base64Image: String?
+        customBaseUrl: String?
     ): String {
         val provider = ModelDetector.detect(apiKey, customBaseUrl)
         val baseUrl = provider.effectiveBaseUrl.trimEnd('/')
@@ -179,7 +178,7 @@ class OpenAILlmClient @Inject constructor(
         val bodyJson = JSONObject().apply {
             put("model", model)
             put("max_tokens", if (provider.provider == ModelDetector.Provider.NVIDIA) 512 else 1024)
-            put("temperature", 0.0) // Deterministic for tool calls
+            put("temperature", 0.0) 
             
             if (toolsJson != null && toolsJson.length() > 0) {
                 if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
@@ -199,41 +198,43 @@ class OpenAILlmClient @Inject constructor(
                 }
             }
 
+            val messagesArray = JSONArray()
             if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
                 put("system", systemContext)
-                put("messages", JSONArray().apply {
-                    put(JSONObject().apply {
-                        put("role", "user")
-                        if (base64Image != null) {
+                messages.forEach { msg ->
+                    messagesArray.put(JSONObject().apply {
+                        put("role", msg.role)
+                        if (msg.imageUrl != null) {
                             put("content", JSONArray().apply {
-                                put(JSONObject().put("type", "text").put("text", prompt))
+                                put(JSONObject().put("type", "text").put("text", msg.content))
                                 put(JSONObject().put("type", "image").put("source", JSONObject().apply {
                                     put("type", "base64")
                                     put("media_type", "image/jpeg")
-                                    put("data", base64Image)
+                                    put("data", msg.imageUrl)
                                 }))
                             })
                         } else {
-                            put("content", prompt)
+                            put("content", msg.content)
                         }
                     })
-                })
+                }
             } else {
-                put("messages", JSONArray().apply {
-                    put(JSONObject().put("role", "system").put("content", systemContext))
-                    put(JSONObject().apply {
-                        put("role", "user")
-                        if (base64Image != null) {
+                messagesArray.put(JSONObject().put("role", "system").put("content", systemContext))
+                messages.forEach { msg ->
+                    messagesArray.put(JSONObject().apply {
+                        put("role", msg.role)
+                        if (msg.imageUrl != null) {
                             put("content", JSONArray().apply {
-                                put(JSONObject().put("type", "text").put("text", prompt))
-                                put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$base64Image")))
+                                put(JSONObject().put("type", "text").put("text", msg.content))
+                                put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,${msg.imageUrl}")))
                             })
                         } else {
-                            put("content", prompt)
+                            put("content", msg.content)
                         }
                     })
-                })
+                }
             }
+            put("messages", messagesArray)
         }
 
         val request = Request.Builder()
@@ -250,7 +251,6 @@ class OpenAILlmClient @Inject constructor(
             
             val json = JSONObject(body)
             val message = if (provider.provider == ModelDetector.Provider.ANTHROPIC) {
-                // Map Anthropic response to common format
                 val content = json.getJSONArray("content")
                 JSONObject().put("content", content)
             } else {
@@ -260,6 +260,20 @@ class OpenAILlmClient @Inject constructor(
             extractMessageContent(message)
         }
     }
+
+    override suspend fun getCompletion(
+        apiKey: String,
+        prompt: String,
+        systemContext: String,
+        model: String,
+        toolsJson: JSONArray?,
+        customBaseUrl: String?,
+        base64Image: String?
+    ): String {
+        val messages = listOf(Message(role = "user", content = prompt, imageUrl = base64Image))
+        return getChatCompletion(apiKey, messages, systemContext, model, toolsJson, customBaseUrl)
+    }
+
 
     override suspend fun getEmbeddings(apiKey: String, text: String, model: String): List<Float> {
         val provider = ModelDetector.detect(apiKey)

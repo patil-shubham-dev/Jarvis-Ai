@@ -357,6 +357,47 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
         return sb.toString()
     }
 
+    override fun getScreenNodes(): List<com.jarvisai.app.api.context.ScreenStateEngine.NodeSummary> {
+        val root = rootInActiveWindow ?: return emptyList()
+        val nodes = mutableListOf<com.jarvisai.app.api.context.ScreenStateEngine.NodeSummary>()
+        traverseNodesSummary(root, nodes, 0)
+        return nodes
+    }
+
+    private fun traverseNodesSummary(node: AccessibilityNodeInfo?, list: MutableList<com.jarvisai.app.api.context.ScreenStateEngine.NodeSummary>, depth: Int) {
+        if (node == null || depth > 30) return
+
+        val pkg = node.packageName?.toString() ?: ""
+        if (pkg.contains("inputmethod") || pkg.contains("keyboard")) return
+
+        val text = node.text?.toString() ?: ""
+        val contentDesc = node.contentDescription?.toString()
+        val resourceId = node.viewIdResourceName
+        val className = node.className?.toString()
+        val bounds = Rect()
+        node.getBoundsInScreen(bounds)
+        val isClickable = node.isClickable
+
+        if (node.isVisibleToUser && (text.isNotBlank() || contentDesc != null || resourceId != null)) {
+            list.add(com.jarvisai.app.api.context.ScreenStateEngine.NodeSummary(
+                text = text,
+                contentDescription = contentDesc,
+                resourceId = resourceId,
+                className = className,
+                bounds = bounds,
+                isClickable = isClickable
+            ))
+        }
+
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i)
+            if (child != null) {
+                traverseNodesSummary(child, list, depth + 1)
+                try { child.recycle() } catch (e: Exception) {}
+            }
+        }
+    }
+
     private fun traverseNode(node: AccessibilityNodeInfo?, sb: StringBuilder, depth: Int) {
         if (node == null || depth > 20) return // Reduced depth cap
         

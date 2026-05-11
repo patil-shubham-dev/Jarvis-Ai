@@ -36,12 +36,36 @@ class PlannerAgent @Inject constructor(
     private val gson: Gson
 ) {
 
+    private val STATIC_SYSTEM_PROMPT = """
+        You are JARVIS (Sentinel V4.1), an autonomous Android agent.
+        
+        RULES:
+        - Respond ONLY with valid JSON.
+        - Analyze the screen delta to understand state changes.
+        - If verification fails twice, attempt a different approach or ABORT.
+        - Never tap outside screen bounds.
+        
+        AVAILABLE TOOLS:
+        {tools}
+        - DONE: Goal reached. Provide a final summary in 'description'.
+        
+        OUTPUT SCHEMA:
+        {
+          "thought": "your reasoning",
+          "description": "status update for user",
+          "toolName": "tool_name",
+          "params": { "key": "value" }
+        }
+    """.trimIndent()
+
     private var isRunning = false
+    private val conversationHistory = mutableListOf<com.jarvisai.app.api.Message>()
 
     suspend fun processIntent(userInput: String): String {
         if (isRunning) return "I'm already working on a task."
         isRunning = true
         executionTracker.startGoal(userInput)
+        conversationHistory.clear()
 
         var iteration = 0
         val maxIterations = 15 // Safety cap
@@ -59,7 +83,8 @@ class PlannerAgent @Inject constructor(
 
                 // 1. Observe
                 JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.ANALYZING)
-                val screenContent = skillManager.get().runSkill("see_screen", emptyMap()).message
+                val screenNodes = com.jarvisai.app.service.JarvisAccessibilityService.instance?.getScreenNodes() ?: emptyList()
+                val treeDiff = screenStateEngine.computeDiff(screenNodes)
                 val deviceState = screenStateEngine.getCurrentContextSummary()
                 
                 // 2. Think
@@ -72,7 +97,7 @@ class PlannerAgent @Inject constructor(
                     "text" to "🤔 Analyzing screen context..."
                 ))
                 
-                val nextStep = decideNextStep(userInput, screenContent, deviceState)
+                val nextStep = decideNextStep(userInput, treeDiff, deviceState)
                 
                 if (nextStep == null) {
                     updateOverlay("Task stuck")
@@ -120,6 +145,10 @@ class PlannerAgent @Inject constructor(
                 val result = skillManager.get().runSkill(tool, params)
                 executionTracker.updateLastStep(result)
 
+                // Add to history for next iteration
+                conversationHistory.add(com.jarvisai.app.api.Message("assistant", gson.toJson(nextStep)))
+                conversationHistory.add(com.jarvisai.app.api.Message("user", "Result: ${result.message}. Success: ${result.success}"))
+
                 // 5. Verify & Adapt
                 if (!result.success) {
                     Log.w("PlannerAgent", "Step failed: ${result.message}. Attempting recovery...")
@@ -163,62 +192,54 @@ class PlannerAgent @Inject constructor(
 
     private suspend fun decideNextStep(
         goal: String, 
-        screenObservation: String, 
+        treeDiff: com.jarvisai.app.api.context.ScreenStateEngine.TreeDiff, 
         deviceState: String
     ): TaskStep? {
         val apiKey = SecurePrefs.getApiKey(context)
         val baseUrl = SecurePrefs.getBaseUrl(context)
-        
-        // Improvement 1: Dynamic Tooling
         val availableTools = skillManager.get().getToolDefinitions()
 
-        val systemPrompt = """
-            You are the JARVIS Autonomous Brain (Sentinel V4.1).
-            You are a REAL Android Agent, not a simulator.
-            
+        val systemContext = STATIC_SYSTEM_PROMPT.replace("{tools}", availableTools)
+        
+        val currentObservation = """
             GOAL: $goal
-            DEVICE STATE: $deviceState
-            
-            SCREEN OBSERVATION (Accessibility + Vision):
-            $screenObservation
-            
-            HISTORY:
-            ${executionTracker.getHistorySummary()}
-            
-            INSTRUCTIONS:
-            1. Analyze the screen. Identify the coordinates of elements you need to interact with.
-            2. If you need to find a contact, look for the Search icon or search bar.
-            3. If you are in the correct app but not on the target screen, navigate (click/swipe).
-            4. If the task is completed, return toolName: "DONE" with a concise success summary.
-            5. Return ONLY a JSON TaskStep.
-            
-            AVAILABLE TOOLS:
-            $availableTools
-            - tap_at(x, y): Click specific coordinates.
-            - type_at(content, x, y): Click then type text.
-            - swipe_at(x, y, x2, y2): Scroll or swipe.
-            - DONE: Goal reached.
-            
-            RESPONSE FORMAT (JSON ONLY):
-            { 
-              "id": "next", 
-              "thought": "I see the search bar at [500, 120]. I will click it to find the contact.",
-              "description": "Searching for contact...", 
-              "toolName": "tool", 
-              "params": { ... } 
-            }
+            DEVICE: $deviceState
+            SCREEN_DELTA:
+            ${with(screenStateEngine) { treeDiff.toPromptString() }}
         """.trimIndent()
+
+        val currentMessages = conversationHistory.toMutableList().apply {
+            add(com.jarvisai.app.api.Message("user", currentObservation))
+        }
 
         val model = SecurePrefs.getSelectedModel(context) ?: "gpt-4o"
         
-        // Use customBaseUrl to ensure we use the user's unified provider
-        val response = llmClient.getCompletion(apiKey, "What is the next step?", systemPrompt, model, null, baseUrl)
+        val response = try {
+            llmClient.getChatCompletion(apiKey, currentMessages, systemContext, model, null, baseUrl)
+        } catch (e: Exception) {
+            Log.e("PlannerAgent", "LLM Call Failed", e)
+            return null
+        }
+        
+        return parseAgentResponse(response)
+    }
+
+    private fun parseAgentResponse(raw: String): TaskStep? {
+        val cleaned = raw.trim()
+            .removePrefix("```json").removePrefix("```")
+            .removeSuffix("```").trim()
         
         return try {
-            val cleanResponse = response.substringAfter("{").substringBeforeLast("}")
-            gson.fromJson("{$cleanResponse}", TaskStep::class.java)
+            gson.fromJson(cleaned, TaskStep::class.java)
         } catch (e: Exception) {
-            null
+            // Fallback: extract first JSON object
+            val jsonMatch = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL).find(cleaned)?.value
+            try {
+                gson.fromJson(jsonMatch, TaskStep::class.java)
+            } catch (e2: Exception) {
+                Log.e("PlannerAgent", "JSON Parse Failed: $raw", e2)
+                null
+            }
         }
     }
 
