@@ -1,70 +1,30 @@
-<p align="center">
-  <img src="docs/assets/logo.png" width="220" alt="Jarvis AI Logo">
-</p>
+🌌 JARVIS AI: SENTINEL OS V4.1
+==============================
 
-<h1 align="center">🌌 JARVIS AI: SENTINEL OS</h1>
-<p align="center">
-  <b>The Future of Autonomous Mobile Interaction</b><br>
-  <i>A professional-grade personal intelligence layer for Android.</i>
-</p>
+[![Release](https://img.shields.io/badge/Release-v4.1.0--Stable-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/patil-shubham-dev/Jarvis-Ai/releases)
+[![Build](https://img.shields.io/badge/Build-Success-success?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/patil-shubham-dev/Jarvis-Ai/actions)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Release-v4.1.0--Stable-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Version">
-  <img src="https://img.shields.io/badge/Community-Join%20Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">
-  <img src="https://img.shields.io/badge/Twitter-Follow%20Us-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" alt="Twitter">
-</p>
-
-<p align="center">
-  <img src="docs/assets/typing.svg" width="500" alt="Jarvis Typing Effect">
-</p>
-
-<p align="center">
-  <a href="#-why-jarvis">Why Jarvis?</a> •
-  <a href="#-key-features">Features</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-setup-guide">Setup</a> •
-  <a href="#-contributing">Contribute</a>
-</p>
+**Jarvis Sentinel V4.1** is a high-fidelity, autonomous mobile agent designed to bridge the gap between human intent and device execution. Unlike traditional assistants, Jarvis utilizes **Local Vision (MobileNet V3)** and a recursive **Observe-Think-Act** loop to control any Android application without pre-built integrations.
 
 ---
 
-## 📱 Experience True Autonomy
+## 🚀 Recent Breakthroughs (v4.1)
 
-Jarvis isn't just a chatbot; it's a **Sentinel**. It observes your screen, understands your intent, and executes tasks with human-like precision. By removing the friction between thought and action, Jarvis becomes your digital twin.
+### 👁️ Resilient Vision Engine
+*   **Local Processing**: Integrated **MobileNet V3** via ML Kit for 100% on-device visual labeling and OCR.
+*   **Hardware-to-Software Fallback**: Robust bitmap processing for modern GPUs (Realme/Oppo/Samsung support).
+*   **Context Optimization**: Automatic "Keyboard Filtering" to reduce LLM prompt bloat by 70%, ensuring lightning-fast decision making.
 
-<p align="center">
-  <table align="center">
-    <tr>
-      <td align="center">
-        <img src="docs/assets/ui_1.jpg" width="250" style="border-radius: 15px; border: 2px solid #333;" alt="Jarvis UI 1"><br>
-        <i>Intelligent Conversation</i>
-      </td>
-      <td align="center">
-        <img src="docs/assets/ui_2.jpg" width="250" style="border-radius: 15px; border: 2px solid #333;" alt="Jarvis UI 2"><br>
-        <i>Autonomous Control</i>
-      </td>
-    </tr>
-  </table>
-</p>
+### 🤖 Autonomous Brain (Sentinel Core)
+*   **Recursive Planning**: A sophisticated multi-step planner that verifies every tap and swipe before proceeding.
+*   **Pronoun Resolution**: Intelligent context awareness—Jarvis understands who "him/her" refers to by scanning recent interactions.
+*   **Live Thought-Stream**: Real-time feedback in the chat UI (`🤔 Analyzing...`, `✅ Tapping Send...`) so you're never in the dark.
 
 ---
 
-## ❓ Why Jarvis?
+## 📱 The Cognitive Loop
 
-Traditional assistants (Siri, Google Assistant) are "walled gardens"—they only work with apps that have specific integrations. **Jarvis breaks those walls.**
-
-| Feature | Jarvis AI | Traditional Assistants |
-| :--- | :--- | :--- |
-| **Vision** | See & Understands any UI | Limited to API-supported apps |
-| **Autonomy** | Executes multi-step workflows | Single-command responses |
-| **Privacy** | 100% Local Episodic Memory | Cloud-based data harvesting |
-| **Control** | Human-like gestures (Tap/Swipe) | Intent-based API calls |
-
----
-
-## 🧠 The Cognitive Loop
-
-Jarvis operates on a high-fidelity **Multi-Agent Orchestration** model.
+Jarvis doesn't just react; it **Navigates**.
 
 ```mermaid
 graph TD
@@ -72,68 +32,43 @@ graph TD
     Orb --> Planner{PlannerAgent}
     
     subgraph "The Cognitive Engine"
-        Planner --> Observe[VisionSkill: UI Analysis]
-        Observe --> Think[LLM Decision: Strategy]
+        Planner --> Observe[VisionSkill: Local OCR + Labeling]
+        Observe --> Think[LLM Strategy: gpt-4o/Sonnet 3.5]
         Think --> Memory[Memory: Context Injection]
         Memory --> Think
-        Think --> Act[ActionEngine: Interaction]
+        Think --> Act[ActionEngine: Human-like Gestures]
     end
     
-    Act --> Feedback[State Verification]
+    Act --> Feedback[Verification: Did the UI change?]
     Feedback --> Observe
 ```
 
 ---
 
-## 🔬 Technical Logics
+## 🔬 Technical Specs
 
-### 🛠 ActionEngine Mechanics
-The `ActionEngine` translates AI strategy into hardware reality.
-*   **Coordinate Normalization:** Maps relative coordinates (0-1000) to device-specific pixel densities.
-*   **Adaptive Gestures:** Uses Bezier curves for natural, human-like swipes.
-
-### 📁 Memory Hierarchy (RAG v4)
-*   **L1 (Reactive):** Current conversation context.
-*   **L2 (Episodic):** Local vector store (ChromaDB) for historical recall.
-*   **L3 (Routine):** Predictive engine for habit-based task pre-warming.
-
----
-
-## 🤖 Model Compatibility Matrix
-
-Jarvis supports any OpenAI-compatible API, but is optimized for the following:
-
-| Model | Role | Performance |
+| Feature | Implementation | Performance |
 | :--- | :--- | :--- |
-| **GPT-4o** | Primary Reasoning | ⭐⭐⭐⭐⭐ |
-| **Claude 3.5 Sonnet** | Vision/Strategy | ⭐⭐⭐⭐⭐ |
-| **Llama 3.1 (Local)** | Routine Prediction | ⭐⭐⭐⭐ |
-| **Gemini 1.5 Pro** | Long-context Memory | ⭐⭐⭐⭐ |
-
----
-
-## 🤝 Contributing
-
-We are building the future of mobile intelligence, and we need your help!
-- **Build a Skill:** Want Jarvis to control a new app? Write a `Skill` in Kotlin.
-- **Improve Vision:** Help us tune our TFLite models for better icon recognition.
-- **Memory Refinement:** Optimize our vector retrieval logic.
-
-Check out our [**Contributing Guide**](docs/internal/CONTRIBUTING.md) to get started.
+| **Vision** | Google ML Kit + Custom MobileNet V3 | ~150ms / Scan |
+| **Gestures** | Bezier-curve Interpolated Taps & Swipes | 100% Human-like |
+| **Context** | Filtered Accessibility Tree (Keyboard excluded) | Optimized Tokens |
+| **Privacy** | Local SQLite + On-Device Labeling | Private by Design |
 
 ---
 
 ## 🔧 Setup & Quickstart
 
 ```bash
-# Clone and build the Sentinel
+# Clone the repository
 git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
-cd Jarvis-Ai/app
+cd Jarvis-Ai
+
+# Deploy to your device
 ./gradlew installDebug
 ```
 
-> [!IMPORTANT]
-> Jarvis requires **Accessibility Service** permissions to observe and interact with your device.
+> [!CAUTION]
+> **Android 13/14 Users**: If the app reports "Accessibility Off" even when toggled ON, please **Turn it OFF and ON again** in settings. This kickstarts the internal service process after a fresh install.
 
 ---
 

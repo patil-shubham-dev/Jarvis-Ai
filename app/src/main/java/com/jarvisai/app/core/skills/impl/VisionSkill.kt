@@ -20,9 +20,8 @@ class VisionSkill(
 
     override suspend fun execute(params: Map<String, Any>): SkillResult {
         Log.d("VisionSkill", "Starting execution...")
-        updateStatus("Scanning screen...")
-        
         Log.d("VisionSkill", "Capturing screenshot...")
+        updateStatus("Capturing screen...")
         val screenshot = accessibility.captureScreenshot() 
         if (screenshot == null) {
             Log.e("VisionSkill", "Screenshot capture failed (timed out or null)")
@@ -31,21 +30,32 @@ class VisionSkill(
         Log.d("VisionSkill", "Screenshot captured successfully.")
 
         // Run Vision and Accessibility in parallel for speed
+        // Set a strict timeout for the visual part to prevent hanging the whole system
         val analysisResult = try {
             coroutineScope {
                 Log.d("VisionSkill", "Starting parallel jobs (Vision + Accessibility)...")
-                val visionJob = async(Dispatchers.Default) { localVisionEngine.analyze(screenshot) }
-                val accessibilityJob = async(Dispatchers.Default) { accessibility.getScreenContent() }
+                
+                // Screenshot/Vision job with strict 3s timeout
+                val visionJob = async(Dispatchers.Default) {
+                    withTimeoutOrNull(3000) {
+                        localVisionEngine.analyze(screenshot)
+                    } ?: "Visual analysis timed out. Using accessibility data only."
+                }
+                
+                // Accessibility job (usually very fast)
+                val accessibilityJob = async(Dispatchers.Default) { 
+                    accessibility.getScreenContent() 
+                }
                 
                 val v = visionJob.await()
-                Log.d("VisionSkill", "Vision job completed.")
+                Log.d("VisionSkill", "Vision job completed/timed out.")
                 val a = accessibilityJob.await()
                 Log.d("VisionSkill", "Accessibility job completed.")
                 Pair(v, a)
             }
         } catch (e: Exception) {
             Log.e("VisionSkill", "Parallel analysis failed", e)
-            return SkillResult(false, "Analysis failed: ${e.message}")
+            Pair("Visual analysis failed: ${e.message}", accessibility.getScreenContent())
         }
 
         val analysis = analysisResult.first

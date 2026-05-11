@@ -16,9 +16,9 @@
         app:cardBackgroundColor="#AA0A0A0A"
         app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
-        app:layout_constraintBottom_toBottomOf="@id/icon_container"
-        app:layout_constraintEnd_toStartOf="@id/icon_container"
-        app:layout_constraintTop_toTopOf="@id/icon_container">
+        app:layout_constraintBottom_toBottomOf="@id/jarvis_orb"
+        app:layout_constraintEnd_toStartOf="@id/jarvis_orb"
+        app:layout_constraintTop_toTopOf="@id/jarvis_orb">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -41,31 +41,13 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <FrameLayout
-        android:id="@+id/icon_container"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+    <com.jarvisai.app.ui.views.JarvisOrbView
+        android:id="@+id/jarvis_orb"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="-12dp" /> <!-- Negative margin to account for glow -->
 
-        <!-- Outer Breathing/Glow Layer -->
-        <View
-            android:id="@+id/orb_glow"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:background="@drawable/bg_jarvis_orb"
-            android:alpha="0.7" />
-
-        <!-- Static Core Logo (Minimal) -->
-        <ImageView
-            android:id="@+id/orb_core"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_jarvis_logo"
-            android:padding="4dp"
-            android:alpha="0.9"
-            android:elevation="12dp" />
-    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

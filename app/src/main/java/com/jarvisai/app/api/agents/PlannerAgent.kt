@@ -64,8 +64,24 @@ class PlannerAgent @Inject constructor(
                 
                 // 2. Think
                 JarvisOverlayService.instance?.setOrbState(JarvisOverlayService.OrbState.THINKING)
+                updateOverlay("Thinking...")
+                
+                // Post status to chat
+                skillManager.get().runSkill("communication", mapOf(
+                    "type" to "post_status",
+                    "text" to "🤔 Analyzing screen context..."
+                ))
+                
                 val nextStep = decideNextStep(userInput, screenContent, deviceState)
-                    ?: break // Goal achieved or stuck
+                
+                if (nextStep == null) {
+                    updateOverlay("Task stuck")
+                    skillManager.get().runSkill("communication", mapOf(
+                        "type" to "post_status",
+                        "text" to "❌ I'm stuck. Please provide more details or check your connection."
+                    ))
+                    break
+                }
 
                 if (nextStep.toolName == "DONE") {
                     executionTracker.completeGoal()

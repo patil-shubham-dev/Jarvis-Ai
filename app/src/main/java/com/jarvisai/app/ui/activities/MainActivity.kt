@@ -288,13 +288,31 @@ class MainActivity : AppCompatActivity() {
         updateStatus()
     }
 
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val am = getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+        val enabledServices = am.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC)
+        for (service in enabledServices) {
+            if (service.resolveInfo.serviceInfo.packageName == packageName &&
+                service.resolveInfo.serviceInfo.name == com.jarvisai.app.service.JarvisAccessibilityService::class.java.name) {
+                return true
+            }
+        }
+        return false
+    }
+
     private fun checkAccessibilityStatus() {
-        if (com.jarvisai.app.service.JarvisAccessibilityService.instance == null) {
+        val isEnabled = isAccessibilityServiceEnabled()
+        val hasInstance = com.jarvisai.app.service.JarvisAccessibilityService.instance != null
+        
+        if (!isEnabled || !hasInstance) {
+            val msg = if (!isEnabled) "Accessibility Service is DISABLED in settings." 
+                      else "Service is enabled but not responding. Please toggle it OFF and ON."
+            
             com.google.android.material.snackbar.Snackbar.make(
                 binding.root,
-                "Accessibility Service is OFF. Jarvis cannot see or control the screen.",
+                msg,
                 com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
-            ).setAction("ENABLE") {
+            ).setAction("FIX NOW") {
                 startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
             }.show()
         }

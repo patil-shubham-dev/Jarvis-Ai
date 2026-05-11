@@ -20,9 +20,10 @@ import com.jarvisai.app.data.models.RoutineEntity
         ChatSessionEntity::class,
         MemorySnippetEntity::class,
         ReminderEntity::class,
-        RoutineEntity::class
+        RoutineEntity::class,
+        com.jarvisai.app.data.models.HabitEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,4 +33,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun memoryDao(): MemoryDao
     abstract fun reminderDao(): ReminderDao
     abstract fun routineDao(): RoutineDao
+    abstract fun habitDao(): com.jarvisai.app.data.local.dao.HabitDao
 }

@@ -80,14 +80,17 @@ class LocalVisionEngine @Inject constructor(
         val image = InputImage.fromBitmap(softwareBitmap, 0)
 
         return try {
-            val analysisResult = withTimeoutOrNull(4000) { 
+            val analysisResult = withTimeoutOrNull(8000) { 
+                Log.d(TAG, "Starting OCR task...")
                 val textTask = textRecognizer.process(image)
+                Log.d(TAG, "Starting Labeling task...")
                 val labelTask = (customLabeler ?: generalLabeler).process(image)
                 
-                Log.d(TAG, "Awaiting ML Kit results...")
+                Log.d(TAG, "Awaiting ML Kit results (8s timeout)...")
                 val textResult = textTask.await()
+                Log.d(TAG, "OCR completed.")
                 val labelResult = labelTask.await()
-                Log.d(TAG, "ML Kit results received.")
+                Log.d(TAG, "Labeling completed.")
                 
                 Pair(textResult, labelResult)
             }

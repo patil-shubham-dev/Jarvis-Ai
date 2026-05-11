@@ -77,4 +77,7 @@ object AppModule {
 
     @Provides
     fun provideRoutineDao(db: AppDatabase): RoutineDao = db.routineDao()
+
+    @Provides
+    fun provideHabitDao(db: AppDatabase): com.jarvisai.app.data.local.dao.HabitDao = db.habitDao()
 }

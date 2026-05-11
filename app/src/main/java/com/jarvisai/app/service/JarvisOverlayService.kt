@@ -101,12 +101,14 @@ class JarvisOverlayService : Service() {
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    com.jarvisai.app.utils.HapticUtil.vibrate(this, com.jarvisai.app.utils.HapticUtil.Pattern.LIGHT)
                     true
                 }
                 android.view.MotionEvent.ACTION_UP -> {
                     val diffX = (event.rawX - initialTouchX).toInt()
                     val diffY = (event.rawY - initialTouchY).toInt()
                     if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
+                        com.jarvisai.app.utils.HapticUtil.vibrate(this, com.jarvisai.app.utils.HapticUtil.Pattern.MEDIUM)
                         launchJarvis()
                     }
                     true
@@ -179,41 +181,29 @@ class JarvisOverlayService : Service() {
                 showOverlay()
             }
             
-            val orbGlow = overlayView?.findViewById<View>(R.id.orb_glow) ?: return@post
-            orbGlow.clearAnimation()
+            val orbView = overlayView?.findViewById<com.jarvisai.app.ui.views.JarvisOrbView>(R.id.jarvis_orb) ?: return@post
+            orbView.setState(state)
             
             when (state) {
-                OrbState.IDLE -> {
-                    orbGlow.alpha = 0.6f
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
-                }
+                OrbState.IDLE -> { }
                 OrbState.LISTENING -> {
-                    startBreathingAnimation(orbGlow)
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
+                    com.jarvisai.app.utils.HapticUtil.vibrate(this, com.jarvisai.app.utils.HapticUtil.Pattern.LIGHT)
                 }
                 OrbState.THINKING -> {
-                    startPulseAnimation(orbGlow, 1.2f)
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#BB86FC"))
                     showBorder(android.graphics.Color.parseColor("#BB86FC"))
                 }
                 OrbState.ANALYZING -> {
-                    startPulseAnimation(orbGlow, 1.3f)
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#03DAC5"))
                     showBorder(android.graphics.Color.parseColor("#03DAC5"))
                 }
                 OrbState.EXECUTING -> {
-                    startPulseAnimation(orbGlow, 1.4f)
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
                     showBorder(android.graphics.Color.parseColor("#00D4FF"))
                 }
                 OrbState.SUCCESS -> {
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.GREEN)
-                    startPulseAnimation(orbGlow, 1.2f)
+                    com.jarvisai.app.utils.HapticUtil.vibrate(this, com.jarvisai.app.utils.HapticUtil.Pattern.SUCCESS)
                     handler.postDelayed({ hideOverlay() }, 2000)
                 }
                 OrbState.ERROR -> {
-                    orbGlow.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.RED)
-                    startPulseAnimation(orbGlow, 1.1f)
+                    com.jarvisai.app.utils.HapticUtil.vibrate(this, com.jarvisai.app.utils.HapticUtil.Pattern.ERROR)
                 }
                 OrbState.HIDDEN -> {
                     hideOverlay()

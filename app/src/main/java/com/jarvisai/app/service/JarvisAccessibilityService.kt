@@ -40,6 +40,12 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     @Inject
     lateinit var screenStateEngine: ScreenStateEngine
 
+    @Inject
+    lateinit var habitRepository: com.jarvisai.app.data.repository.HabitRepository
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private lateinit var mainExecutor: Executor
+
     companion object {
         private const val TAG = "JarvisAccessibility"
         var instance: JarvisAccessibilityService? = null
@@ -48,13 +54,15 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     override fun onServiceConnected() {
         Log.d(TAG, "Service Connected")
         instance = this
+        mainExecutor = androidx.core.content.ContextCompat.getMainExecutor(this)
         val info = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPES_ALL_MASK
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             notificationTimeout = 100
             flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or 
                     AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
-                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
+                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
+                    AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         }
         serviceInfo = info
         
@@ -67,6 +75,19 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
                 val pkg = event.packageName?.toString() ?: ""
                 contextEngine.updateForegroundApp(pkg)
                 screenStateEngine.updateState(packageName = pkg)
+                
+                // Track habit
+                serviceScope.launch {
+                    habitRepository.logAppUsage(pkg)
+                    
+                    // Check for proactive suggestions
+                    val suggestions = habitRepository.getRoutineSuggestions()
+                    if (suggestions.contains(pkg)) {
+                        Log.i(TAG, "Proactive Habit Match: $pkg")
+                        // In a real app, we'd show a more specific suggestion
+                    }
+                }
+                
                 checkProactiveTriggers(pkg)
             }
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED, 
@@ -211,6 +232,7 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         super.onDestroy()
         instance = null
     }
@@ -251,11 +273,23 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
                 try {
                     takeScreenshot(android.view.Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
                         override fun onSuccess(screenshot: ScreenshotResult) {
-                            val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(
-                                screenshot.hardwareBuffer,
-                                screenshot.colorSpace
-                            )
-                            cont.resume(bitmap)
+                            try {
+                                val buffer = screenshot.hardwareBuffer
+                                val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(
+                                    buffer,
+                                    screenshot.colorSpace
+                                )
+                                // Force a software copy if needed to ensure availability across threads
+                                val result = if (bitmap != null && bitmap.config == android.graphics.Bitmap.Config.HARDWARE) {
+                                    bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                                } else {
+                                    bitmap
+                                }
+                                cont.resume(result)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Bitmap conversion failed", e)
+                                cont.resume(null)
+                            }
                         }
 
                         override fun onFailure(errorCode: Int) {
@@ -303,25 +337,24 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     }
 
     private fun traverseNode(node: AccessibilityNodeInfo?, sb: StringBuilder, depth: Int) {
-        if (node == null || depth > 25) return // Safety depth cap
+        if (node == null || depth > 20) return // Reduced depth cap
         
+        val pkg = node.packageName?.toString() ?: ""
+        // Skip keyboard nodes as they bloat the context with irrelevant data
+        if (pkg.contains("inputmethod") || pkg.contains("keyboard")) return
+
         val className = node.className?.toString() ?: ""
         val text = node.text?.toString() ?: node.contentDescription?.toString() ?: ""
         
-        // Skip common layout containers that don't add semantic value unless they have text
-        val isLayout = className.contains("Layout") || className.contains("ViewGroup") || className.contains("Frame")
-        
-        if (text.isNotBlank()) {
-            repeat(depth % 10) { sb.append("  ") } // Limit indent
+        if (text.isNotBlank() && node.isVisibleToUser) {
             sb.append("- [${className.substringAfterLast('.')}] $text\n")
         }
 
-        // Only traverse children if it's not a leaf or if it's a layout
         for (i in 0 until node.childCount) {
             val child = node.getChild(i)
             if (child != null) {
                 traverseNode(child, sb, depth + 1)
-                child.recycle() // Important for performance/memory
+                try { child.recycle() } catch (e: Exception) {}
             }
         }
     }
