@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from app.database.vector_db import VectorDB
 import logging
 

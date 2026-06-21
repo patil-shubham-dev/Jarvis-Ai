@@ -3,7 +3,7 @@
 import pytest
 from app.agents.orchestrator import AgentOrchestrator
 from app.database.vector_db import VectorDB
-from app.models.intent import IntentClassification, IntentCategory
+from app.models.intent import IntentCategory
 
 
 class TestOrchestrator:

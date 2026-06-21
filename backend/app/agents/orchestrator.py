@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Callable
 from app.config import config
-from app.models.agent import AgentState, Plan, PlanStep, AgentContext
+from app.models.agent import AgentState, Plan, PlanStep
 from app.models.intent import IntentCategory, IntentClassification
 from app.agents.base import BaseAgent
 from app.agents.conversation import ConversationAgent
@@ -43,7 +43,8 @@ class AgentOrchestrator(BaseAgent):
     async def process_message(self, session_id: str, text: str,
                               on_event: Callable = None) -> str:
         try:
-            ctx = AgentContext(session_id=session_id)
+            if not text or not text.strip():
+                return self._fallback_response(text)
 
             if on_event:
                 self.on("thought", on_event)

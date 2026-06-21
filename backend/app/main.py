@@ -1,4 +1,5 @@
 import os
+import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -187,7 +188,6 @@ async def list_memories(query: str = "", limit: int = 50):
 
 @app.post("/api/proxy/chat")
 async def proxy_chat_completion(request: ChatProxyRequest):
-    import httpx
     api_key = request.api_key or config.get_api_key()
     if not api_key:
         return {"error": "No API key provided"}
@@ -214,7 +214,6 @@ async def proxy_chat_completion(request: ChatProxyRequest):
 
 @app.post("/api/proxy/embeddings")
 async def proxy_embeddings(request: EmbeddingProxyRequest):
-    import httpx
     api_key = request.api_key or config.get_api_key()
     if not api_key:
         return {"error": "No API key provided."}
@@ -258,7 +257,7 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
 
             try:
                 data = WSMessage(**json.loads(raw))
-            except Exception as e:
+            except Exception:
                 await manager.send(session_id, {
                     "type": "error",
                     "content": "Invalid message format"

@@ -1,5 +1,4 @@
 import os
-import functools
 from typing import Dict, List
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
@@ -63,19 +62,22 @@ class AppConfig:
         }
 
     @property
-    @functools.lru_cache(maxsize=1)
     def active_provider(self) -> str:
-        for name, cfg in self.providers.items():
-            if name != "ollama" and os.getenv(cfg.api_key_env):
-                return name
-        try:
-            import httpx
-            resp = httpx.get("http://localhost:11434/api/tags", timeout=2.0)
-            if resp.status_code == 200:
-                return "ollama"
-        except Exception:
-            pass
-        return "openai"
+        if not hasattr(self, '_cached_provider'):
+            for name, cfg in self.providers.items():
+                if name != "ollama" and os.getenv(cfg.api_key_env):
+                    self._cached_provider = name
+                    return self._cached_provider
+            try:
+                import httpx
+                resp = httpx.get("http://localhost:11434/api/tags", timeout=2.0)
+                if resp.status_code == 200:
+                    self._cached_provider = "ollama"
+                    return "ollama"
+            except Exception:
+                pass
+            self._cached_provider = "openai"
+        return self._cached_provider
 
     def get_api_key(self) -> str:
         provider = self.active_provider

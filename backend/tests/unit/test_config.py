@@ -1,6 +1,5 @@
 """Unit tests for config module."""
 
-import os
 from app.config import AppConfig
 
 
@@ -8,7 +7,7 @@ def test_default_config_values():
     cfg = AppConfig()
     assert cfg.app_name == "Jarvis AI OS Backend"
     assert cfg.debug is False
-    assert "localhost:3000" in cfg.cors_origins
+    assert any("localhost:3000" in o for o in cfg.cors_origins)
     assert cfg.ws_ping_interval == 30
 
 

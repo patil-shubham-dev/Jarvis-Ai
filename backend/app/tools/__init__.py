@@ -1,4 +1,8 @@
-from typing import Dict, Any, Optional, Callable
+import asyncio
+import ast
+import io
+import contextlib
+from typing import Dict, Any, Callable
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,11 +51,6 @@ class ToolRegistry:
             name: "implemented" if handler is not None else "not_implemented"
             for name, handler in self._tools.items()
         }
-
-import asyncio
-import ast
-import io
-import contextlib
 
 # Register web search handler
 async def _web_search_handler(query: str, num_results: int = 5):
