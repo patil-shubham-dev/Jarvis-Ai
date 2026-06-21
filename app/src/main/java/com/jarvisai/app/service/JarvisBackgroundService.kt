@@ -54,13 +54,24 @@ class JarvisBackgroundService : Service() {
         if (isListening.get()) return
 
         try {
-            porcupine = ai.picovoice.porcupine.Porcupine.Builder()
-                .setAccessKey(accessKey)
-                .setKeyword(ai.picovoice.porcupine.Porcupine.BuiltInKeyword.PORCUPINE)
-                .build(applicationContext)
+            val keywordPath = "${applicationContext.filesDir.absolutePath}/Hey_Jarvis.ppn"
+            val keywordFile = java.io.File(keywordPath)
 
+            porcupine = if (keywordFile.exists()) {
+                ai.picovoice.porcupine.Porcupine.Builder()
+                    .setAccessKey(accessKey)
+                    .setKeywordPath(keywordPath)
+                    .build(applicationContext)
+            } else {
+                ai.picovoice.porcupine.Porcupine.Builder()
+                    .setAccessKey(accessKey)
+                    .setKeyword(ai.picovoice.porcupine.Porcupine.BuiltInKeyword.JARVIS)
+                    .build(applicationContext)
+            }
+
+            val pcm = porcupine ?: return
             val minBufferSize = android.media.AudioRecord.getMinBufferSize(
-                porcupine!!.sampleRate,
+                pcm.sampleRate,
                 android.media.AudioFormat.CHANNEL_IN_MONO,
                 android.media.AudioFormat.ENCODING_PCM_16BIT
             )
@@ -68,10 +79,10 @@ class JarvisBackgroundService : Service() {
             // We explicitly use MIC instead of VOICE_RECOGNITION to not suppress background audio apps
             audioRecord = android.media.AudioRecord(
                 android.media.MediaRecorder.AudioSource.MIC,
-                porcupine!!.sampleRate,
+                pcm.sampleRate,
                 android.media.AudioFormat.CHANNEL_IN_MONO,
                 android.media.AudioFormat.ENCODING_PCM_16BIT,
-                minBufferSize.coerceAtLeast(porcupine!!.frameLength * 2)
+                minBufferSize.coerceAtLeast(pcm.frameLength * 2)
             )
 
             if (audioRecord?.state != android.media.AudioRecord.STATE_INITIALIZED) {
@@ -82,13 +93,14 @@ class JarvisBackgroundService : Service() {
             audioRecord?.startRecording()
             isListening.set(true)
 
+            val porc = porcupine ?: return
             recordThread = Thread {
-                val pcmFrame = ShortArray(porcupine!!.frameLength)
+                val pcmFrame = ShortArray(porc.frameLength)
                 while (isListening.get()) {
                     val readResult = audioRecord?.read(pcmFrame, 0, pcmFrame.size) ?: 0
                     if (readResult == pcmFrame.size) {
                         try {
-                            val keywordIndex = porcupine?.process(pcmFrame) ?: -1
+                            val keywordIndex = porc.process(pcmFrame)
                             if (keywordIndex >= 0) {
                                 onWakeWordDetected()
                             }

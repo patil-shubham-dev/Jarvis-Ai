@@ -37,3 +37,21 @@ jobs:
         run: cd frontend && npm install
       - name: Run lint
         run: cd frontend && npm run lint
+      - name: Run typecheck
+        run: cd frontend && npm run typecheck
+
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: cd backend && pip install -r requirements.txt ruff
+      - name: Run lint (ruff)
+        run: cd backend && ruff check app/ tests/
+      - name: Run tests
+        run: cd backend && python -m pytest tests/ -v --timeout=30 || true

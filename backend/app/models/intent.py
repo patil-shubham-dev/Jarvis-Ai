@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 class IntentCategory(str, Enum):
     CASUAL = "casual conversation"

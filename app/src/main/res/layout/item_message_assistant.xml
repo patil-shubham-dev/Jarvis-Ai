@@ -37,8 +37,8 @@
                 android:text="JARVIS"
                 android:textColor="@color/jarvis_accent"
                 android:textSize="10sp"
-                android:fontFamily="sans-serif-black"
-                android:letterSpacing="0.1"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.12"
                 android:layout_marginBottom="4dp" />
 
             <TextView

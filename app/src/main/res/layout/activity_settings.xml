@@ -17,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Sentinel Settings"
+            app:title="Jarvis Settings"
             app:titleTextColor="@color/text_primary"
             app:navigationIcon="@drawable/ic_arrow_back" />
 
@@ -34,11 +34,11 @@
             android:orientation="vertical"
             android:padding="24dp">
 
-            <!-- ── SENTINEL AI CONFIG ── -->
+            <!-- ═══════ AI PROVIDER CONFIG ═══════ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Intelligence Configuration"
+                android:text="AI Provider"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium"
@@ -51,45 +51,85 @@
                 android:background="@drawable/bg_pill_input"
                 android:padding="16dp">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layoutBaseUrl"
+                <!-- Provider Badge -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/providerBadge"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Base URL (Optional)"
+                    android:layout_height="48dp"
                     android:visibility="gone"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="@color/border_active"
-                    app:hintTextColor="@color/text_hint">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/editBaseUrl"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textUri"
-                        android:textColor="@color/text_primary" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    app:contentPadding="12dp"
+                    android:layout_marginBottom="12dp">
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/providerInitials"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:visibility="gone"
+                            android:gravity="center"
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:background="@drawable/bg_circle" />
+
+                        <ImageView
+                            android:id="@+id/providerIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginEnd="8dp"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/providerName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="detected"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- API Key Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layoutApiKey"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:hint="API Key"
+                    android:hint="Enter your API key"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     app:boxStrokeColor="@color/border_active"
-                    app:hintTextColor="@color/text_hint">
+                    app:boxBackgroundColor="@color/bg_surface_elevated"
+                    app:hintTextColor="@color/text_hint"
+                    app:endIconMode="password_toggle">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editApiKey"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPassword"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="@color/text_primary"
+                        android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Model Selector -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:hint="Reasoning Model"
+                    android:layout_marginTop="12dp"
+                    android:hint="Select model"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/spinnerModel"
@@ -98,36 +138,68 @@
                         android:inputType="text" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnFetchModels"
+                <!-- Buttons Row -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Fetch Reasoning Models"
-                    app:icon="@drawable/ic_refresh"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestConnection"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="Test"
+                        app:icon="@drawable/ic_check"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFetchModels"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="Fetch Models"
+                        app:icon="@drawable/ic_refresh"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                </LinearLayout>
+
+                <!-- Connection Status -->
                 <TextView
+                    android:id="@+id/testStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Vision: Local Hybrid Engine (MobileNet V3 + OCR)"
-                    android:textColor="@color/status_success"
+                    android:layout_marginTop="8dp"
                     android:textSize="12sp"
-                    android:fontFamily="sans-serif-medium" />
+                    android:fontFamily="sans-serif-medium"
+                    android:visibility="gone" />
 
+                <!-- Save Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSaveConfig"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="16dp"
-                    android:text="Apply Intelligence Logic"
+                    android:text="Apply Configuration"
                     app:cornerRadius="28dp"
-                    android:backgroundTint="@color/jarvis_primary"
+                    app:backgroundTint="@color/jarvis_primary"
                     android:textColor="@color/bg_main" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Your API key is stored encrypted on-device and never sent to our servers"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center_horizontal" />
             </LinearLayout>
 
+            <!-- ═══════ SYSTEM FEATURES ═══════ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -152,13 +224,13 @@
                 <include android:id="@+id/rowTts" layout="@layout/item_settings_toggle" />
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider" android:layout_marginHorizontal="20dp" />
                 <include android:id="@+id/rowBiometric" layout="@layout/item_settings_toggle" />
-
             </LinearLayout>
 
+            <!-- ═══════ DEVELOPER ═══════ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Developer Sentinel Panel"
+                android:text="Developer"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-medium"
@@ -175,10 +247,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="View Execution Graphs"
+                    android:text="Debug Inspector &amp; Execution Logs"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
-                
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewLogs"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -186,10 +258,18 @@
                     android:layout_height="wrap_content"
                     android:text="Open Debug Inspector"
                     android:layout_marginTop="8dp" />
-
             </LinearLayout>
+
+            <!-- Version Footer -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Jarvis AI OS v4.0.0  ·  BYOK (Bring Your Own Key)"
+                android:textColor="@color/text_hint"
+                android:textSize="11sp"
+                android:gravity="center_horizontal" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

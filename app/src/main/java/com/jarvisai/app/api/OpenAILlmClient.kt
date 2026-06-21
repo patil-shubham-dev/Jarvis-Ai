@@ -277,7 +277,7 @@ class OpenAILlmClient @Inject constructor(
 
     override suspend fun getEmbeddings(apiKey: String, text: String, model: String): List<Float> {
         val provider = ModelDetector.detect(apiKey)
-        val url = "${provider.baseUrl.trimEnd('/')}/embeddings"
+        val url = "${provider.effectiveBaseUrl.trimEnd('/')}/embeddings"
         val bodyJson = JSONObject().apply { put("model", model); put("input", text) }
         val request = Request.Builder()
             .url(url)

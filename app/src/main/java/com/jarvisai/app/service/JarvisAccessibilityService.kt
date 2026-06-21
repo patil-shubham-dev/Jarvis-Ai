@@ -48,12 +48,19 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
 
     companion object {
         private const val TAG = "JarvisAccessibility"
+        private val lock = Any()
+        @Volatile
         var instance: JarvisAccessibilityService? = null
+            private set
+
+        fun getInstanceSafe(): JarvisAccessibilityService? {
+            return synchronized(lock) { instance }
+        }
     }
 
     override fun onServiceConnected() {
         Log.d(TAG, "Service Connected")
-        instance = this
+        synchronized(lock) { instance = this }
         mainExecutor = androidx.core.content.ContextCompat.getMainExecutor(this)
         
         // Keep service alive with a notification (Crucial for Realme/Oppo)
@@ -248,14 +255,14 @@ class JarvisAccessibilityService : AccessibilityService(), com.jarvisai.app.core
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        instance = null
+        synchronized(lock) { instance = null }
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
         serviceScope.cancel()
+        synchronized(lock) { instance = null }
         super.onDestroy()
-        instance = null
     }
 
     // ══════════════ ACCESSIBILITY HELPER IMPLEMENTATION ══════════════

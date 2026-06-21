@@ -7,7 +7,6 @@ import com.jarvisai.app.api.LlmClient
 import com.jarvisai.app.data.local.dao.ChatDao
 import com.jarvisai.app.data.local.dao.ChatSessionDao
 import com.jarvisai.app.data.models.ChatMessageEntity
-import com.jarvisai.app.data.models.ChatSessionEntity
 import com.jarvisai.app.data.models.ChatMessage
 import com.jarvisai.app.data.models.ChatSession
 import com.jarvisai.app.data.models.MessageRole
@@ -23,7 +22,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -207,7 +205,7 @@ class ChatRepository @Inject constructor(
                     prompt = prompt,
                     systemContext = systemPrompt,
                     model = resolvedModel,
-                    toolsJson = null,
+                    toolsJson = tools,
                     customBaseUrl = baseUrl
                 ).catch { e ->
                     Log.e("ChatRepository", "Stream error", e)

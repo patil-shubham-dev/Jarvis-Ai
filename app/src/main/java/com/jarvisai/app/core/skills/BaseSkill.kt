@@ -8,6 +8,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * Foundation for all autonomous skills in Sentinel V2.
@@ -21,6 +23,7 @@ abstract class BaseSkill(
     internal var overlay: JarvisOverlayService? = null
     internal var skillManager: SkillManager? = null
     internal var currentSkillName: String? = null
+    private val skillScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     /**
      * Executes the skill with the given parameters.
@@ -61,10 +64,13 @@ abstract class BaseSkill(
 
     protected fun updateStatus(msg: String) {
         overlay?.updateStatus(msg)
-        // Also pipe to chat history if it's a significant update
-        CoroutineScope(Dispatchers.IO).launch {
+        skillScope.launch {
             skillManager?.postStatus(msg)
         }
+    }
+
+    open fun onDestroy() {
+        skillScope.cancel()
     }
 }
 

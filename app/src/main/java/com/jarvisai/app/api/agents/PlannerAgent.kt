@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.jarvisai.app.api.LlmClient
-import com.jarvisai.app.api.ModelDetector
 import com.jarvisai.app.api.context.ScreenStateEngine
 import com.jarvisai.app.core.action.ActionEngine
 import com.jarvisai.app.core.skills.ExecutionTracker
@@ -14,7 +13,6 @@ import com.jarvisai.app.utils.SecurePrefs
 import com.jarvisai.app.service.JarvisOverlayService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONArray
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.delay

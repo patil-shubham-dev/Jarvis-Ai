@@ -3,97 +3,227 @@
 import { useState, useEffect, useRef } from "react";
 import { Orb } from "@/components/Orb";
 import { EdgeGlow } from "@/components/EdgeGlow";
+import { StreamMessage } from "@/components/StreamMessage";
+import { MemoryExplorer } from "@/components/MemoryExplorer";
+import { ActionTimeline } from "@/components/ActionTimeline";
+import { AgentThoughtView } from "@/components/AgentThoughtView";
+import { ToolCallView } from "@/components/ToolCallView";
+import { useWS } from "@/hooks/WebSocketContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, Settings, MessageSquare, Brain, Activity, X, ChevronUp } from "lucide-react";
+import { Send, Mic, Settings, MessageSquare, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+interface AgentThought {
+  agent: string;
+  content: string;
+  type?: string;
+}
+
+interface ToolCall {
+  id: string;
+  tool: string;
+  status: "pending" | "running" | "success" | "failed";
+  args?: string;
+  result?: string;
+  duration_ms?: number;
+}
+
+interface DisplayMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp?: string;
+  isStreaming?: boolean;
+}
+
+let msgCounter = 0;
+function nextId() {
+  return `msg_${++msgCounter}_${Date.now()}`;
+}
+
 export default function Home() {
-  const [messages, setMessages] = useState<{ role: string; content: string; type?: string }[]>([]);
+  const router = useRouter();
+  const { socket, isConnected, messages, timelineSteps, send } = useWS();
+  const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [state, setState] = useState<"idle" | "thinking" | "listening" | "speaking">("idle");
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [agentThoughts, setAgentThoughts] = useState<AgentThought[]>([]);
+  const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let ws: WebSocket;
-    let reconnectInterval: any;
-
-    const connect = () => {
-      ws = new WebSocket("ws://localhost:8000/ws/chat");
-      
-      ws.onopen = () => {
-        console.log("Connected to Jarvis Backend");
-        setSocket(ws);
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === "thought") {
-          setState("thinking");
-        } else if (data.type === "action" && data.action === "vision_scan") {
-          setState("thinking");
-        } else if (data.type === "message") {
-          setState("speaking");
-          setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
-          if (!isChatOpen) setIsChatOpen(true);
-          setTimeout(() => setState("idle"), 3000);
-        }
-      };
-
-      ws.onclose = () => {
-        console.log("WebSocket disconnected. Retrying in 3s...");
-        setSocket(null);
-        reconnectInterval = setTimeout(connect, 3000);
-      };
-    };
-
-    connect();
-    return () => {
-      if (ws) ws.close();
-      if (reconnectInterval) clearTimeout(reconnectInterval);
-    };
-  }, [isChatOpen]);
+  const processingRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [displayMessages]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    const msgKey = `${lastMsg.type}_${lastMsg.content}_${messages.length}`;
+    if (processingRef.current.has(msgKey)) return;
+    processingRef.current.add(msgKey);
+    if (processingRef.current.size > 200) {
+      processingRef.current = new Set([...processingRef.current].slice(-100));
+    }
+
+    switch (lastMsg.type) {
+      case "user_message":
+        setDisplayMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "user", content: lastMsg.content || "", timestamp: lastMsg.timestamp },
+        ]);
+        break;
+
+      case "thought":
+        setState("thinking");
+        setAgentThoughts((prev) => [
+          ...prev,
+          { agent: lastMsg.agent || "orchestrator", content: lastMsg.content || "", type: "reasoning" },
+        ]);
+        break;
+
+      case "plan":
+        setShowTimeline(true);
+        break;
+
+      case "step_started":
+        setState("thinking");
+        break;
+
+      case "tool":
+        if (lastMsg.tool) {
+          setToolCalls((prev) => [
+            ...prev,
+            {
+              id: `tool_${Date.now()}`,
+              tool: lastMsg.tool,
+              status: lastMsg.status || "success",
+              args: lastMsg.args ? JSON.stringify(lastMsg.args).slice(0, 100) : undefined,
+              result: lastMsg.result ? String(lastMsg.result).slice(0, 100) : undefined,
+              duration_ms: lastMsg.duration_ms,
+            },
+          ]);
+        }
+        break;
+
+      case "stream_token":
+        setDisplayMessages((prev) => {
+          if (prev.length > 0 && prev[prev.length - 1].isStreaming) {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + (lastMsg.content || ""),
+            };
+            return updated;
+          }
+          return prev;
+        });
+        break;
+
+      case "stream_start":
+        setDisplayMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "assistant", content: "", isStreaming: true, timestamp: lastMsg.timestamp },
+        ]);
+        setState("speaking");
+        break;
+
+      case "stream_end":
+        setDisplayMessages((prev) => {
+          if (prev.length > 0 && prev[prev.length - 1].isStreaming) {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            updated[updated.length - 1] = {
+              ...last,
+              isStreaming: false,
+              timestamp: lastMsg.timestamp || last.timestamp,
+            };
+            return updated;
+          }
+          return prev;
+        });
+        setTimeout(() => { setState("idle"); setShowTimeline(false); }, 1000);
+        break;
+
+      case "message":
+        if (lastMsg.content) {
+          setDisplayMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", content: lastMsg.content ?? "", timestamp: lastMsg.timestamp },
+          ]);
+          setState("speaking");
+          if (!isChatOpen) setIsChatOpen(true);
+          setTimeout(() => { setState("idle"); setShowTimeline(false); }, 2000);
+        }
+        break;
+
+      case "error":
+        setDisplayMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "system", content: lastMsg.content || "An error occurred" },
+        ]);
+        setState("idle");
+        setShowTimeline(false);
+        break;
+    }
   }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim() || !socket) return;
-    const userMsg = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMsg]);
-    socket.send(JSON.stringify({ text: input }));
+    const text = input.trim();
+    if (!text) return;
+
+    if (!isConnected || !socket) {
+      setDisplayMessages((prev) => [
+        ...prev,
+        { id: nextId(), role: "system", content: "Cannot send message: not connected to server" },
+      ]);
+      return;
+    }
+
+    setDisplayMessages((prev) => [
+      ...prev,
+      { id: nextId(), role: "user", content: text, timestamp: new Date().toISOString() },
+    ]);
+    send({ text });
     setInput("");
     setState("thinking");
   };
 
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen bg-white overflow-hidden font-sans text-gray-900">
-      <EdgeGlow 
-        active={state !== "idle"} 
-        type={state === "thinking" ? "thinking" : state === "speaking" ? "executing" : state === "listening" ? "listening" : "thinking"} 
+    <main className="relative flex flex-col items-center justify-center min-h-screen bg-background overflow-hidden font-sans text-foreground">
+      <EdgeGlow
+        active={state !== "idle"}
+        type={state === "thinking" ? "thinking" : state === "speaking" ? "executing" : state === "listening" ? "listening" : "thinking"}
       />
-      
-      {/* Premium Ambient Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,122,255,0.03),transparent_70%)] pointer-events-none" />
-      
-      {/* Top Status Bar (Mobile Style) */}
+
+      <MemoryExplorer />
+      <ActionTimeline steps={timelineSteps} visible={showTimeline} />
+      <AgentThoughtView thoughts={agentThoughts} visible={agentThoughts.length > 0} />
+      <ToolCallView calls={toolCalls} visible={toolCalls.length > 0} />
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(196,149,106,0.04),transparent_70%)] pointer-events-none" />
+
       <header className="absolute top-0 w-full p-6 flex justify-between items-center z-20">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600/10 backdrop-blur-md border border-blue-600/20 flex items-center justify-center">
-            <span className="text-blue-600 font-bold text-xs">J</span>
-          </div>
-          <span className="text-sm font-medium tracking-widest text-gray-400 uppercase">Jarvis OS</span>
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "w-2.5 h-2.5 rounded-full transition-colors",
+            isConnected ? "bg-success" : "bg-destructive"
+          )} />
+          <span className="text-sm font-medium tracking-widest text-muted-foreground uppercase">
+            {isConnected ? "Jarvis OS" : "Disconnected"}
+          </span>
         </div>
-        <button className="p-2 rounded-full bg-black/5 backdrop-blur-md border border-black/5">
-          <Settings className="w-5 h-5 text-gray-600" />
+        <button onClick={() => router.push("/settings")} className="p-2 rounded-full bg-card backdrop-blur-md border border-border">
+          <Settings className="w-5 h-5 text-muted-foreground" />
         </button>
       </header>
 
-      {/* Central Living Orb */}
       <div className={cn(
         "transition-all duration-700 ease-in-out",
         isChatOpen ? "scale-75 -translate-y-32" : "scale-100"
@@ -101,13 +231,12 @@ export default function Home() {
         <Orb state={state} />
       </div>
 
-      {/* Interaction State Label */}
-      <motion.div 
+      <motion.div
         animate={{ opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 3, repeat: Infinity }}
         className="absolute top-[60%] text-center"
       >
-        <p className="text-xs tracking-[0.3em] uppercase text-blue-600 font-medium">
+        <p className="text-xs tracking-[0.3em] uppercase text-primary font-medium">
           {state === "idle" && "System Ready"}
           {state === "thinking" && "Processing..."}
           {state === "listening" && "Listening..."}
@@ -115,36 +244,30 @@ export default function Home() {
         </p>
       </motion.div>
 
-      {/* Bottom Controls */}
       <div className={cn(
         "absolute bottom-0 w-full transition-transform duration-500 z-30",
         isChatOpen ? "translate-y-full" : "translate-y-0"
       )}>
-        <div className="p-8 pb-12 flex justify-center gap-8 items-center bg-gradient-to-t from-white to-transparent">
-          <button className="p-4 rounded-full bg-black/5 border border-black/5 text-gray-400 hover:text-black transition-all">
-            <Brain className="w-6 h-6" />
-          </button>
-          
-          <button 
-            onClick={() => setState(state === "listening" ? "idle" : "listening")}
-            className={cn(
-              "p-6 rounded-full shadow-[0_10px_30px_rgba(59,130,246,0.3)] transition-all",
-              state === "listening" ? "bg-red-500 scale-110" : "bg-blue-600 hover:bg-blue-500"
-            )}
-          >
-            <Mic className="w-8 h-8 text-white" />
-          </button>
- 
-          <button 
+        <div className="p-8 pb-12 flex justify-center gap-4 items-center bg-gradient-to-t from-background to-transparent">
+          <button
             onClick={() => setIsChatOpen(true)}
-            className="p-4 rounded-full bg-black/5 border border-black/5 text-gray-400 hover:text-black transition-all"
+            className="p-4 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground transition-all"
           >
             <MessageSquare className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={() => setState(state === "listening" ? "idle" : "listening")}
+            className={cn(
+              "p-6 rounded-full shadow-lg transition-all",
+              state === "listening" ? "bg-destructive scale-110" : "bg-primary hover:bg-[#DA4800]"
+            )}
+          >
+            <Mic className="w-8 h-8 text-primary-foreground" />
           </button>
         </div>
       </div>
 
-      {/* Bottom Sheet Chat */}
       <AnimatePresence>
         {isChatOpen && (
           <motion.div
@@ -152,72 +275,63 @@ export default function Home() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute inset-0 z-40 bg-white flex flex-col"
+            className="absolute inset-0 z-40 bg-background flex flex-col"
           >
-            {/* Sheet Header */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+            <div className="p-4 border-b border-border flex justify-between items-center">
               <button onClick={() => setIsChatOpen(false)} className="p-2">
-                <X className="w-6 h-6 text-gray-400" />
+                <X className="w-6 h-6 text-muted-foreground" />
               </button>
               <div className="flex flex-col items-center">
-                <div className="w-12 h-1 bg-gray-100 rounded-full mb-2" />
-                <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Conversation</span>
+                <div className="w-12 h-1 bg-border rounded-full mb-2" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-widest">Conversation</span>
               </div>
-              <div className="w-10" /> {/* Spacer */}
+              <div className="w-10" />
             </div>
 
-            {/* Chat Content */}
-            <div 
+            <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+              className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
             >
-              {messages.length === 0 && (
-                <div className="h-full flex flex-col items-center justify-center opacity-30 text-center px-12">
-                  <MessageSquare className="w-12 h-12 mb-4" />
-                  <p className="text-sm">No recent messages. Start a conversation with Jarvis.</p>
+              {displayMessages.length === 0 && (
+                <div className="h-full flex flex-col items-center justify-center opacity-40 text-center px-12">
+                  <MessageSquare className="w-12 h-12 mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Start a conversation with Jarvis</p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">Ask me anything or give me a task</p>
                 </div>
               )}
-              {messages.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={cn(
-                    "flex flex-col max-w-[85%]",
-                    msg.role === "user" ? "ml-auto items-end" : "mr-auto items-start"
-                  )}
-                >
-                  <div className={cn(
-                    "p-4 rounded-2xl text-sm leading-relaxed",
-                    msg.role === "user" 
-                      ? "bg-blue-600 text-white rounded-tr-none shadow-[0_5px_15px_rgba(37,99,235,0.2)]" 
-                      : "bg-gray-100 text-gray-800 rounded-tl-none"
-                  )}>
-                    {msg.content}
-                  </div>
-                  <span className="text-[10px] uppercase tracking-tighter text-gray-400 mt-2">
-                    {msg.role === "user" ? "You" : "Jarvis"}
-                  </span>
-                </motion.div>
+              {displayMessages.map((msg) => (
+                <StreamMessage
+                  key={msg.id}
+                  content={msg.content}
+                  role={msg.role}
+                  timestamp={msg.timestamp}
+                  isStreaming={msg.isStreaming}
+                />
               ))}
             </div>
 
-            {/* Sticky Chat Input */}
-            <div className="p-6 bg-gradient-to-t from-white to-transparent">
-              <div className="bg-gray-100 border border-gray-200 rounded-3xl p-2 flex items-center gap-2">
-                <input 
-                  type="text" 
+            <div className="p-6 bg-gradient-to-t from-background to-transparent">
+              <div className="bg-card border border-border rounded-3xl p-2 flex items-center gap-2 shadow-sm">
+                <input
+                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-transparent border-none outline-none text-sm px-4 text-gray-900 placeholder:text-gray-400"
+                  placeholder={isConnected ? "Ask Jarvis anything..." : "Reconnecting..."}
+                  disabled={!isConnected}
+                  className="flex-1 bg-transparent border-none outline-none text-sm px-4 text-foreground placeholder:text-muted-foreground/60 disabled:opacity-50"
                 />
-                <button 
+                <button
                   onClick={handleSend}
-                  className="p-3 bg-blue-600 rounded-2xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/20"
+                  disabled={!input.trim() || !isConnected}
+                  className={cn(
+                    "p-3 rounded-2xl transition-all",
+                    input.trim() && isConnected
+                      ? "bg-primary hover:bg-[#DA4800] shadow-sm text-white"
+                      : "bg-muted text-muted-foreground"
+                  )}
                 >
-                  <Send className="w-5 h-5 text-white" />
+                  <Send className="w-5 h-5" />
                 </button>
               </div>
             </div>

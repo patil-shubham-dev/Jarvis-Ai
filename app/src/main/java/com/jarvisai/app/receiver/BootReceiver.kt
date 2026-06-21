@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import androidx.room.Room
 import com.jarvisai.app.data.local.AppDatabase
 import com.jarvisai.app.notifications.ReminderScheduler
 import com.jarvisai.app.service.JarvisOverlayService
@@ -35,11 +34,7 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val database = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "jarvis_db"
-                ).fallbackToDestructiveMigration().build()
+                val database = AppDatabase.getInstance(context)
                 val scheduler = ReminderScheduler(context.applicationContext)
                 database.reminderDao().getPendingReminders().first().forEach { reminder ->
                     scheduler.schedule(reminder.id, reminder.triggerAtMillis)

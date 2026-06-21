@@ -13,13 +13,15 @@ class ExecutionVisualizerView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val tapPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#8000D4FF")
+        color = context.getColor(com.jarvisai.app.R.color.jarvis_accent)
+        alpha = 128
         style = Paint.Style.STROKE
         strokeWidth = 6f
     }
 
     private val trailPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#4000D4FF")
+        color = context.getColor(com.jarvisai.app.R.color.jarvis_accent)
+        alpha = 64
         style = Paint.Style.STROKE
         strokeWidth = 8f
         strokeJoin = Paint.Join.ROUND

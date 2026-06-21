@@ -1,42 +1,75 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --card: #f7f7f8;
-  --card-foreground: #1a1a1a;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #007aff;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f4;
-  --secondary-foreground: #1a1a1a;
-  --muted: #f4f4f4;
-  --muted-foreground: #737373;
-  --accent: #00a67e;
-  --accent-foreground: #ffffff;
-  --destructive: #ff3b30;
-  --destructive-foreground: #ffffff;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #007aff;
+@theme {
+  --color-background: #F7F5F0;
+  --color-foreground: #2C2C2C;
+  --color-card: #FDFCFA;
+  --color-card-foreground: #2C2C2C;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #2C2C2C;
+  --color-primary: #F86607;
+  --color-primary-foreground: #F7F5F0;
+  --color-secondary: #F0EBE5;
+  --color-secondary-foreground: #2C2C2C;
+  --color-muted: #F5F2EC;
+  --color-muted-foreground: #6B6560;
+  --color-accent: #FF8425;
+  --color-accent-foreground: #2C2C2C;
+  --color-destructive: #CC7A7A;
+  --color-destructive-foreground: #F7F5F0;
+  --color-border: #E5E0D8;
+  --color-input: #E5E0D8;
+  --color-ring: #F86607;
+  --color-success: #7DAA7D;
+  --color-warning: #D4A050;
+  --color-info: #F86607;
   --radius: 1rem;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+.dark {
+  --color-background: #1A1A1A;
+  --color-foreground: #E8E4DE;
+  --color-card: #242424;
+  --color-card-foreground: #E8E4DE;
+  --color-popover: #2A2A2A;
+  --color-popover-foreground: #E8E4DE;
+  --color-primary: #FF8425;
+  --color-primary-foreground: #1A1A1A;
+  --color-secondary: #2E2E2E;
+  --color-secondary-foreground: #E8E4DE;
+  --color-muted: #2E2E2E;
+  --color-muted-foreground: #9E9A96;
+  --color-accent: #FF8425;
+  --color-accent-foreground: #1A1A1A;
+  --color-destructive: #CC7A7A;
+  --color-destructive-foreground: #1A1A1A;
+  --color-border: #333333;
+  --color-input: #333333;
+  --color-ring: #FF8425;
+  --color-success: #7DAA7D;
+  --color-warning: #D4A050;
+  --color-info: #FF8425;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 .glass {
-  @apply bg-white/80 backdrop-blur-md border border-black/5;
+  background-color: rgb(255 255 255 / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(0 0 0 / 0.05);
+}
+
+.dark .glass {
+  background-color: rgb(36 36 36 / 0.8);
+  border: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -44,9 +77,22 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-black/10 rounded-full hover:bg-black/20 transition-colors;
+  background: rgb(0 0 0 / 0.1);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(0 0 0 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

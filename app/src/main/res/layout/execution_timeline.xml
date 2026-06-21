@@ -5,9 +5,9 @@
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
-    app:cardBackgroundColor="#CC000000"
+    app:cardBackgroundColor="@color/bg_surface"
     app:cardCornerRadius="16dp"
-    app:cardElevation="0dp">
+    app:cardElevation="2dp">
 
     <LinearLayout
         android:id="@+id/timeline_container"
@@ -20,9 +20,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="JARVIS TIMELINE"
-            android:textColor="#80FFFFFF"
+            android:textColor="@color/text_secondary"
             android:textSize="10sp"
-            android:fontFamily="sans-serif-black"
+            android:fontFamily="sans-serif-medium"
             android:letterSpacing="0.1"
             android:layout_marginBottom="8dp" />
 

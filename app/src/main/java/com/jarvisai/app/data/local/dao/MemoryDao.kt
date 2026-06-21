@@ -11,6 +11,9 @@ interface MemoryDao {
     @Query("SELECT * FROM memory_snippets ORDER BY timestamp DESC")
     suspend fun getAllSnippets(): List<MemorySnippetEntity>
 
+    @Query("SELECT * FROM memory_snippets ORDER BY timestamp DESC LIMIT :limit")
+    suspend fun getRecentSnippets(limit: Int = 200): List<MemorySnippetEntity>
+
     @Query("DELETE FROM memory_snippets WHERE id = :id")
     suspend fun deleteSnippet(id: Long)
 

@@ -1,0 +1,46 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Source code
+*.kt text diff=kotlin
+*.kts text diff=kotlin
+*.java text diff=java
+*.py text diff=python
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text diff=javascript
+*.jsx text diff=javascript
+*.json text
+*.xml text
+*.yml text
+*.yaml text
+*.md text diff=markdown
+*.gradle text
+*.properties text
+*.cfg text
+*.ini text
+*.sh text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.svg binary
+*.jar binary
+*.keystore binary
+*.jks binary
+*.aab binary
+*.apk binary
+*.dex binary
+*.class binary
+*.hprof binary
+*.trace binary
+
+# Editor configs
+*.iml text
+.gitignore text
+.gitattributes text
+.editorconfig text

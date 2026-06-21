@@ -4,43 +4,53 @@
     <!--        JARVIS AI — MINIMALIST LIGHT THEME -->
     <!-- ═══════════════════════════════════════ -->
 
-    <!-- Backgrounds — Pure Light (ChatGPT/Claude Style) -->
-    <color name="bg_main">#FFFFFF</color>
-    <color name="bg_surface">#F9F9F9</color>
+    <!-- Backgrounds — Warm Cream (Claude Style) -->
+    <color name="bg_main">#F7F5F0</color>
+    <color name="bg_surface">#FDFCFA</color>
     <color name="bg_surface_elevated">#FFFFFF</color>
-    <color name="bg_card">#F7F7F8</color>
-    <color name="bg_overlay">#80FFFFFF</color>
-    <color name="bg_pill_input">#FFFFFF</color>
+    <color name="bg_card">#F5F2EC</color>
+    <color name="bg_overlay">#80F7F5F0</color>
+    <color name="bg_pill_input">#FDFCFA</color>
 
-    <!-- Primary Brand — Sophisticated Teal & Blue -->
-    <color name="jarvis_primary">#007AFF</color> <!-- iOS Blue for primary -->
-    <color name="jarvis_accent">#00A67E</color>  <!-- ChatGPT Green for accent -->
+    <!-- Primary Brand — Warm Amber (Claude-inspired) -->
+    <color name="jarvis_primary">#F86607</color> <!-- Warm amber/terracotta -->
+    <color name="jarvis_accent">#FF8425</color>  <!-- Lighter warm amber accent -->
     
-    <!-- Text — Modern High-Contrast -->
-    <color name="text_primary">#1A1A1A</color>
-    <color name="text_secondary">#4D4D4D</color>
-    <color name="text_hint">#8E8E93</color>
-    <color name="text_error">#FF3B30</color>
+    <!-- Text — Warm Dark -->
+    <color name="text_primary">#2C2C2C</color>
+    <color name="text_secondary">#6B6560</color>
+    <color name="text_hint">#9A9490</color>
+    <color name="text_error">#CC7A7A</color>
 
-    <!-- Chat Elements -->
-    <color name="bubble_user">#F4F4F4</color>
+    <!-- Chat Elements — Warm Tones -->
+    <color name="bubble_user">#F0EBE5</color>
     <color name="bubble_jarvis">#FFFFFF</color>
     
-    <!-- Icons -->
-    <color name="icon_primary">#4D4D4D</color>
-    <color name="icon_secondary">#8E8E93</color>
+    <!-- Icons — Warm -->
+    <color name="icon_primary">#4A4540</color>
+    <color name="icon_secondary">#8A8580</color>
 
-    <!-- Dividers & Borders -->
-    <color name="divider">#E5E5E5</color>
-    <color name="border_subtle">#E5E5E5</color>
-    <color name="border_active">#007AFF</color>
+    <!-- Dividers & Borders — Warm -->
+    <color name="divider">#E5E0D8</color>
+    <color name="border_subtle">#E5E0D8</color>
+    <color name="border_active">#F86607</color>
 
-    <!-- Status -->
-    <color name="status_success">#34C759</color>
-    <color name="status_warning">#FFCC00</color>
-    <color name="status_error">#FF3B30</color>
-    <color name="status_info">#007AFF</color>
+    <!-- Status — Warm-toned -->
+    <color name="status_success">#7DAA7D</color>  <!-- Warm sage green -->
+    <color name="status_warning">#D4A050</color>  <!-- Warm amber -->
+    <color name="status_error">#CC7A7A</color>    <!-- Muted warm red -->
+    <color name="status_info">#F86607</color>      <!-- Warm amber -->
 
     <!-- Transparent -->
     <color name="transparent">#00000000</color>
+
+    <!-- Provider Colors (for BYOK badge) -->
+    <color name="provider_openai">#10A37F</color>
+    <color name="provider_anthropic">#FF8425</color>
+    <color name="provider_google">#4285F4</color>
+    <color name="provider_groq">#F97316</color>
+    <color name="provider_ollama">#8B5CF6</color>
+    <color name="provider_openrouter">#8B5CF6</color>
+    <color name="provider_deepseek">#4F46E5</color>
+    <color name="provider_unknown">#6B7280</color>
 </resources>

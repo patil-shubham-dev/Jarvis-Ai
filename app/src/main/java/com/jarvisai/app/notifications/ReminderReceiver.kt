@@ -17,12 +17,7 @@ class ReminderReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 JarvisNotificationManager.ensureChannels(context)
-                val db = AppDatabase::class.java
-                val database = androidx.room.Room.databaseBuilder(
-                    context.applicationContext,
-                    db,
-                    "jarvis_db"
-                ).fallbackToDestructiveMigration().build()
+                val database = AppDatabase.getInstance(context)
 
                 val reminder = database.reminderDao().getById(reminderId) ?: return@launch
                 JarvisNotificationManager.showReminderNotification(

@@ -1,115 +1,164 @@
-# 🌌 Jarvis AI: Sentinel OS V4.1
+# Jarvis AI OS
 
-**The Autonomous Mobile Agent for Android**
+[![CI](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](backend/requirements.txt)
+[![Next.js](https://img.shields.io/badge/frontend-Next.js-black)](frontend/package.json)
+[![Kotlin](https://img.shields.io/badge/android-Kotlin-purple)](app/build.gradle.kts)
 
-Jarvis AI (Sentinel OS) is a high-fidelity, autonomous mobile agent designed to bridge the gap between human intent and device execution. Unlike traditional assistants, Jarvis utilizes **Local Vision (MobileNet V3)** and a recursive **Observe-Think-Act** loop to control any Android application without pre-built integrations.
-
-[![Release](https://img.shields.io/badge/Release-v4.1.0--Stable-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/patil-shubham-dev/Jarvis-Ai/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://github.com/patil-shubham-dev/Jarvis-Ai/blob/main/LICENSE)
-[![Build](https://img.shields.io/badge/Build-Success-success?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/patil-shubham-dev/Jarvis-Ai/actions)
-
----
-
-## 🚀 Key Features
-
-### 👁️ Resilient Vision Engine
-- **Local Processing**: Integrated **MobileNet V3** via ML Kit for 100% on-device visual labeling and OCR.
-- **Hardware Acceleration**: Robust bitmap processing for modern GPUs (Realme/Oppo/Samsung support).
-- **Context Optimization**: Automatic "Keyboard Filtering" to reduce LLM prompt bloat by 70%, ensuring lightning-fast decision making.
-
-### 🤖 Autonomous Brain (Sentinel Core)
-- **Recursive Planning**: A sophisticated multi-step planner that verifies every tap and swipe before proceeding.
-- **Pronoun Resolution**: Intelligent context awareness—Jarvis understands who "him/her" refers to by scanning recent interactions.
-- **Live Thought-Stream**: Real-time feedback in the chat UI (`🤔 Analyzing...`, `✅ Tapping Send...`) so you're never in the dark.
-
-### 🗄️ Memory & Context
-- **Tiered Memory System**: Combines local SQLite storage for immediate context with vector-based semantic search for long-term recall.
-- **Privacy by Design**: All visual labeling and sensitive data processing occur on-device.
+A persistent AI operating system assistant with memory, voice, workflows, and device automation.
+Jarvis understands natural language, executes multi-step plans, remembers past conversations, and controls Android devices via accessibility services.
 
 ---
 
-## 📱 The Cognitive Loop
+## Architecture Overview
 
-Jarvis doesn't just react; it **Navigates**.
-
-```mermaid
-graph TD
-    User([User Intent]) --> Orb[Jarvis Reactive Orb]
-    Orb --> Planner{PlannerAgent}
-    
-    subgraph "The Cognitive Engine"
-        Planner --> Observe[VisionSkill: Local OCR + Labeling]
-        Observe --> Think[LLM Strategy: gpt-4o/Sonnet 3.5]
-        Think --> Memory[Memory: Context Injection]
-        Memory --> Think
-        Think --> Act[ActionEngine: Human-like Gestures]
-    end
-    
-    Act --> Feedback[Verification: Did the UI change?]
-    Feedback --> Observe
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Frontend (Next.js)                    │
+│  Web UI  ←→  WebSocket  ←→  REST API                    │
+└──────────────────────┬──────────────────────────────────┘
+                       │ ws://localhost:8000
+┌──────────────────────▼──────────────────────────────────┐
+│               Backend (FastAPI + Python)                 │
+│  ┌──────────┐  ┌──────────────┐  ┌──────────────────┐   │
+│  │ Agent    │  │ Conversation │  │ Memory Agent     │   │
+│  │Orchestr. │──│ Agent        │──│ (ChromaDB)       │   │
+│  └──────────┘  └──────────────┘  └──────────────────┘   │
+│  ┌──────────────────────────────────────────────────┐    │
+│  │ Tool Registry (web_search, code_exec, android)   │    │
+│  └──────────────────────────────────────────────────┘    │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP / WebSocket
+┌──────────────────────▼──────────────────────────────────┐
+│              Android App (Kotlin / Jetpack)              │
+│  ┌──────────┐  ┌────────────┐  ┌──────────────────┐     │
+│  │ Chat UI  │  │ Overlay    │  │ Action Engine    │     │
+│  │          │  │ Service    │  │ (Accessibility)   │     │
+│  └──────────┘  └────────────┘  └──────────────────┘     │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 🔬 Technical Specs
-
-| Feature | Implementation | Performance |
-| :--- | :--- | :--- |
-| **Vision** | Google ML Kit + Custom MobileNet V3 | ~150ms / Scan |
-| **Gestures** | Bezier-curve Interpolated Taps & Swipes | 100% Human-like |
-| **Context** | Filtered Accessibility Tree (Keyboard excluded) | Optimized Tokens |
-| **Privacy** | Local SQLite + On-Device Labeling | Private by Design |
-
----
-
-## 📂 Repository Structure
-
-```text
-.
-├── app/                # Android Mobile Client (Kotlin)
-├── backend/            # Cognitive Engine (FastAPI/Python)
-├── frontend/           # Web Dashboard (Next.js/TypeScript)
-├── docs/               # Technical Documentation & Assets
-├── .github/            # CI/CD Workflows
-├── CONTRIBUTING.md     # Contribution Guidelines
-└── SYSTEM_REFERENCE.md # Technical Architecture Overview
-```
-
----
-
-## 🔧 Setup & Quickstart
+## Quick Start
 
 ### Prerequisites
-- Android Studio Iguana+
-- Python 3.10+
-- Node.js 18+
 
-### Installation
+- Python 3.11+
+- Node.js 18+
+- Android Studio (for the mobile app)
+
+### Backend Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/patil-shubham-dev/Jarvis-Ai.git
-cd Jarvis-Ai
+cd backend
+cp .env.example .env
+# Edit .env and add your API keys (at minimum OPENAI_API_KEY)
 
-# Deploy the Android app
-./gradlew installDebug
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-> [!CAUTION]
-> **Android 13/14 Users**: If the app reports "Accessibility Off" even when toggled ON, please **Turn it OFF and ON again** in settings. This kickstarts the internal service process after a fresh install.
+The API is now running at `http://localhost:8000`.
 
----
+### Frontend Setup
 
-## 📄 Documentation
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- [Setup Guide](docs/SETUP_GUIDE.md)
-- [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
-- [System Reference](SYSTEM_REFERENCE.md)
+Open `http://localhost:3000` in your browser.
 
----
+### Android App
 
-<p align="center">
-  <b>Jarvis AI: Sentinel OS</b><br>
-  Developed with ❤️ by <a href="https://github.com/patil-shubham-dev">Shubham Patil</a><br>
-  <i>Leading the transition to Agentic Computing.</i>
-</p>
+Open `app/` in Android Studio, sync Gradle, and run on a device or emulator.
+
+## Features
+
+- **🧠 Multi-Agent Architecture**: Orchestrator, Conversation, Planner, Memory agents working together
+- **💬 Streaming Chat**: Real-time token-by-token responses via WebSocket
+- **🔧 Tool Execution**: Web search, code execution (sandboxed), Android device bridge
+- **📌 Persistent Memory**: ChromaDB vector store for semantic recall across sessions
+- **🎙️ Voice Toggle**: Built-in voice command support
+- **🔑 Multi-Provider AI**: OpenAI, Anthropic Claude, Google Gemini, local Ollama
+- **📱 Android Integration**: Overlay service, accessibility automation, app control
+- **📊 Plan & Timeline**: Visual step-by-step plan execution with status tracking
+- **🌙 Dark Mode**: Light/dark/system theme support
+
+## Project Structure
+
+```
+├── backend/              # Python FastAPI backend
+│   ├── app/
+│   │   ├── agents/       # AI agents (orchestrator, conversation, planner, memory)
+│   │   ├── database/     # ChromaDB vector store
+│   │   ├── models/       # Pydantic validation models
+│   │   ├── tools/        # Tool registry (web search, code exec, android)
+│   │   ├── config.py     # Central configuration
+│   │   └── main.py       # FastAPI app + WebSocket endpoints
+│   ├── tests/            # E2E + unit tests
+│   └── requirements.txt
+├── frontend/             # Next.js web UI
+│   ├── app/              # Page routes
+│   ├── components/       # Reusable UI components
+│   ├── hooks/            # WebSocket context + hook
+│   └── package.json
+├── app/                  # Native Android app (Kotlin)
+│   ├── src/main/java/    # Activity, service, viewmodel, engine code
+│   └── build.gradle.kts
+├── docs/                 # Architecture & setup guides
+├── .github/              # CI, issue templates, PR template
+├── .env.example          # Environment variable template
+└── gradle/               # Gradle wrapper + version catalog
+```
+
+## Configuration
+
+Copy `backend/.env.example` to `backend/.env` and configure:
+
+| Variable            | Description                    | Default                        |
+|---------------------|--------------------------------|--------------------------------|
+| `OPENAI_API_KEY`    | OpenAI API key (primary)       | -                              |
+| `ANTHROPIC_API_KEY` | Anthropic API key (fallback)   | -                              |
+| `GOOGLE_API_KEY`    | Google AI API key (fallback)   | -                              |
+| `HOST`              | Server bind address            | `127.0.0.1`                    |
+| `PORT`              | Server port                    | `8000`                         |
+| `DEBUG`             | Enable hot reload              | `false`                        |
+| `LOG_LEVEL`         | Logging verbosity              | `INFO`                         |
+| `CORS_ORIGINS`      | Allowed CORS origins (comma separated) | `http://localhost:3000` |
+
+## API Endpoints
+
+| Method | Path               | Description                       |
+|--------|--------------------|-----------------------------------|
+| GET    | `/`                | Server info                       |
+| GET    | `/api/health`      | Health check                      |
+| GET    | `/api/memories`    | List/search stored memories       |
+| POST   | `/api/proxy/chat`  | Proxy chat completion to AI API   |
+| POST   | `/api/proxy/embeddings` | Proxy embedding request       |
+| WS     | `/ws/chat`         | Streaming chat WebSocket          |
+| WS     | `/ws/stream`       | Raw event stream WebSocket        |
+
+## Testing
+
+```bash
+# Backend unit tests
+cd backend
+pytest tests/unit/ -v
+
+# Backend e2e tests (requires running server)
+pytest tests/e2e_test_streaming.py -v
+```
+
+## Security
+
+- **SSRF Protection**: Proxy endpoints only allow requests to a predefined domain allowlist
+- **Input Validation**: All WebSocket messages validated via Pydantic models
+- **Size Limits**: HTTP body capped at 1MB, WebSocket messages at 64KB
+- **API Key Safety**: Keys stored in client session storage (not persistent local storage)
+- **XSS Prevention**: All markdown output sanitized with DOMPurify
+
+## License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.

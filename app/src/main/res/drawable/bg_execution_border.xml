@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Outer Glow -->
+    <!-- Outer Warm Glow -->
     <item>
         <shape android:shape="rectangle">
             <stroke
                 android:width="6dp"
-                android:color="#4000D4FF" />
+                android:color="#40D4A574" />
             <corners android:radius="20dp" />
         </shape>
     </item>
@@ -14,7 +14,7 @@
         <shape android:shape="rectangle">
             <stroke
                 android:width="2dp"
-                android:color="#00D4FF" />
+                android:color="#FF8425" />
             <corners android:radius="18dp" />
         </shape>
     </item>

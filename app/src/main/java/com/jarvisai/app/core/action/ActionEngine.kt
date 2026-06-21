@@ -1,6 +1,5 @@
 package com.jarvisai.app.core.action
 
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
@@ -50,6 +49,9 @@ class ActionEngine @Inject constructor(
         TAP_AT,
         SWIPE_AT,
         TYPE_AT,
+        SCROLL,
+        PRESS_BACK,
+        PRESS_HOME,
         UNKNOWN
     }
 
@@ -143,50 +145,45 @@ class ActionEngine @Inject constructor(
     private fun executeOpenApp(appName: String): Boolean {
         return try {
             val pm = context.packageManager
-            var intent = pm.getLaunchIntentForPackage(appName)
-            
-            if (intent == null) {
-                // Hardcoded common mappings for speed/reliability
-                val packageMap = mapOf(
-                    "whatsapp" to "com.whatsapp",
-                    "spotify" to "com.spotify.music",
-                    "instagram" to "com.instagram.android",
-                    "youtube" to "com.google.android.youtube",
-                    "chrome" to "com.android.chrome",
-                    "maps" to "com.google.android.apps.maps",
-                    "settings" to "com.android.settings"
-                )
-                
-                val directPackage = packageMap[appName.lowercase()]
-                if (directPackage != null) {
-                    intent = pm.getLaunchIntentForPackage(directPackage)
-                }
-            }
-
-            if (intent == null) {
-                val packages = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
-                val targetPackage = packages.find { pkg ->
-                    val label = pm.getApplicationLabel(pkg).toString().lowercase()
-                    label == appName.lowercase() || label.contains(appName.lowercase())
-                }?.packageName
-                
-                if (targetPackage != null) {
-                    intent = pm.getLaunchIntentForPackage(targetPackage)
-                }
-            }
-
-            if (intent != null) {
-                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-                true
-            } else {
+            val intent = resolveLaunchIntent(pm, appName) ?: run {
                 Log.w(TAG, "App not found: $appName")
-                false
+                return false
             }
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to open app: $appName", e)
             false
         }
+    }
+
+    private fun resolveLaunchIntent(pm: android.content.pm.PackageManager, appName: String): android.content.Intent? {
+        pm.getLaunchIntentForPackage(appName)?.let { return it }
+
+        val packageMap = mapOf(
+            "whatsapp" to "com.whatsapp",
+            "spotify" to "com.spotify.music",
+            "instagram" to "com.instagram.android",
+            "youtube" to "com.google.android.youtube",
+            "chrome" to "com.android.chrome",
+            "maps" to "com.google.android.apps.maps",
+            "settings" to "com.android.settings"
+        )
+        packageMap[appName.lowercase()]?.let { pkg ->
+            pm.getLaunchIntentForPackage(pkg)?.let { return it }
+        }
+
+        val packages = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+        val targetPackage = packages.find { pkg ->
+            val label = pm.getApplicationLabel(pkg).toString().lowercase()
+            label == appName.lowercase() || label.contains(appName.lowercase())
+        }?.packageName
+        if (targetPackage != null) {
+            pm.getLaunchIntentForPackage(targetPackage)?.let { return it }
+        }
+
+        return null
     }
 
     private suspend fun executeSetReminder(

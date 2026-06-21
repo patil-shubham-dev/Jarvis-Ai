@@ -34,9 +34,9 @@ class MemoryAgent @Inject constructor(
         // 1. Store in Vector DB for semantic recall
         vectorMemoryStore.store(text, module)
         
-        // 2. (Continuous Learning) Analyze if a JSON update is needed
-        // For now, we log it to SYSTEM_LOGS
-        memoryManager.saveToJson("SYSTEM_LOGS", "observation_${System.currentTimeMillis()}.json", mapOf(
+        // 2. (Continuous Learning) Store in the correct module directory
+        val targetModule = module.ifBlank { "SYSTEM_LOGS" }
+        memoryManager.saveToJson(targetModule, "observation_${System.currentTimeMillis()}.json", mapOf(
             "source" to source,
             "text" to text,
             "module" to module,

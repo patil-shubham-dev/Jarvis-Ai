@@ -5,9 +5,9 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     app:cardCornerRadius="24dp"
-    app:cardElevation="8dp"
-    app:cardBackgroundColor="#CC000000"
-    app:strokeColor="#40FFFFFF"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/bg_surface_elevated"
+    app:strokeColor="@color/divider"
     app:strokeWidth="1dp"
     android:clickable="true"
     android:focusable="true"
@@ -25,7 +25,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/ic_mic"
-            app:tint="#00D4FF"
+            app:tint="@color/jarvis_primary"
             android:layout_marginEnd="10dp" />
 
         <TextView
@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Start Meeting Memo?"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium" />
 

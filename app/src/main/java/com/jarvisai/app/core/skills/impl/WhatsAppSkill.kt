@@ -26,12 +26,22 @@ class WhatsAppSkill(
         
         // 1. Search for contact
         updateStatus("Searching: $contact")
-        val searchSelectors = listOf("Search", "menu_search", "Ask Meta AI or Search", "com.whatsapp:id/menu_search")
+        val searchSelectors = listOf("Search", "menu_search", "Ask Meta AI or Search", "com.whatsapp:id/menu_search", "Search…")
         var foundSearch = false
         for (selector in searchSelectors) {
             if (accessibility.performActionClick(selector)) {
                 foundSearch = true
                 break
+            }
+        }
+        if (!foundSearch) {
+            val screenNodes = accessibility.getScreenNodes()
+            val searchNode = screenNodes?.firstOrNull { node ->
+                node?.text?.contains("Search", ignoreCase = true) == true ||
+                node?.contentDescription?.contains("Search", ignoreCase = true) == true
+            }
+            if (searchNode != null) {
+                foundSearch = accessibility.performActionClick(searchNode.text ?: "Search")
             }
         }
 

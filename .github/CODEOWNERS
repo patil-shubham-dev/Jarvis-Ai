@@ -1,0 +1,18 @@
+# Default owners for the entire repository
+*       @anomalyco
+
+# Backend ownership
+/backend/        @anomalyco
+
+# Android app ownership
+/app/            @anomalyco
+
+# Frontend ownership
+/frontend/       @anomalyco
+
+# Documentation ownership
+/docs/           @anomalyco
+/*.md            @anomalyco
+
+# CI/CD ownership
+/.github/        @anomalyco

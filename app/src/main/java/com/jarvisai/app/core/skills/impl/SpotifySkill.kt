@@ -39,14 +39,24 @@ class SpotifySkill(
             }
         }
         if (!foundSearchTab) {
-            // Try clicking the search icon if text fails
-            accessibility.performTap(500f, 2000f) // Generic bottom nav tap area for search
+            val screenNodes = accessibility.getScreenNodes()
+            val searchNode = screenNodes?.firstOrNull { node ->
+                node?.text?.contains("Search", ignoreCase = true) == true ||
+                node?.contentDescription?.contains("Search", ignoreCase = true) == true
+            }
+            if (searchNode != null) {
+                accessibility.performActionClick("Search")
+            } else {
+                val displayMetrics = context.resources.displayMetrics
+                val searchTabY = displayMetrics.heightPixels * 0.92f
+                accessibility.performTap(displayMetrics.widthPixels / 2f, searchTabY)
+            }
         }
         delay(1000)
 
         // 2. Click Search Input
         updateStatus("Finding input field...")
-        val inputFieldSelectors = listOf("What do you want to listen to?", "Search query", "com.spotify.music:id/search_query")
+        val inputFieldSelectors = listOf("What do you want to listen to?", "Search query", "com.spotify.music:id/search_query", "Search")
         var foundInput = false
         for (selector in inputFieldSelectors) {
             accessibility.findNode(selector)?.let {
@@ -61,8 +71,18 @@ class SpotifySkill(
 
         // 3. Click first result
         updateStatus("Playing $query")
-        // Typically the first result is at a specific location or matches text
-        accessibility.performTap(500f, 600f) // Tap the top search result
+        val resultSelectors = listOf(query, "com.spotify.music:id/row_view")
+        var foundResult = false
+        for (selector in resultSelectors) {
+            if (accessibility.performActionClick(selector)) {
+                foundResult = true
+                break
+            }
+        }
+        if (!foundResult) {
+            val displayMetrics = context.resources.displayMetrics
+            accessibility.performTap(displayMetrics.widthPixels / 2f, displayMetrics.heightPixels * 0.35f)
+        }
         delay(1500)
 
         // 4. Verify Playback

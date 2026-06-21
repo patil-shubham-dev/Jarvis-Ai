@@ -62,7 +62,7 @@ class SkillManager @Inject constructor(
         skills["type_at"] = generic
         skills["communication"] = CommunicationSkill(context, acc)
         skills["planning"] = PlanningSkill(context, acc)
-        skills["meeting_memo"] = com.jarvisai.app.core.skills.impl.MeetingMemoSkill(context, acc, chatRepository)
+        skills["meeting_memo"] = com.jarvisai.app.core.skills.impl.MeetingMemoSkill(context, acc, chatRepository, llmClient)
         
         skills.values.forEach { it.skillManager = this }
     }

@@ -4,6 +4,6 @@
     <gradient
         android:type="radial"
         android:gradientRadius="50%"
-        android:startColor="#884FC3F7"
-        android:endColor="#004FC3F7" />
+        android:startColor="#88D4A574"
+        android:endColor="#00D4A574" />
 </shape>

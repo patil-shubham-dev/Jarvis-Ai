@@ -23,7 +23,7 @@
             android:text="CORE_IDENTITY"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
-            android:fontFamily="sans-serif-bold"
+            android:fontFamily="sans-serif-medium"
             android:textAllCaps="true"
             android:gravity="center"
             android:layout_marginBottom="4dp" />

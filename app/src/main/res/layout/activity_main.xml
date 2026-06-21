@@ -37,8 +37,8 @@
                 android:layout_height="wrap_content"
                 android:text="Jarvis"
                 android:textColor="@color/text_primary"
-                android:textSize="17sp"
-                android:fontFamily="sans-serif-medium"
+                android:textSize="18sp"
+                android:fontFamily="serif"
                 android:letterSpacing="0.05"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -92,13 +92,14 @@
                 android:padding="12dp" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Glassmorphism Input Bar -->
+        <!-- Warm Cream Input Bar -->
         <LinearLayout
             android:id="@+id/inputContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:orientation="vertical"
+            android:background="@color/bg_main"
             app:layout_constraintBottom_toBottomOf="parent">
 
             <LinearLayout

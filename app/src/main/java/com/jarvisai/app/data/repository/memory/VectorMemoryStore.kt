@@ -36,15 +36,13 @@ class VectorMemoryStore @Inject constructor(
         try {
             val embedding = llmClient.getEmbeddings(apiKey, text, "text-embedding-3-small")
             
-            // Deduplication check
-            val queryEmbedding = embedding
-            val allSnippets = memoryDao.getAllSnippets()
-            val mostSimilar = allSnippets
-                .map { it to cosineSimilarity(queryEmbedding, it.embedding) }
+            // Deduplication check (limited to most recent 200 to avoid O(n) full scan)
+            val recentSnippets = memoryDao.getRecentSnippets(200)
+            val mostSimilar = recentSnippets
+                .map { it to cosineSimilarity(embedding, it.embedding) }
                 .maxByOrNull { it.second }
 
             if (mostSimilar != null && mostSimilar.second > 0.9f) {
-                // Update existing memory
                 val existing = mostSimilar.first
                 memoryDao.insertSnippet(existing.copy(
                     text = text,
@@ -65,7 +63,7 @@ class VectorMemoryStore @Inject constructor(
                 summary = summary
             ))
         } catch (e: Exception) {
-            // Log error silently
+            android.util.Log.e("VectorMemoryStore", "Failed to store memory: ${e.message}")
         }
     }
 

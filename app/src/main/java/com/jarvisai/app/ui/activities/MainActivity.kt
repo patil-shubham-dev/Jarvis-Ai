@@ -146,8 +146,8 @@ class MainActivity : AppCompatActivity() {
     private var isDashboardVisible = false
     private fun toggleMemoryDashboard() {
         isDashboardVisible = !isDashboardVisible
-        val targetY = if (isDashboardVisible) 0f else binding.cardMemoryDashboard.height.toFloat()
-        binding.cardMemoryDashboard.animate().translationY(-targetY).setDuration(500).start()
+        val targetY = if (isDashboardVisible) 0f else binding.cardMemoryDashboard.height.toFloat() + 100f
+        binding.cardMemoryDashboard.animate().translationY(targetY).setDuration(500).start()
     }
 
 

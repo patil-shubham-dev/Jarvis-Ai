@@ -17,7 +17,12 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission"
+        android:required="true"
+        tools:node="replace" />
+    <!-- QUERY_ALL_PACKAGES is required for app automation: launching target apps (WhatsApp, Spotify, Instagram) by package name.
+         If Google Play rejects this, narrow to specific packages via <queries> block above. -->
 
     <queries>
         <intent>

@@ -22,6 +22,8 @@ import com.jarvisai.app.core.skills.SkillManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+private const val TAG = "JarvisOverlay"
+
 @AndroidEntryPoint
 class JarvisOverlayService : Service() {
 
@@ -114,11 +116,13 @@ class JarvisOverlayService : Service() {
                     true
                 }
                 android.view.MotionEvent.ACTION_MOVE -> {
-                    params.x = initialX - (event.rawX - initialTouchX).toInt()
-                    params.y = initialY - (event.rawY - initialTouchY).toInt()
+                    params.x = initialX + (event.rawX - initialTouchX).toInt()
+                    params.y = initialY + (event.rawY - initialTouchY).toInt()
                     try {
                         windowManager?.updateViewLayout(overlayView, params)
-                    } catch (e: Exception) { /* Ignore */ }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Overlay move failed", e)
+                    }
                     true
                 }
                 else -> false
@@ -215,9 +219,11 @@ class JarvisOverlayService : Service() {
 
     private fun hideOverlay() {
         overlayView?.animate()?.alpha(0f)?.setDuration(500)?.withEndAction {
-            try {
-                windowManager?.removeView(overlayView)
-            } catch (e: Exception) { /* Ignore */ }
+                    try {
+                        windowManager?.removeView(overlayView)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to remove overlay", e)
+                    }
             overlayView = null
         }?.start()
         hideBorder()
@@ -296,7 +302,9 @@ class JarvisOverlayService : Service() {
         borderContainer?.let {
             try {
                 windowManager?.removeView(it)
-            } catch (e: Exception) { /* Ignore */ }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to remove border", e)
+            }
         }
         borderContainer = null
         borderView = null
@@ -347,7 +355,9 @@ class JarvisOverlayService : Service() {
                 meetingPillView?.animate()?.alpha(0f)?.setDuration(500)?.withEndAction {
                     try {
                         windowManager?.removeView(meetingPillView)
-                    } catch (e: Exception) { }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to remove meeting pill", e)
+                    }
                     meetingPillView = null
                 }?.start()
             }
@@ -466,7 +476,9 @@ class JarvisOverlayService : Service() {
         timelineView?.let {
             try {
                 windowManager?.removeView(it)
-            } catch (e: Exception) { /* Ignore */ }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to remove timeline", e)
+            }
         }
         timelineView = null
     }
@@ -476,7 +488,9 @@ class JarvisOverlayService : Service() {
         overlayView?.let { 
             try {
                 windowManager?.removeView(it)
-            } catch (e: Exception) { /* Ignore */ }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to remove overlay in onDestroy", e)
+            }
         }
         hideBorder()
         hideTimeline()
@@ -492,6 +506,7 @@ class JarvisOverlayService : Service() {
 
     companion object {
         private const val NOTIF_ID = 1001
+        @Volatile
         var instance: JarvisOverlayService? = null
     }
 }

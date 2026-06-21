@@ -354,12 +354,12 @@ Claude-inspired warm palette:
 
 ```xml
 <!-- colors.xml -->
-<color name="bg_main">#FFFBF7</color>
-<color name="bg_surface">#FFF5F0</color>
-<color name="jarvis_primary">#6366F1</color>
-<color name="jarvis_accent">#EC4899</color>
-<color name="text_primary">#1F2937</color>
-<color name="text_hint">#9CA3AF</color>
+<color name="bg_main">#F7F5F0</color>
+<color name="bg_surface">#FDFCFA</color>
+<color name="jarvis_primary">#F86607</color>
+<color name="jarvis_accent">#FF8425</color>
+<color name="text_primary">#2C2C2C</color>
+<color name="text_hint">#9A9490</color>
 ```
 
 ---

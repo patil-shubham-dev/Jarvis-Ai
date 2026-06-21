@@ -59,7 +59,7 @@ class ScreenCaptureService : Service() {
             imageReader?.surface, null, null
         )
 
-        instance = this
+        synchronized(ScreenCaptureService::class.java) { instance = this }
         Log.d("ScreenCapture", "Projection started successfully")
     }
 
@@ -69,17 +69,34 @@ class ScreenCaptureService : Service() {
         val buffer = planes[0].buffer
         val pixelStride = planes[0].pixelStride
         val rowStride = planes[0].rowStride
-        val rowPadding = rowStride - pixelStride * image.width
 
-        val bitmap = Bitmap.createBitmap(
-            image.width + rowPadding / pixelStride,
-            image.height, Bitmap.Config.ARGB_8888
-        )
-        bitmap.copyPixelsFromBuffer(buffer)
+        val bitmapWidth = image.width
+        val bitmapHeight = image.height
+        val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+
+        if (rowStride == bitmapWidth * 4) {
+            buffer.rewind()
+            bitmap.copyPixelsFromBuffer(buffer)
+        } else {
+            val pixels = IntArray(bitmapWidth * bitmapHeight)
+            val rowBytes = ByteArray(rowStride)
+            for (y in 0 until bitmapHeight) {
+                buffer.position(y * rowStride)
+                buffer.get(rowBytes)
+                for (x in 0 until bitmapWidth) {
+                    val idx = x * pixelStride
+                    val a = rowBytes[idx + 3].toInt() and 0xFF
+                    val r = rowBytes[idx].toInt() and 0xFF
+                    val g = rowBytes[idx + 1].toInt() and 0xFF
+                    val b = rowBytes[idx + 2].toInt() and 0xFF
+                    pixels[y * bitmapWidth + x] = (a shl 24) or (r shl 16) or (g shl 8) or b
+                }
+            }
+            bitmap.setPixels(pixels, 0, bitmapWidth, 0, 0, bitmapWidth, bitmapHeight)
+        }
+
         image.close()
-        
-        // Crop to actual screen width
-        return Bitmap.createBitmap(bitmap, 0, 0, image.width, image.height)
+        return bitmap
     }
 
     private fun buildNotification(): Notification {
@@ -99,6 +116,7 @@ class ScreenCaptureService : Service() {
 
     companion object {
         private const val NOTIFICATION_ID = 2002
+        @Volatile
         var instance: ScreenCaptureService? = null
     }
 }
