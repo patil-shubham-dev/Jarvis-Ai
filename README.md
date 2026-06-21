@@ -5,7 +5,7 @@
     <em>Your persistent AI operating system assistant</em>
   </p>
 
-  [![CI](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml)
+  [![CI](https://github.com/patil-shubham-dev/Jarvis-Ai/actions/workflows/ci.yml/badge.svg)](https://github.com/patil-shubham-dev/Jarvis-Ai/actions/workflows/ci.yml)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
   [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](backend/requirements.txt)
   [![Next.js](https://img.shields.io/badge/frontend-Next.js-black)](frontend/package.json)
