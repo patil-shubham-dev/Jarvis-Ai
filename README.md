@@ -1,10 +1,16 @@
-# Jarvis AI OS
+<div align="center">
+  <img src="docs/assets/logo.png" alt="Jarvis AI OS Logo" width="120" height="120" style="border-radius: 20px;">
+  <h1 align="center">Jarvis AI OS</h1>
+  <p align="center">
+    <em>Your persistent AI operating system assistant</em>
+  </p>
 
-[![CI](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](backend/requirements.txt)
-[![Next.js](https://img.shields.io/badge/frontend-Next.js-black)](frontend/package.json)
-[![Kotlin](https://img.shields.io/badge/android-Kotlin-purple)](app/build.gradle.kts)
+  [![CI](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/anomalyco/Jarvis-AI/actions/workflows/ci.yml)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+  [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](backend/requirements.txt)
+  [![Next.js](https://img.shields.io/badge/frontend-Next.js-black)](frontend/package.json)
+  [![Kotlin](https://img.shields.io/badge/android-Kotlin-purple)](app/build.gradle.kts)
+</div>
 
 A persistent AI operating system assistant with memory, voice, workflows, and device automation.
 Jarvis understands natural language, executes multi-step plans, remembers past conversations, and controls Android devices via accessibility services.
