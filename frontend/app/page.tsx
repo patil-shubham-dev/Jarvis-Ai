@@ -212,10 +212,6 @@ export default function Home() {
       return;
     }
 
-    setDisplayMessages((prev) => [
-      ...prev,
-      { id: nextId(), role: "user", content: text, timestamp: new Date().toISOString() },
-    ]);
     send({ text });
     setInput("");
     setState("thinking");

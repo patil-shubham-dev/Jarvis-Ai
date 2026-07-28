@@ -1,52 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Key, Globe, Smartphone, Save,
-  CheckCircle, Eye, EyeOff, Search, ChevronDown, Sparkles,
-  RefreshCw, Bell, Brain, AlertCircle, Zap,
+  CheckCircle, Bell, Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AIProviderCard } from "@/components/AIProviderCard";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const PROVIDER_META: Record<string, { icon: string; color: string; label: string }> = {
-  openai:    { icon: "⚡", color: "text-emerald-600 dark:text-emerald-400", label: "OpenAI" },
-  anthropic: { icon: "🟣", color: "text-purple-600 dark:text-purple-400", label: "Anthropic" },
-  google:    { icon: "🔵", color: "text-blue-600 dark:text-blue-400", label: "Google Gemini" },
-  groq:      { icon: "🟢", color: "text-green-600 dark:text-green-400", label: "Groq" },
-  mistral:   { icon: "💨", color: "text-orange-600 dark:text-orange-400", label: "Mistral" },
-  openrouter:{ icon: "🔄", color: "text-indigo-600 dark:text-indigo-400", label: "OpenRouter" },
-  deepseek:  { icon: "🐋", color: "text-cyan-600 dark:text-cyan-400", label: "DeepSeek" },
-};
 
-interface ModelInfo { id: string; name: string; provider: string; }
 interface ProviderInfo { id: string; name: string; }
-
-type TestStatus = "idle" | "testing" | "success" | "error";
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("api");
   const [saved, setSaved] = useState(false);
   const [apiKey, setApiKey] = useState(() => { try { return sessionStorage.getItem("jarvis_api_key") || ""; } catch { return ""; } });
-  const [showKey, setShowKey] = useState(false);
   const [detectedProvider, setDetectedProvider] = useState<ProviderInfo | null>(() => {
     try {
-      const provider = sessionStorage.getItem("jarvis_provider");
-      if (provider && provider !== "null") return { id: provider, name: provider.charAt(0).toUpperCase() + provider.slice(1) };
+      const p = sessionStorage.getItem("jarvis_provider");
+      if (p && p !== "null") return { id: p, name: p.charAt(0).toUpperCase() + p.slice(1) };
     } catch {}
     return null;
   });
-  const [detecting, setDetecting] = useState(false);
-  const [detectError, setDetectError] = useState("");
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
+  const [models, setModels] = useState<any[]>([]);
   const [selectedModel, setSelectedModel] = useState(() => { try { return sessionStorage.getItem("jarvis_model") || ""; } catch { return ""; } });
-  const [modelSearch, setModelSearch] = useState("");
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [testStatus, setTestStatus] = useState<TestStatus>("idle");
-  const [testMessage, setTestMessage] = useState("");
-  const modelDropdownRef = useRef<HTMLDivElement>(null);
 
   const defaultSettings = {
     theme: "light", auto_connect: true, voice_wake: false,
@@ -64,117 +43,6 @@ export default function SettingsPage() {
     return defaultSettings;
   });
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
-  const detectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modelDropdownRef.current && !modelDropdownRef.current.contains(e.target as Node)) {
-        setShowModelDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const fetchModels = useCallback(async (key: string, provider: string) => {
-    setLoadingModels(true);
-    try {
-      const resp = await fetch(`${API_BASE}/api/providers/models`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: key, provider }),
-      });
-      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
-      const data = await resp.json();
-      if (data.models && data.models.length > 0) {
-        setModels(data.models);
-        const current = sessionStorage.getItem("jarvis_model");
-        if (current && data.models.some((m: ModelInfo) => m.id === current)) {
-          setSelectedModel(current);
-        } else {
-          setSelectedModel(data.models[0].id);
-        }
-      } else {
-        setModels([]);
-        if (data.error) setDetectError(data.error);
-      }
-    } catch (e) {
-      setModels([]);
-      setDetectError(e instanceof Error ? e.message : "Failed to load models");
-    } finally {
-      setLoadingModels(false);
-    }
-  }, []);
-
-  const detectProvider = useCallback(async (key: string) => {
-    setDetectError("");
-    if (!key || key.length < 10) {
-      setDetectedProvider(null); setModels([]); setSelectedModel(""); return;
-    }
-    setDetecting(true);
-    try {
-      const resp = await fetch(`${API_BASE}/api/providers/detect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: key }),
-      });
-      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
-      const data = await resp.json();
-      if (data.provider) {
-        setDetectedProvider({ id: data.provider, name: data.name || data.provider });
-        fetchModels(key, data.provider);
-      } else {
-        setDetectedProvider(null); setModels([]);
-        setDetectError(data.error || "Provider not recognized");
-      }
-    } catch (e) {
-      setDetectedProvider(null); setModels([]);
-      setDetectError(e instanceof Error ? e.message : "Connection failed — is the backend running?");
-    } finally {
-      setDetecting(false);
-    }
-  }, [fetchModels]);
-
-  const testConnection = async () => {
-    if (!apiKey || !selectedModel) return;
-    setTestStatus("testing");
-    setTestMessage("");
-    try {
-      const resp = await fetch(`${API_BASE}/api/proxy/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          api_key: apiKey,
-          model: selectedModel,
-          messages: [{ role: "user", content: "Reply with exactly: Connection successful" }],
-        }),
-      });
-      const data = await resp.json();
-      if (data.error) {
-        setTestStatus("error");
-        setTestMessage(data.error);
-      } else {
-        const content = data.choices?.[0]?.message?.content || data.content?.[0]?.text || JSON.stringify(data).slice(0, 200);
-        setTestStatus("success");
-        setTestMessage(content);
-      }
-    } catch (e) {
-      setTestStatus("error");
-      setTestMessage(e instanceof Error ? e.message : "Request failed");
-    }
-  };
-
-  const handleKeyChange = (val: string) => {
-    setApiKey(val);
-    setDetectError("");
-    setTestStatus("idle");
-    if (detectTimerRef.current !== null) clearTimeout(detectTimerRef.current);
-    if (val.length > 10) {
-      detectTimerRef.current = setTimeout(() => detectProvider(val), 400);
-    } else {
-      setDetectedProvider(null); setModels([]);
-    }
-  };
 
   const handleSave = () => {
     const safe = { ...settings };
@@ -189,201 +57,15 @@ export default function SettingsPage() {
     setTimeout(() => { setSaved(false); setShowSaveIndicator(false); }, 2500);
   };
 
-  const filteredModels = models.filter(
-    (m) => m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
-          m.name.toLowerCase().includes(modelSearch.toLowerCase())
-  );
-
-  const providerMeta = detectedProvider ? PROVIDER_META[detectedProvider.id] : null;
-
   const apiSection = (
-    <div className="space-y-5">
-      <div className="p-5 rounded-2xl bg-card border border-border">
-        <label className="text-sm font-medium text-foreground block mb-2">AI Provider API Key</label>
-        <div className="relative">
-          <input
-            type={showKey ? "text" : "password"}
-            value={apiKey}
-            onChange={(e) => handleKeyChange(e.target.value)}
-            placeholder="Paste your API key (sk-... , sk-ant-... , AIza...)"
-            className="w-full pr-20 pl-4 py-3 text-sm bg-muted rounded-xl border border-border outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40 font-mono"
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            <button onClick={() => setShowKey(!showKey)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-              {showKey ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
-            </button>
-          </div>
-        </div>
-
-        {detecting && (
-          <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-            <RefreshCw className="w-3 h-3 animate-spin" />
-            Detecting provider...
-          </div>
-        )}
-
-        {detectError && !detecting && (
-          <div className="flex items-center gap-2 mt-3 text-xs text-destructive">
-            <AlertCircle className="w-3 h-3 flex-shrink-0" />
-            {detectError}
-          </div>
-        )}
-
-        {detectedProvider && !detecting && providerMeta && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 flex items-center gap-2 flex-wrap"
-          >
-            <span className={cn("px-2.5 py-1 rounded-lg bg-muted text-xs font-medium flex items-center gap-1.5", providerMeta.color)}>
-              <span>{providerMeta.icon}</span>
-              {providerMeta.label}
-            </span>
-            <span className="text-[10px] text-muted-foreground">auto-detected</span>
-            {models.length > 0 && (
-              <span className="text-[10px] text-muted-foreground/60">{models.length} models</span>
-            )}
-          </motion.div>
-        )}
-      </div>
-
-      {detectedProvider && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-2xl bg-card border border-border"
-        >
-          <label className="text-sm font-medium text-foreground block mb-2">Model</label>
-          <div className="relative" ref={modelDropdownRef}>
-            <button
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm bg-muted rounded-xl border border-border outline-none focus:border-primary transition-colors text-left"
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                {loadingModels ? (
-                  <span className="text-muted-foreground flex items-center gap-2">
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                    Loading models...
-                  </span>
-                ) : selectedModel ? (
-                  <>
-                    <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="truncate">{models.find(m => m.id === selectedModel)?.name || selectedModel}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono truncate hidden sm:inline">({selectedModel})</span>
-                  </>
-                ) : (
-                  <span className="text-muted-foreground">No models available</span>
-                )}
-              </div>
-              <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-2", showModelDropdown && "rotate-180")} />
-            </button>
-
-            <AnimatePresence>
-              {showModelDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                  className="absolute z-50 mt-1 w-full bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
-                  style={{ maxHeight: "min(24rem, calc(100vh - 300px))" }}
-                >
-                  <div className="p-2 border-b border-border">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        value={modelSearch}
-                        onChange={(e) => setModelSearch(e.target.value)}
-                        placeholder="Search models..."
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-muted rounded-lg border border-border outline-none focus:border-primary transition-colors"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-                  <div className="overflow-y-auto" style={{ maxHeight: "16rem" }}>
-                    {filteredModels.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-muted-foreground">
-                        {modelSearch ? "No matching models" : "No models loaded"}
-                      </div>
-                    ) : (
-                      filteredModels.map((model) => (
-                        <button
-                          key={model.id}
-                          onClick={() => { setSelectedModel(model.id); setShowModelDropdown(false); setModelSearch(""); }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
-                            selectedModel === model.id
-                              ? "bg-primary/10 text-primary"
-                              : "hover:bg-muted text-foreground"
-                          )}
-                        >
-                          <Sparkles className={cn("w-4 h-4 flex-shrink-0", selectedModel === model.id ? "text-primary" : "text-muted-foreground")} />
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate font-medium">{model.name}</div>
-                            <div className="truncate text-[10px] text-muted-foreground font-mono">{model.id}</div>
-                          </div>
-                          {selectedModel === model.id && <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                  <div className="p-2 border-t border-border flex justify-between text-[10px] text-muted-foreground px-3">
-                    <span>{models.length} models</span>
-                    <button onClick={() => fetchModels(apiKey, detectedProvider?.id || "")} className="hover:text-foreground transition-colors flex items-center gap-1">
-                      <RefreshCw className="w-3 h-3" /> Refresh
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      )}
-
-      {detectedProvider && selectedModel && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-2xl bg-card border border-border"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-foreground">Test Connection</label>
-            <button
-              onClick={testConnection}
-              disabled={testStatus === "testing"}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all",
-                testStatus === "success" ? "bg-success/20 text-success" :
-                testStatus === "error" ? "bg-destructive/20 text-destructive" :
-                "bg-primary text-primary-foreground hover:opacity-90",
-                testStatus === "testing" && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              {testStatus === "testing" ? (
-                <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Testing...</>
-              ) : testStatus === "success" ? (
-                <><CheckCircle className="w-3.5 h-3.5" /> Connected</>
-              ) : testStatus === "error" ? (
-                <><AlertCircle className="w-3.5 h-3.5" /> Failed</>
-              ) : (
-                <><Zap className="w-3.5 h-3.5" /> Test</>
-              )}
-            </button>
-          </div>
-          {testStatus === "success" && testMessage && (
-            <div className="p-3 rounded-xl bg-success/5 border border-success/20 text-xs text-foreground/80 leading-relaxed max-h-24 overflow-y-auto">
-              <span className="text-success font-medium block mb-1">Response:</span>
-              {testMessage}
-            </div>
-          )}
-          {testStatus === "error" && testMessage && (
-            <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 text-xs text-destructive leading-relaxed">
-              {testMessage}
-            </div>
-          )}
-        </motion.div>
-      )}
-    </div>
+    <AIProviderCard
+      apiKey={apiKey}
+      detectedProvider={detectedProvider}
+      selectedModel={selectedModel}
+      models={models}
+      onApiKeyChange={(key) => setApiKey(key)}
+      onModelChange={(model) => setSelectedModel(model)}
+    />
   );
 
   const sections = [

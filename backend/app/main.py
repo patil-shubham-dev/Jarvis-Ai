@@ -345,22 +345,35 @@ async def proxy_embeddings(request: EmbeddingProxyRequest):
 
 async def _stream_provider_response(api_key: str, model: str, messages: list, on_token):
     provider = detect_provider(api_key)
+    provider_config = get_provider_config(provider) if provider else None
     if provider == "anthropic":
         await _stream_anthropic(api_key, model, messages, on_token)
     elif provider == "google":
         await _stream_google(api_key, model, messages, on_token)
     else:
-        await _stream_openai(api_key, model, messages, on_token)
+        base_url = (provider_config["base_url"] if provider_config else "https://api.openai.com/v1").rstrip("/")
+        await _stream_openai(api_key, model, messages, on_token, base_url)
 
-async def _stream_openai(api_key: str, model: str, messages: list, on_token):
-    url = "https://api.openai.com/v1/chat/completions"
+async def _stream_openai(api_key: str, model: str, messages: list, on_token, base_url: str = "https://api.openai.com/v1"):
+    provider = detect_provider(api_key)
+    provider_config = get_provider_config(provider) if provider else None
+    if provider_config:
+        api_header = provider_config["api_key_header"]
+        api_prefix = provider_config["api_key_prefix"]
+    else:
+        api_header = "Authorization"
+        api_prefix = "Bearer "
+    url = f"{base_url}/chat/completions"
     async with httpx.AsyncClient(timeout=120.0) as client:
         async with client.stream(
             "POST",
             url,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            headers={api_header: f"{api_prefix}{api_key}", "Content-Type": "application/json"},
             json={"model": model, "messages": messages, "stream": True},
         ) as resp:
+            if resp.status_code != 200:
+                error_text = await resp.aread()
+                raise RuntimeError(f"API returned status {resp.status_code}: {error_text.decode(errors='replace')[:500]}")
             async for line in resp.aiter_lines():
                 if not line.startswith("data: "):
                     continue
@@ -399,6 +412,9 @@ async def _stream_anthropic(api_key: str, model: str, messages: list, on_token):
             },
             json=body,
         ) as resp:
+            if resp.status_code != 200:
+                error_text = await resp.aread()
+                raise RuntimeError(f"Anthropic API returned status {resp.status_code}: {error_text.decode(errors='replace')[:500]}")
             async for line in resp.aiter_lines():
                 if not line.startswith("data: "):
                     continue
@@ -426,6 +442,9 @@ async def _stream_google(api_key: str, model: str, messages: list, on_token):
             headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
             json={"contents": contents},
         ) as resp:
+            if resp.status_code != 200:
+                error_text = await resp.aread()
+                raise RuntimeError(f"Google API returned status {resp.status_code}: {error_text.decode(errors='replace')[:500]}")
             async for line in resp.aiter_lines():
                 if not line:
                     continue
@@ -488,7 +507,9 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
             if api_key:
                 provider = detect_provider(api_key)
                 provider_config = get_provider_config(provider) if provider else None
-                if provider == "anthropic":
+                if provider and provider_config:
+                    model = data.model or provider_config["default_model"]
+                elif provider == "anthropic":
                     model = data.model or "claude-sonnet-4-20250514"
                 elif provider == "google":
                     model = data.model or "gemini-2.0-flash"
@@ -513,6 +534,7 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
                 except Exception as e:
                     logger.exception("Streaming error")
                     await manager.send(session_id, {"type": "error", "content": f"Streaming failed: {str(e)}"})
+                    return
             else:
                 response = await orchestrator.process_message_stream(
                     session_id=session_id,

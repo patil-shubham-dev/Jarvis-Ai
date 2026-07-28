@@ -175,7 +175,6 @@ def _fallback_models(provider_id: str) -> list[dict]:
         ],
         "anthropic": [
             {"id": "claude-sonnet-4-20250514", "name": "Claude Sonnet 4", "provider": "anthropic"},
-            {"id": "claude-sonnet-4-20250514", "name": "Claude Sonnet 4", "provider": "anthropic"},
         ],
         "google": [
             {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "provider": "google"},
