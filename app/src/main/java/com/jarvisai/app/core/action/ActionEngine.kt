@@ -131,6 +131,18 @@ class ActionEngine @Inject constructor(
                         false
                     }
                 }
+                ActionType.SCROLL -> {
+                    val service = JarvisAccessibilityService.instance ?: return false
+                    service.performSwipe(intent.x ?: 0f, intent.y ?: 0f, intent.x2 ?: 0f, intent.y2 ?: 0f, 500)
+                }
+                ActionType.PRESS_BACK -> {
+                    JarvisAccessibilityService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_BACK) ?: return false
+                    true
+                }
+                ActionType.PRESS_HOME -> {
+                    JarvisAccessibilityService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME) ?: return false
+                    true
+                }
                 ActionType.UNKNOWN -> {
                     Log.w(TAG, "Unknown action type")
                     false

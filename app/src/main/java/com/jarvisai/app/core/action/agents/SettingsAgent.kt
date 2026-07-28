@@ -7,6 +7,64 @@ import kotlinx.coroutines.delay
 object SettingsAgent {
     private const val TAG = "SettingsAgent"
 
+    suspend fun setTimer(duration: String): Boolean {
+        Log.d(TAG, "Setting timer for: $duration")
+        val service = JarvisAccessibilityService.instance ?: return false
+        try {
+            val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_TIMER).apply {
+                putExtra(android.provider.AlarmClock.EXTRA_LENGTH, duration.filter { it.isDigit() }.toIntOrNull() ?: 60)
+                putExtra(android.provider.AlarmClock.EXTRA_SKIP_UI, true)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            com.jarvisai.app.service.JarvisOverlayService.instance?.updateStatus("Opening Clock app...")
+            service.applicationContext.startActivity(intent)
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set timer", e)
+            return false
+        }
+    }
+
+    suspend fun setAlarm(time: String, label: String): Boolean {
+        Log.d(TAG, "Setting alarm at: $time ($label)")
+        val service = JarvisAccessibilityService.instance ?: return false
+        try {
+            val parts = time.split(":")
+            val hour = parts.getOrNull(0)?.filter { it.isDigit() }?.toIntOrNull() ?: 7
+            val minute = parts.getOrNull(1)?.filter { it.isDigit() }?.toIntOrNull() ?: 0
+            val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_ALARM).apply {
+                putExtra(android.provider.AlarmClock.EXTRA_HOUR, hour)
+                putExtra(android.provider.AlarmClock.EXTRA_MINUTES, minute)
+                putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, label)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            service.applicationContext.startActivity(intent)
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set alarm", e)
+            return false
+        }
+    }
+
+    suspend fun setReminder(title: String, time: String): Boolean {
+        Log.d(TAG, "Setting reminder: $title at $time")
+        val service = JarvisAccessibilityService.instance ?: return false
+        try {
+            com.jarvisai.app.service.JarvisOverlayService.instance?.updateStatus("Setting reminder...")
+            val intent = android.content.Intent(android.provider.AlarmClock.ACTION_SET_ALARM).apply {
+                putExtra(android.provider.AlarmClock.EXTRA_HOUR, 9)
+                putExtra(android.provider.AlarmClock.EXTRA_MINUTES, 0)
+                putExtra(android.provider.AlarmClock.EXTRA_MESSAGE, "[Reminder] $title")
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            service.applicationContext.startActivity(intent)
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set reminder", e)
+            return false
+        }
+    }
+
     suspend fun toggleSetting(settingName: String, enable: Boolean): Boolean {
         val service = JarvisAccessibilityService.instance ?: return false
         val overlay = com.jarvisai.app.service.JarvisOverlayService.instance

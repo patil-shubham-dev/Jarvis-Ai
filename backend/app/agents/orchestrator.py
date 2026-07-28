@@ -79,7 +79,7 @@ class AgentOrchestrator(BaseAgent):
 
             response = await self.conversation_agent.generate_response(
                 text, intent,
-                {"context": context, "plan": plan.dict() if plan else None}
+                {"context": context, "plan": plan.model_dump() if plan else None}
             )
 
             await self._store_memory(text, response, intent)
@@ -128,7 +128,7 @@ class AgentOrchestrator(BaseAgent):
             await self._emit("plan", {
                 "plan_id": plan.id,
                 "goal": plan.goal,
-                "steps": [s.dict() for s in plan.steps]
+                "steps": [s.model_dump() for s in plan.steps]
             })
 
             plan = await self._execute_plan_steps(plan)
@@ -195,7 +195,7 @@ class AgentOrchestrator(BaseAgent):
         await self._emit("plan", {
             "plan_id": plan.id,
             "status": "completed",
-            "steps": [s.dict() for s in plan.steps]
+            "steps": [s.model_dump() for s in plan.steps]
         })
 
         return plan

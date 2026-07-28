@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -17,13 +17,8 @@ class AgentThought(BaseModel):
     agent_name: str
     state: AgentState
     content: str
-    timestamp: datetime = None
+    timestamp: datetime = Field(default_factory=datetime.now)
     metadata: Dict[str, Any] = {}
-
-    def __init__(self, **data):
-        if "timestamp" not in data or data.get("timestamp") is None:
-            data["timestamp"] = datetime.now()
-        super().__init__(**data)
 
 class PlanStep(BaseModel):
     id: str
@@ -36,19 +31,23 @@ class PlanStep(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
+    def model_dump(self, **kwargs):
+        data = super().model_dump(**kwargs)
+        if self.result is not None:
+            try:
+                data["result"] = str(self.result)
+            except Exception:
+                data["result"] = None
+        return data
+
 class Plan(BaseModel):
     id: str
     goal: str
     steps: List[PlanStep] = []
     status: str = "created"
-    created_at: datetime = None
+    created_at: datetime = Field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
     error: Optional[str] = None
-
-    def __init__(self, **data):
-        if "created_at" not in data or data.get("created_at") is None:
-            data["created_at"] = datetime.now()
-        super().__init__(**data)
 
 class AgentContext(BaseModel):
     session_id: str

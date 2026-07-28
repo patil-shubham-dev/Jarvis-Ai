@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Wrench, ArrowRight, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Wrench, ArrowRight, CheckCircle, XCircle, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ToolCall {
@@ -22,7 +22,7 @@ export function ToolCallView({ calls, visible }: ToolCallViewProps) {
   if (!visible || calls.length === 0) return null;
 
   return (
-    <div className="fixed right-4 bottom-24 z-50 max-w-xs">
+    <div className="fixed right-4 bottom-24 z-50 max-w-xs max-sm:hidden" aria-live="polite">
       <AnimatePresence>
         {calls.map((call) => (
           <motion.div
@@ -30,7 +30,7 @@ export function ToolCallView({ calls, visible }: ToolCallViewProps) {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="mb-2 p-3 rounded-xl bg-card/90 backdrop-blur-xl border border-border shadow-lg"
+            className="mb-2 p-3 rounded-xl bg-card/90 backdrop-blur-lg border border-border shadow-lg"
           >
             <div className="flex items-start gap-3">
               <div className={cn(
@@ -41,7 +41,7 @@ export function ToolCallView({ calls, visible }: ToolCallViewProps) {
               )}>
                 {call.status === "success" ? <CheckCircle className="w-4 h-4 text-success" /> :
                  call.status === "failed" ? <XCircle className="w-4 h-4 text-destructive" /> :
-                 call.status === "running" ? <Clock className="w-4 h-4 text-primary animate-spin" /> :
+                 call.status === "running" ? <Loader className="w-4 h-4 text-primary animate-spin" /> :
                  <Wrench className="w-4 h-4 text-muted-foreground" />}
               </div>
               <div className="flex-1 min-w-0">

@@ -72,7 +72,7 @@ class VoiceEngine @Inject constructor(
         continuation.resume(result == TextToSpeech.SUCCESS)
     }
 
-    fun speak(text: String) {
+    fun speakNow(text: String) {
         if (isInitialized) {
             requestAudioFocus()
             tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "jarvis_speech")

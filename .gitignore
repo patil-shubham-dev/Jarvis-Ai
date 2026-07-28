@@ -116,6 +116,7 @@ build_output.txt
 logcat_output.txt
 
 # ──── Python / Backend ────
+chroma_db/
 __pycache__/
 *.py[cod]
 *$py.class

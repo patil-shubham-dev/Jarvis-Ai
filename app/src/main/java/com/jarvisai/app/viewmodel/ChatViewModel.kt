@@ -119,7 +119,7 @@ class ChatViewModel @Inject constructor(
                     fullResponse = accumulatedText
 
                     if (SecurePrefs.isTtsEnabled(application)) {
-                        voiceEngine.speak(accumulatedText)
+                        voiceEngine.speakNow(accumulatedText)
                     }
 
                     if (repository.isActionIntent(text)) {

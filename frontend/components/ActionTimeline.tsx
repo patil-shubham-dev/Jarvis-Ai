@@ -38,9 +38,9 @@ export function ActionTimeline({ steps, visible }: ActionTimelineProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="fixed right-4 top-20 w-72 z-50"
+      className="fixed right-4 top-20 w-72 z-50 max-sm:hidden"
     >
-      <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden">
+      <div className="bg-card/95 backdrop-blur-lg border border-border rounded-2xl shadow-2xl overflow-hidden" aria-live="polite">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <ArrowRight className="w-4 h-4 text-primary" />

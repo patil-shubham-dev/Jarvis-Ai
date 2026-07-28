@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, startTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Search, Clock, Star, ChevronRight, Database, Loader } from "lucide-react";
+import { Brain, Search, Clock, Star, Database, Loader, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Memory {
@@ -18,18 +18,21 @@ export function MemoryExplorer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loadingMemories, setLoadingMemories] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const filtered = memories.filter(m =>
     m.text.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  useEffect(() => {
-    if (!isOpen || memories.length > 0) return;
+  const loadMemories = useCallback(() => {
     setLoadingMemories(true);
+    setLoadError(false);
     fetch(`/api/memories?limit=10`)
       .then((r) => r.json())
       .then((data) => {
-        setMemories((data.memories || []).map((m: any) => ({
+        setMemories((data.memories || []).map((m: { id: string; text: string; timestamp: string; category: string; importance: number }) => ({
           id: m.id,
           text: m.text,
           timestamp: m.timestamp ? new Date(m.timestamp).toLocaleString() : "recent",
@@ -37,16 +40,39 @@ export function MemoryExplorer() {
           importance: m.importance ?? 0.5,
         })));
       })
-      .catch(() => { /* silently fail, show empty */ })
+      .catch(() => { setLoadError(true); })
       .finally(() => setLoadingMemories(false));
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || memories.length > 0) return;
+    startTransition(() => { loadMemories(); });
+  }, [isOpen, loadMemories, memories.length]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
   }, [isOpen]);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setTimeout(() => triggerRef.current?.focus(), 100);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") close();
+  }, [close]);
 
   return (
     <div className="fixed left-4 top-20 z-50">
       <motion.button
+        ref={triggerRef}
         whileHover={{ scale: 1.05 }}
         onClick={() => setIsOpen(!isOpen)}
         className="p-3 rounded-xl bg-card/90 backdrop-blur-md border border-border shadow-lg"
+        aria-label={isOpen ? "Close memory explorer" : "Open memory explorer"}
+        aria-expanded={isOpen}
       >
         <Database className="w-5 h-5 text-primary" />
       </motion.button>
@@ -57,7 +83,10 @@ export function MemoryExplorer() {
             initial={{ opacity: 0, x: -20, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -20, scale: 0.95 }}
-            className="absolute left-14 top-0 w-80 bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden"
+            onKeyDown={handleKeyDown}
+            className="absolute left-14 top-0 w-80 bg-card/95 backdrop-blur-lg border border-border rounded-2xl shadow-2xl overflow-hidden"
+            role="dialog"
+            aria-label="Memory explorer"
           >
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-2 mb-3">
@@ -67,6 +96,7 @@ export function MemoryExplorer() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -82,7 +112,14 @@ export function MemoryExplorer() {
                   <Loader className="w-5 h-5 text-muted-foreground animate-spin" />
                 </div>
               )}
-              {!loadingMemories && filtered.length === 0 && (
+              {!loadingMemories && loadError && (
+                <div className="text-center py-6">
+                  <AlertCircle className="w-6 h-6 text-destructive mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground mb-2">Failed to load memories</p>
+                  <button onClick={loadMemories} className="text-xs text-primary underline">Retry</button>
+                </div>
+              )}
+              {!loadingMemories && !loadError && filtered.length === 0 && (
                 <div className="text-center py-6">
                   <p className="text-xs text-muted-foreground">{searchQuery ? "No matching memories" : "No memories yet"}</p>
                 </div>
@@ -118,7 +155,6 @@ export function MemoryExplorer() {
                         </div>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </div>
                 </motion.div>
               ))}

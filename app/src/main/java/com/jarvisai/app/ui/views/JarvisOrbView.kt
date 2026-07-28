@@ -59,6 +59,7 @@ class JarvisOrbView @JvmOverloads constructor(
         currentState = state
 
         targetColor = when (state) {
+            OrbState.HIDDEN -> idleColor
             OrbState.IDLE -> idleColor
             OrbState.LISTENING -> idleColor
             OrbState.THINKING -> thinkingColor

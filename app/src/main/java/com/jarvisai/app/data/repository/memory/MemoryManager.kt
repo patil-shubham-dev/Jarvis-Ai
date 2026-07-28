@@ -117,5 +117,33 @@ class MemoryManager @Inject constructor(
             append("- Learning: ${getModuleFiles("LEARNING_ENGINE").size} updates\n")
         }
     }
+
+    /**
+     * Triggers a proactive notification with memory insights.
+     */
+    fun generateMemoryInsight(): String? {
+        val modules = listOf(
+            "CORE_IDENTITY" to "identity", "LEARNING_ENGINE" to "learning",
+            "PREFERENCES_ENGINE" to "preferences", "MEMORY_TIMELINE" to "timeline"
+        )
+        for ((module, _) in modules) {
+            val files = getModuleFiles(module)
+            if (files.isNotEmpty()) {
+                val latest = files.maxByOrNull { it.lastModified() } ?: continue
+                val content = readFromJson(module, latest.nameWithoutExtension)
+                if (!content.isNullOrBlank()) {
+                    return "[$module] $content"
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Returns total memory module stats for dashboard display.
+     */
+    fun getMemoryStats(): Map<String, Int> {
+        return modules.associateWith { getModuleFiles(it).size }
+    }
 }
 

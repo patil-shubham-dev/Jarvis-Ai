@@ -1,18 +1,20 @@
 import os
 import asyncio
+import json
+import uuid
+import logging
+from datetime import datetime
+from typing import Dict, Any, List, Optional
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
-import logging
-import json
-import uuid
-from datetime import datetime
-from typing import Dict, Any, List, Optional
 
 from app.config import config
 from app.agents.orchestrator import AgentOrchestrator
 from app.database.vector_db import VectorDB
+from app.providers import detect_provider, fetch_models, get_provider_config, PROVIDER_CONFIGS
 
 logging.basicConfig(
     level=getattr(logging, config.log_level.upper(), logging.INFO),
@@ -20,8 +22,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-MAX_REQUEST_BODY = 1_048_576  # 1MB
-MAX_WS_MESSAGE_SIZE = 65536   # 64KB
+MAX_REQUEST_BODY = 1_048_576
+MAX_WS_MESSAGE_SIZE = 65536
+
+# ─── Request Models ────────────────────────────────────────────────
+
+class DetectProviderRequest(BaseModel):
+    api_key: str = Field(..., min_length=1, max_length=256)
+
+class ListModelsRequest(BaseModel):
+    api_key: str = Field(..., min_length=1, max_length=256)
+    provider: Optional[str] = Field(default=None, max_length=64)
 
 class ChatProxyRequest(BaseModel):
     api_key: Optional[str] = None
@@ -61,9 +72,15 @@ class EmbeddingProxyRequest(BaseModel):
 class WSMessage(BaseModel):
     text: str = Field(default="", max_length=MAX_WS_MESSAGE_SIZE)
     action: str = Field(default="", max_length=64)
+    api_key: Optional[str] = Field(default=None, max_length=1024)
+    model: Optional[str] = Field(default=None, max_length=128)
+
+# ─── Database & Orchestrator ──────────────────────────────────────
 
 db = VectorDB(persist_directory=config.memory.chroma_persist_dir)
 orchestrator = AgentOrchestrator(db)
+
+# ─── Connection Manager ────────────────────────────────────────────
 
 class ConnectionManager:
     def __init__(self):
@@ -77,7 +94,7 @@ class ConnectionManager:
         self.sessions[session_id] = {
             "id": session_id,
             "connected_at": datetime.now().isoformat(),
-            "messages_count": 0
+            "messages_count": 0,
         }
         logger.info(f"WebSocket connected: {session_id}")
         return session_id
@@ -101,17 +118,21 @@ class ConnectionManager:
             await self.send(session_id, data)
 
 manager = ConnectionManager()
-
 _shared_http_client = None
 
 def get_http_client():
     global _shared_http_client
     if _shared_http_client is None:
         import httpx
-        _shared_http_client = httpx.AsyncClient(timeout=60.0, limits=httpx.Limits(max_keepalive_connections=20, max_connections=100))
+        _shared_http_client = httpx.AsyncClient(
+            timeout=120.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100)
+        )
     return _shared_http_client
 
-app = FastAPI(title=config.app_name, version="4.0.0")
+# ─── FastAPI App ───────────────────────────────────────────────────
+
+app = FastAPI(title=config.app_name, version="4.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -133,14 +154,16 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.exception(f"Unhandled error on {request.method} {request.url.path}")
     return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
+# ─── Provider Discovery API ────────────────────────────────────────
+
 @app.get("/")
 async def root():
     return {
         "name": config.app_name,
-        "version": "4.0.0",
+        "version": "4.1.0",
         "status": "running",
         "connections": len(manager.active_connections),
-        "tools": ["web_search", "code_exec", "android_bridge"]
+        "supported_providers": list(PROVIDER_CONFIGS.keys()),
     }
 
 @app.get("/api/health")
@@ -148,18 +171,35 @@ async def health():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "active_connections": len(manager.active_connections)
+        "active_connections": len(manager.active_connections),
     }
 
-@app.get("/api/sessions")
-async def list_sessions():
+@app.post("/api/providers/detect")
+async def detect_provider_endpoint(req: DetectProviderRequest):
+    provider = detect_provider(req.api_key)
+    if not provider:
+        return {"provider": None, "error": "Could not detect provider from API key"}
+    info = get_provider_config(provider)
+    return {"provider": provider, "name": info["name"] if info else provider}
+
+@app.post("/api/providers/models")
+async def list_models_endpoint(req: ListModelsRequest):
+    provider = req.provider or detect_provider(req.api_key)
+    if not provider:
+        return {"models": [], "error": "Could not detect provider"}
+    models = await fetch_models(req.api_key, provider)
+    return {"provider": provider, "models": models}
+
+@app.get("/api/providers")
+async def list_providers():
     return {
-        "sessions": [
-            {"id": sid, "connected_at": info["connected_at"],
-             "messages_count": info["messages_count"]}
-            for sid, info in manager.sessions.items()
+        "providers": [
+            {"id": pid, "name": info["name"]}
+            for pid, info in PROVIDER_CONFIGS.items()
         ]
     }
+
+# ─── Memory API ────────────────────────────────────────────────────
 
 @app.get("/api/memories")
 async def list_memories(query: str = "", limit: int = 50):
@@ -178,13 +218,25 @@ async def list_memories(query: str = "", limit: int = 50):
                     "text": results.get("documents", [[]])[0][i] if results.get("documents") else "",
                     "timestamp": meta.get("timestamp", ""),
                     "category": meta.get("category", "conversation"),
-                    "module": "chat",
-                    "importance": float(meta.get("importance", 0.7))
+                    "module": meta.get("module", "chat"),
+                    "importance": float(meta.get("importance", 0.7)),
                 })
         return {"memories": memories}
     except Exception:
         logger.exception("Memory fetch error")
         return {"memories": []}
+
+@app.delete("/api/memories")
+async def clear_memories():
+    try:
+        db.conversations.delete(ids=db.conversations.get()["ids"])
+        db.documents.delete(ids=db.documents.get()["ids"])
+        return {"status": "cleared"}
+    except Exception:
+        logger.exception("Memory clear error")
+        return {"error": "Failed to clear memories"}
+
+# ─── Proxy API ─────────────────────────────────────────────────────
 
 @app.post("/api/proxy/chat")
 async def proxy_chat_completion(request: ChatProxyRequest):
@@ -192,24 +244,80 @@ async def proxy_chat_completion(request: ChatProxyRequest):
     if not api_key:
         return {"error": "No API key provided"}
 
-    messages = request.messages
-    model = request.model or config.models.openai
-    base_url = (request.base_url or "https://api.openai.com/v1/").rstrip("/")
-    url = f"{base_url}/chat/completions"
+    provider = detect_provider(api_key)
+    provider_config = get_provider_config(provider) if provider else None
 
+    messages = request.messages
+    model = request.model or (provider_config["default_model"] if provider_config else "gpt-4o-mini")
+
+    if provider == "anthropic":
+        return await _proxy_anthropic_chat(api_key, model, messages)
+    elif provider == "google":
+        return await _proxy_google_chat(api_key, model, messages)
+    else:
+        return await _proxy_openai_chat(api_key, model, messages, request.base_url)
+
+async def _proxy_openai_chat(api_key: str, model: str, messages: list, base_url: str = None):
+    base_url = (base_url or "https://api.openai.com/v1/").rstrip("/")
+    url = f"{base_url}/chat/completions"
     if not config.is_allowed_proxy_url(url):
         return {"error": "Proxy domain not allowed"}
-
     client = get_http_client()
     try:
         resp = await client.post(
             url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": model, "messages": messages}
+            json={"model": model, "messages": messages},
         )
         return resp.json()
     except Exception as e:
         logger.exception("Proxy chat request failed")
+        return {"error": f"Proxy request failed: {e}"}
+
+async def _proxy_anthropic_chat(api_key: str, model: str, messages: list):
+    url = "https://api.anthropic.com/v1/messages"
+    system = None
+    filtered = []
+    for m in messages:
+        if m.get("role") == "system":
+            system = m["content"]
+        else:
+            filtered.append(m)
+    body = {"model": model, "max_tokens": 4096, "messages": filtered}
+    if system:
+        body["system"] = system
+    client = get_http_client()
+    try:
+        resp = await client.post(
+            url,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+            json=body,
+        )
+        return resp.json()
+    except Exception as e:
+        logger.exception("Anthropic proxy failed")
+        return {"error": f"Proxy request failed: {e}"}
+
+async def _proxy_google_chat(api_key: str, model: str, messages: list):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    contents = []
+    for m in messages:
+        if m.get("role") in ("user", "assistant"):
+            contents.append({"role": m["role"], "parts": [{"text": m["content"]}]})
+    client = get_http_client()
+    try:
+        resp = await client.post(
+            url,
+            headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+            json={"contents": contents},
+        )
+        return resp.json()
+    except Exception as e:
+        logger.exception("Google proxy failed")
         return {"error": f"Proxy request failed: {e}"}
 
 @app.post("/api/proxy/embeddings")
@@ -217,27 +325,121 @@ async def proxy_embeddings(request: EmbeddingProxyRequest):
     api_key = request.api_key or config.get_api_key()
     if not api_key:
         return {"error": "No API key provided."}
-
     base_url = (request.base_url or "https://api.openai.com/v1/").rstrip("/")
     url = f"{base_url}/embeddings"
-
     if not config.is_allowed_proxy_url(url):
         return {"error": "Proxy domain not allowed"}
-
     client = get_http_client()
     try:
         resp = await client.post(
             url,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": request.model or config.models.embedding,
-                "input": request.input
-            }
+            json={"model": request.model or config.models.embedding, "input": request.input},
         )
         return resp.json()
     except Exception as e:
         logger.exception("Proxy embeddings request failed")
         return {"error": f"Proxy request failed: {e}"}
+
+# ─── WebSocket with True Streaming ─────────────────────────────────
+
+async def _stream_provider_response(api_key: str, model: str, messages: list, on_token):
+    provider = detect_provider(api_key)
+    if provider == "anthropic":
+        await _stream_anthropic(api_key, model, messages, on_token)
+    elif provider == "google":
+        await _stream_google(api_key, model, messages, on_token)
+    else:
+        await _stream_openai(api_key, model, messages, on_token)
+
+async def _stream_openai(api_key: str, model: str, messages: list, on_token):
+    url = "https://api.openai.com/v1/chat/completions"
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        async with client.stream(
+            "POST",
+            url,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"model": model, "messages": messages, "stream": True},
+        ) as resp:
+            async for line in resp.aiter_lines():
+                if not line.startswith("data: "):
+                    continue
+                payload = line[6:].strip()
+                if payload == "[DONE]":
+                    break
+                try:
+                    chunk = json.loads(payload)
+                    delta = chunk.get("choices", [{}])[0].get("delta", {})
+                    content = delta.get("content", "")
+                    if content:
+                        await on_token(content)
+                except json.JSONDecodeError:
+                    continue
+
+async def _stream_anthropic(api_key: str, model: str, messages: list, on_token):
+    url = "https://api.anthropic.com/v1/messages"
+    system = None
+    filtered = []
+    for m in messages:
+        if m.get("role") == "system":
+            system = m["content"]
+        else:
+            filtered.append(m)
+    body = {"model": model, "max_tokens": 4096, "messages": filtered, "stream": True}
+    if system:
+        body["system"] = system
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        async with client.stream(
+            "POST",
+            url,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+            json=body,
+        ) as resp:
+            async for line in resp.aiter_lines():
+                if not line.startswith("data: "):
+                    continue
+                payload = line[6:].strip()
+                try:
+                    chunk = json.loads(payload)
+                    if chunk.get("type") == "content_block_delta":
+                        delta = chunk.get("delta", {})
+                        text = delta.get("text", "")
+                        if text:
+                            await on_token(text)
+                except json.JSONDecodeError:
+                    continue
+
+async def _stream_google(api_key: str, model: str, messages: list, on_token):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent"
+    contents = []
+    for m in messages:
+        if m.get("role") in ("user", "assistant"):
+            contents.append({"role": m["role"], "parts": [{"text": m["content"]}]})
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        async with client.stream(
+            "POST",
+            url,
+            headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+            json={"contents": contents},
+        ) as resp:
+            async for line in resp.aiter_lines():
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                    candidates = chunk.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        for part in parts:
+                            text = part.get("text", "")
+                            if text:
+                                await on_token(text)
+                except json.JSONDecodeError:
+                    continue
 
 async def _handle_websocket(websocket: WebSocket, track_user_message: bool = True):
     session_id = await manager.connect(websocket)
@@ -249,19 +451,13 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
         while True:
             raw = await websocket.receive_text()
             if len(raw) > MAX_WS_MESSAGE_SIZE:
-                await manager.send(session_id, {
-                    "type": "error",
-                    "content": "Message too large"
-                })
+                await manager.send(session_id, {"type": "error", "content": "Message too large"})
                 continue
 
             try:
                 data = WSMessage(**json.loads(raw))
             except Exception:
-                await manager.send(session_id, {
-                    "type": "error",
-                    "content": "Invalid message format"
-                })
+                await manager.send(session_id, {"type": "error", "content": "Invalid message format"})
                 continue
 
             if data.action == "ping":
@@ -274,40 +470,70 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
             if track_user_message:
                 session = manager.sessions.get(session_id, {})
                 session["messages_count"] = session.get("messages_count", 0) + 1
-
                 await manager.send(session_id, {
                     "type": "user_message",
                     "content": data.text,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 })
 
             await manager.send(session_id, {
                 "type": "stream_start",
                 "content": "",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             })
 
-            response = await orchestrator.process_message_stream(
-                session_id=session_id,
-                text=data.text,
-                on_event=on_event
-            )
+            api_key = data.api_key or config.get_api_key()
+            model = data.model or config.models.openai
 
-            chunk_size = 3
-            for i in range(0, len(response), chunk_size):
-                chunk = response[i:i + chunk_size]
-                await manager.send(session_id, {
-                    "type": "stream_token",
-                    "content": chunk,
-                    "done": False
-                })
-                await asyncio.sleep(0.008)
+            if api_key:
+                provider = detect_provider(api_key)
+                provider_config = get_provider_config(provider) if provider else None
+                if provider == "anthropic":
+                    model = data.model or "claude-sonnet-4-20250514"
+                elif provider == "google":
+                    model = data.model or "gemini-2.0-flash"
+
+                history = []
+                history.append({"role": "system", "content": "You are Jarvis, a premium AI OS assistant. Be concise and helpful."})
+                history.append({"role": "user", "content": data.text})
+
+                token_count = 0
+                async def on_token(content: str):
+                    nonlocal token_count
+                    token_count += 1
+                    await manager.send(session_id, {
+                        "type": "stream_token",
+                        "content": content,
+                        "done": False,
+                        "index": token_count,
+                    })
+
+                try:
+                    await _stream_provider_response(api_key, model, history, on_token)
+                except Exception as e:
+                    logger.exception("Streaming error")
+                    await manager.send(session_id, {"type": "error", "content": f"Streaming failed: {str(e)}"})
+            else:
+                response = await orchestrator.process_message_stream(
+                    session_id=session_id,
+                    text=data.text,
+                    on_event=on_event,
+                )
+                chunk_size = 3
+                for i in range(0, len(response), chunk_size):
+                    chunk = response[i:i + chunk_size]
+                    await manager.send(session_id, {
+                        "type": "stream_token",
+                        "content": chunk,
+                        "done": False,
+                    })
+                    await asyncio.sleep(0.008)
 
             await manager.send(session_id, {
                 "type": "stream_end",
                 "content": "",
                 "done": True,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             })
 
     except WebSocketDisconnect:
@@ -317,7 +543,7 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
         try:
             await manager.send(session_id, {
                 "type": "error",
-                "content": "An internal error occurred. Please try again."
+                "content": "An internal error occurred. Please try again.",
             })
         except Exception:
             pass
@@ -334,9 +560,8 @@ async def websocket_stream(websocket: WebSocket):
 
 @app.on_event("startup")
 async def startup():
-    logger.info(f"Starting {config.app_name}")
-    logger.info(f"Active provider: {config.active_provider}")
-    logger.info("Tools registered:")
+    logger.info(f"Starting {config.app_name} v4.1.0")
+    logger.info("API key: BYOK (Bring Your Own Key) — keys sent from frontend")
     from app.tools import ToolRegistry
     for name, status in ToolRegistry().list_tools().items():
         logger.info(f"  - {name}: {status}")
@@ -359,5 +584,5 @@ if __name__ == "__main__":
         host=host,
         port=port,
         reload=os.getenv("DEBUG", "false").lower() == "true",
-        log_level=config.log_level.lower()
+        log_level=config.log_level.lower(),
     )

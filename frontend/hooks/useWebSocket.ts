@@ -32,6 +32,18 @@ function jitter(delay: number): number {
   return delay + Math.random() * delay * 0.5;
 }
 
+function getStoredCreds(): { apiKey: string; model: string } {
+  if (typeof window === "undefined") return { apiKey: "", model: "" };
+  try {
+    return {
+      apiKey: sessionStorage.getItem("jarvis_api_key") || "",
+      model: sessionStorage.getItem("jarvis_model") || "",
+    };
+  } catch {
+    return { apiKey: "", model: "" };
+  }
+}
+
 export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWebSocketReturn {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -52,10 +64,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
     let pingInterval: ReturnType<typeof setInterval> | undefined;
 
     ws.onopen = () => {
-      if (!mountedRef.current) {
-        ws.close();
-        return;
-      }
+      if (!mountedRef.current) { ws.close(); return; }
       retryCount.current = 0;
       setIsConnected(true);
       wsRef.current = ws;
@@ -78,6 +87,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
       try {
         const data = JSON.parse(event.data);
         if (data.type === "pong") return;
+
         setMessages((prev) => {
           const updated = [...prev, data];
           return updated.length > MAX_MESSAGES
@@ -95,9 +105,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
           );
         } else if (data.type === "step_started") {
           setTimelineSteps((prev) =>
-            prev.map((s) =>
-              s.id === data.step_id ? { ...s, status: "running" as const } : s
-            )
+            prev.map((s) => s.id === data.step_id ? { ...s, status: "running" as const } : s)
           );
         } else if (data.type === "step_completed") {
           setTimelineSteps((prev) =>
@@ -109,9 +117,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
           );
         }
       } catch (e) {
-        if (mountedRef.current) {
-          console.error("[WS] Parse error:", e);
-        }
+        if (mountedRef.current) console.error("[WS] Parse error:", e);
       }
     };
 
@@ -127,9 +133,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
       reconnectTimer.current = setTimeout(connect, delay);
     };
 
-    ws.onerror = () => {
-      ws.close();
-    };
+    ws.onerror = () => { ws.close(); };
   }, [url]);
 
   useEffect(() => {
@@ -137,9 +141,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
     connect();
     return () => {
       mountedRef.current = false;
-      if (reconnectTimer.current) {
-        clearTimeout(reconnectTimer.current);
-      }
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) {
         const ws = wsRef.current;
         ws.onopen = null;
@@ -155,16 +157,18 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
     };
   }, [connect]);
 
-  const send = useCallback(
-    (data: any) => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify(data));
-      } else {
-        pendingMessages.current.push(data);
-      }
-    },
-    []
-  );
+  const send = useCallback((data: any) => {
+    const { apiKey, model } = getStoredCreds();
+    const payload = { ...data };
+    if (apiKey) payload.api_key = apiKey;
+    if (model) payload.model = model;
+
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload));
+    } else {
+      pendingMessages.current.push(payload);
+    }
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
