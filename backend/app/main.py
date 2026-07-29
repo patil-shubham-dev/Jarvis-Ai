@@ -238,6 +238,47 @@ async def clear_memories():
 
 # ─── Proxy API ─────────────────────────────────────────────────────
 
+@app.post("/api/proxy/test")
+async def proxy_test_connection(req: DetectProviderRequest):
+    """Dedicated lightweight endpoint for connection testing.
+    Sends a minimal ping to the provider and returns a clear result."""
+    api_key = req.api_key
+    if not api_key:
+        return {"success": False, "error": "No API key provided"}
+
+    provider = detect_provider(api_key)
+    if not provider:
+        return {"success": False, "error": "Could not detect provider from API key format"}
+
+    provider_config = get_provider_config(provider)
+    if not provider_config:
+        return {"success": False, "error": f"Unknown provider: {provider}"}
+
+    test_messages = [{"role": "user", "content": "Reply with one word: OK"}]
+    model = provider_config.get("default_model", "gpt-4o-mini")
+
+    try:
+        if provider == "anthropic":
+            result = await _proxy_anthropic_chat(api_key, model, test_messages)
+        elif provider == "google":
+            result = await _proxy_google_chat(api_key, model, test_messages)
+        else:
+            result = await _proxy_openai_chat(api_key, model, test_messages)
+
+        if "error" in result:
+            return {"success": False, "error": result["error"]}
+
+        # Extract response content based on provider format
+        content = (
+            result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            or result.get("content", [{}])[0].get("text", "")
+            or "OK"
+        )
+        return {"success": True, "provider": provider, "model": model, "response": content}
+    except Exception as e:
+        logger.exception("Connection test failed")
+        return {"success": False, "error": f"Connection failed: {str(e)}"}
+
 @app.post("/api/proxy/chat")
 async def proxy_chat_completion(request: ChatProxyRequest):
     api_key = request.api_key or config.get_api_key()
@@ -534,22 +575,28 @@ async def _handle_websocket(websocket: WebSocket, track_user_message: bool = Tru
                 except Exception as e:
                     logger.exception("Streaming error")
                     await manager.send(session_id, {"type": "error", "content": f"Streaming failed: {str(e)}"})
-                    return
+                    # DO NOT return — let stream_end be sent below
             else:
-                response = await orchestrator.process_message_stream(
-                    session_id=session_id,
-                    text=data.text,
-                    on_event=on_event,
-                )
-                chunk_size = 3
-                for i in range(0, len(response), chunk_size):
-                    chunk = response[i:i + chunk_size]
-                    await manager.send(session_id, {
-                        "type": "stream_token",
-                        "content": chunk,
-                        "done": False,
-                    })
-                    await asyncio.sleep(0.008)
+                try:
+                    response = await orchestrator.process_message_stream(
+                        session_id=session_id,
+                        text=data.text,
+                        on_event=on_event,
+                    )
+                    if not response:
+                        response = "I'm ready to help. What would you like me to do?"
+                    chunk_size = 3
+                    for i in range(0, len(response), chunk_size):
+                        chunk = response[i:i + chunk_size]
+                        await manager.send(session_id, {
+                            "type": "stream_token",
+                            "content": chunk,
+                            "done": False,
+                        })
+                        await asyncio.sleep(0.008)
+                except Exception as e:
+                    logger.exception("Orchestrator processing failed")
+                    await manager.send(session_id, {"type": "error", "content": f"Processing failed: {str(e)}"})
 
             await manager.send(session_id, {
                 "type": "stream_end",

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Key, Eye, EyeOff, Search, ChevronDown, Sparkles,
   RefreshCw, CheckCircle, AlertCircle, Zap, XCircle,
-  Loader, Server, Wifi, WifiOff,
+  Loader, Wifi, WifiOff,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,16 @@ const PROVIDER_META: Record<string, { icon: string; ring: string; badge: string;
   mistral:   { icon: "💨", ring: "ring-orange-500/30", badge: "bg-orange-500/10 text-orange-600 dark:text-orange-400", label: "Mistral" },
   openrouter:{ icon: "🔄", ring: "ring-indigo-500/30", badge: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400", label: "OpenRouter" },
   deepseek:  { icon: "🐋", ring: "ring-cyan-500/30", badge: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400", label: "DeepSeek" },
+  nvidia:    { icon: "🟩", ring: "ring-green-600/30", badge: "bg-green-600/10 text-green-700 dark:text-green-400", label: "NVIDIA" },
 };
+
+function autoSaveCreds(key: string, model: string, providerId: string) {
+  try {
+    sessionStorage.setItem("jarvis_api_key", key);
+    sessionStorage.setItem("jarvis_model", model);
+    sessionStorage.setItem("jarvis_provider", providerId);
+  } catch {}
+}
 
 export function AIProviderCard({
   apiKey,
@@ -34,6 +43,7 @@ export function AIProviderCard({
   models,
   onApiKeyChange,
   onModelChange,
+  onModelsFetched,
 }: {
   apiKey: string;
   detectedProvider: ProviderInfo | null;
@@ -41,6 +51,7 @@ export function AIProviderCard({
   models: ModelInfo[];
   onApiKeyChange: (key: string) => void;
   onModelChange: (model: string) => void;
+  onModelsFetched?: (models: ModelInfo[]) => void;
 }) {
   const [showKey, setShowKey] = useState(false);
   const [detecting, setDetecting] = useState(false);
@@ -51,8 +62,12 @@ export function AIProviderCard({
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
+  const [localModels, setLocalModels] = useState<ModelInfo[]>([]);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
   const detectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Merge external models prop with local models — external takes priority
+  const effectiveModels = models.length > 0 ? models : localModels;
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -89,16 +104,20 @@ export function AIProviderCard({
       });
       if (!resp.ok) throw new Error(`Server error (${resp.status})`);
       const data = await resp.json();
-      if (data.models?.length > 0) {
-        onModelChange(data.models[0].id);
+      const fetched: ModelInfo[] = data.models || [];
+      // Store locally so the UI always has models even if parent doesn't track them
+      setLocalModels(fetched);
+      if (onModelsFetched) onModelsFetched(fetched);
+      if (fetched.length > 0) {
+        onModelChange(fetched[0].id);
       }
-      return data.models || [];
+      return fetched;
     } catch (e) {
       return [];
     } finally {
       setLoadingModels(false);
     }
-  }, [onModelChange]);
+  }, [onModelChange, onModelsFetched]);
 
   const detectProvider = useCallback(async (key: string) => {
     setDetectError("");
@@ -117,7 +136,10 @@ export function AIProviderCard({
       const data = await resp.json();
       if (data.provider) {
         onApiKeyChange(key);
-        await fetchModels(key, data.provider);
+        const fetched = await fetchModels(key, data.provider);
+        // Auto-save on detection so chat can immediately use the key
+        const firstModel = fetched.length > 0 ? fetched[0].id : selectedModel;
+        autoSaveCreds(key, firstModel, data.provider);
       } else {
         setDetectError(data.error || "Provider not recognized");
       }
@@ -126,7 +148,7 @@ export function AIProviderCard({
     } finally {
       setDetecting(false);
     }
-  }, [fetchModels, onApiKeyChange]);
+  }, [fetchModels, onApiKeyChange, selectedModel]);
 
   const handleKeyChange = (val: string) => {
     if (detectTimerRef.current !== null) clearTimeout(detectTimerRef.current);
@@ -139,36 +161,43 @@ export function AIProviderCard({
   };
 
   const testConnection = async () => {
-    if (!apiKey || !selectedModel) return;
+    if (!apiKey || !selectedModel) {
+      // If no model selected yet, use provider default
+      if (!selectedModel && effectiveModels.length > 0) {
+        onModelChange(effectiveModels[0].id);
+      }
+      if (!apiKey) {
+        setTestStatus("error");
+        setTestMessage("Please enter an API key first");
+        return;
+      }
+    }
     setTestStatus("testing");
     setTestMessage("");
     try {
-      const resp = await fetch(`${API_BASE}/api/proxy/chat`, {
+      const resp = await fetch(`${API_BASE}/api/proxy/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           api_key: apiKey,
-          model: selectedModel,
-          messages: [{ role: "user", content: "Reply with exactly: Connection successful" }],
         }),
       });
       const text = await resp.text();
       let data;
-      try { data = JSON.parse(text); } catch { throw new Error(`Server returned ${resp.status}: not JSON`); }
+      try { data = JSON.parse(text); } catch { throw new Error(`Server returned ${resp.status}: ${text.slice(0, 100)}`); }
       if (!resp.ok) {
-        throw new Error(data.error?.message || data.error || `Server error (${resp.status})`);
+        throw new Error(data.error || data.detail || `Server error (${resp.status})`);
       }
-      if (data.error) {
-        const msg = typeof data.error === "string" ? data.error : data.error.message || JSON.stringify(data.error);
+      if (data.success === false) {
         setTestStatus("error");
-        setTestMessage(msg);
+        setTestMessage(data.error || "Connection failed");
       } else {
-        const content = data.choices?.[0]?.message?.content
-          || data.content?.[0]?.text
-          || (Array.isArray(data.content) ? data.content.map((c: any) => c.text || "").join("") : "")
-          || JSON.stringify(data).slice(0, 300);
+        // Auto-save on success — key is verified
+        autoSaveCreds(apiKey, selectedModel, detectedProvider?.id || data.provider || "");
+        const model = data.model || selectedModel;
+        if (model && model !== selectedModel) onModelChange(model);
         setTestStatus("success");
-        setTestMessage(content);
+        setTestMessage(data.response || "Connected successfully");
       }
     } catch (e) {
       setTestStatus("error");
@@ -177,7 +206,7 @@ export function AIProviderCard({
   };
 
   const providerMeta = detectedProvider ? PROVIDER_META[detectedProvider.id] : null;
-  const filteredModels = models.filter(
+  const filteredModels = effectiveModels.filter(
     (m) => m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
           m.name.toLowerCase().includes(modelSearch.toLowerCase())
   );
@@ -228,7 +257,7 @@ export function AIProviderCard({
               >
                 <span>{providerMeta.icon}</span>
                 {providerMeta.label}
-                {models.length > 0 && <span className="opacity-60">· {models.length}</span>}
+                {effectiveModels.length > 0 && <span className="opacity-60">· {effectiveModels.length}</span>}
               </motion.span>
             )}
           </div>
@@ -287,8 +316,9 @@ export function AIProviderCard({
                     <RefreshCw className="w-3 h-3 animate-spin" />
                     Loading models...
                   </div>
-                ) : models.length > 0 ? (
+                ) : (
                   <div className="mt-3 space-y-3">
+                    {/* Model selector — always shown when provider is detected */}
                     <div className="relative" ref={modelDropdownRef}>
                       <button
                         onClick={() => setShowModelDropdown(!showModelDropdown)}
@@ -296,8 +326,12 @@ export function AIProviderCard({
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-                          <span className="truncate">{models.find(m => m.id === selectedModel)?.name || selectedModel}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono truncate hidden sm:inline">({selectedModel})</span>
+                          <span className="truncate">
+                            {effectiveModels.find(m => m.id === selectedModel)?.name || selectedModel || "Select a model"}
+                          </span>
+                          {selectedModel && (
+                            <span className="text-[10px] text-muted-foreground font-mono truncate hidden sm:inline">({selectedModel})</span>
+                          )}
                         </div>
                         <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ml-2", showModelDropdown && "rotate-180")} />
                       </button>
@@ -327,7 +361,7 @@ export function AIProviderCard({
                             <div className="overflow-y-auto" style={{ maxHeight: "16rem" }}>
                               {filteredModels.length === 0 ? (
                                 <div className="p-4 text-center text-xs text-muted-foreground">
-                                  {modelSearch ? "No matching models" : "No models loaded"}
+                                  {modelSearch ? "No matching models" : effectiveModels.length === 0 ? "No models loaded — try refreshing" : "No models loaded"}
                                 </div>
                               ) : (
                                 filteredModels.map((model) => (
@@ -352,7 +386,7 @@ export function AIProviderCard({
                               )}
                             </div>
                             <div className="p-2 border-t border-border flex justify-between text-[10px] text-muted-foreground px-3">
-                              <span>{models.length} models</span>
+                              <span>{effectiveModels.length} models</span>
                               <button
                                 onClick={() => { if (detectedProvider) fetchModels(apiKey, detectedProvider.id); }}
                                 className="hover:text-foreground transition-colors flex items-center gap-1"
@@ -365,6 +399,7 @@ export function AIProviderCard({
                       </AnimatePresence>
                     </div>
 
+                    {/* Test connection button — always shown when provider is detected */}
                     <button
                       onClick={testConnection}
                       disabled={testStatus === "testing"}
@@ -408,8 +443,9 @@ export function AIProviderCard({
                           exit={{ opacity: 0, y: -8 }}
                           className={cn(
                             "p-3 rounded-xl text-xs leading-relaxed border max-h-32 overflow-y-auto",
-                            testStatus === "success" ? "bg-success/5 border-success/20 text-foreground/80" :
-                            "bg-destructive/5 border-destructive/20 text-destructive"
+                            testStatus === "success"
+                              ? "bg-success/5 border-success/20 text-foreground/80"
+                              : "bg-destructive/5 border-destructive/20 text-destructive"
                           )}
                         >
                           <span className={cn(
@@ -423,7 +459,7 @@ export function AIProviderCard({
                       )}
                     </AnimatePresence>
                   </div>
-                ) : null}
+                )}
               </motion.div>
             )}
           </AnimatePresence>

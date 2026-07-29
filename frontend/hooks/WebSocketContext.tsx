@@ -10,6 +10,8 @@ interface WebSocketContextValue {
   timelineSteps: TimelineStep[];
   send: (data: any) => void;
   clearMessages: () => void;
+  refreshCreds: () => void;
+  pendingCount: number;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);

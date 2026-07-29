@@ -10,6 +10,7 @@ PROVIDER_PATTERNS = {
     "google": re.compile(r"^AIza"),
     "groq": re.compile(r"^gsk_"),
     "mistral": re.compile(r"^[A-Za-z0-9]{32,}$"),
+    "nvidia": re.compile(r"^nvapi-"),
 }
 
 PROVIDER_CONFIGS = {
@@ -84,6 +85,16 @@ PROVIDER_CONFIGS = {
         "api_key_header": "Authorization",
         "api_key_prefix": "Bearer ",
     },
+    "nvidia": {
+        "name": "NVIDIA",
+        "base_url": "https://api.nvcf.nvidia.com/v1",
+        "models_endpoint": "/models",
+        "chat_endpoint": "/chat/completions",
+        "embedding_endpoint": None,
+        "default_model": "meta/llama-3.1-70b-instruct",
+        "api_key_header": "Authorization",
+        "api_key_prefix": "Bearer ",
+    },
 }
 
 def detect_provider(api_key: str) -> Optional[str]:
@@ -122,7 +133,7 @@ async def fetch_models(api_key: str, provider_id: str) -> list[dict]:
         return _fallback_models(provider_id)
 
 def _parse_provider_models(provider_id: str, data: dict) -> list[dict]:
-    if provider_id == "openai" or provider_id in ("groq", "mistral", "openrouter", "deepseek"):
+    if provider_id == "openai" or provider_id in ("groq", "mistral", "openrouter", "deepseek", "nvidia"):
         raw = data.get("data", [])
         chat_keywords = ["gpt", "o1", "o3", "chat", "claude", "gemini", "llama", "mixtral", "mistral", "deepseek"]
         blacklist = ["instruct", "realtime", "audio", "embedding", "moderation", "whisper", "tts", "dall-e"]
@@ -195,6 +206,11 @@ def _fallback_models(provider_id: str) -> list[dict]:
         "deepseek": [
             {"id": "deepseek-chat", "name": "DeepSeek Chat", "provider": "deepseek"},
             {"id": "deepseek-reasoner", "name": "DeepSeek Reasoner", "provider": "deepseek"},
+        ],
+        "nvidia": [
+            {"id": "meta/llama-3.1-70b-instruct", "name": "Llama 3.1 70B Instruct", "provider": "nvidia"},
+            {"id": "meta/llama-3.1-8b-instruct", "name": "Llama 3.1 8B Instruct", "provider": "nvidia"},
+            {"id": "mistralai/mixtral-8x22b-instruct-v0.1", "name": "Mixtral 8x22B Instruct", "provider": "nvidia"},
         ],
     }
     return fallbacks.get(provider_id, [])

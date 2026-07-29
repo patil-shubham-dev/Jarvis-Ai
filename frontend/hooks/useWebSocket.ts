@@ -22,6 +22,8 @@ interface UseWebSocketReturn {
   timelineSteps: TimelineStep[];
   send: (data: any) => void;
   clearMessages: () => void;
+  refreshCreds: () => void;
+  pendingCount: number;
 }
 
 const MAX_MESSAGES = 500;
@@ -49,6 +51,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<WSMessage[]>([]);
   const [timelineSteps, setTimelineSteps] = useState<TimelineStep[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>(undefined as never);
   const retryCount = useRef(0);
@@ -69,6 +72,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
       setIsConnected(true);
       wsRef.current = ws;
       setSocket(ws);
+      setPendingCount(0);
 
       pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -80,6 +84,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
         const msg = pendingMessages.current.shift();
         ws.send(JSON.stringify(msg));
       }
+      setPendingCount(0);
     };
 
     ws.onmessage = (event) => {
@@ -153,6 +158,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
       }
       setMessages([]);
       setTimelineSteps([]);
+      setPendingCount(0);
       setIsConnected(false);
     };
   }, [connect]);
@@ -167,6 +173,7 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
       wsRef.current.send(JSON.stringify(payload));
     } else {
       pendingMessages.current.push(payload);
+      setPendingCount(pendingMessages.current.length);
     }
   }, []);
 
@@ -175,5 +182,10 @@ export function useWebSocket(url: string = "ws://localhost:8000/ws/chat"): UseWe
     setTimelineSteps([]);
   }, []);
 
-  return { socket, isConnected, messages, timelineSteps, send, clearMessages };
+  const refreshCreds = useCallback(() => {
+    // Force re-read of sessionStorage on next send
+    getStoredCreds();
+  }, []);
+
+  return { socket, isConnected, messages, timelineSteps, send, clearMessages, refreshCreds, pendingCount };
 }

@@ -63,9 +63,9 @@ export default function SettingsPage() {
       detectedProvider={detectedProvider}
       selectedModel={selectedModel}
       models={models}
-      onApiKeyChange={(key) => setApiKey(key)}
-      onModelChange={(model) => setSelectedModel(model)}
-    />
+      onApiKeyChange={(key) => setApiKey(key)}              onModelChange={(model) => setSelectedModel(model)}
+              onModelsFetched={(fetched) => setModels(fetched)}
+            />
   );
 
   const sections = [

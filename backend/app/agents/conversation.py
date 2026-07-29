@@ -72,7 +72,13 @@ class ConversationAgent:
                 logger.warning(f"Provider {prov} failed: {e}")
                 continue
 
-        raise RuntimeError("No LLM provider available. Check API keys and network connectivity.")
+        # Graceful fallback: no provider available, use template responses
+        logger.warning(
+            "No LLM provider available. Template fallback will be used. "
+            "Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GOOGLE_API_KEY in .env "
+            "or provide an API key from the UI."
+        )
+        self.llm = None
 
     def _create_llm(self, provider: str, model: str) -> Optional[Any]:
         if provider == "ollama":
@@ -90,6 +96,14 @@ class ConversationAgent:
         return None
 
     async def classify_intent(self, text: str, history: List[Dict[str, str]] = None) -> IntentClassification:
+        # Fallback when no LLM provider is available
+        if not self.llm:
+            return IntentClassification(
+                category=IntentCategory.CASUAL,
+                confidence=0.6,
+                reasoning="No LLM provider available — defaulting to casual response"
+            )
+
         history = history or []
         prompt = ChatPromptTemplate.from_template(
             "You are Jarvis, a highly intelligent AI Operating System. "
@@ -123,6 +137,10 @@ class ConversationAgent:
         return await chain.ainvoke(input_data)
 
     async def generate_response(self, text: str, intent: IntentClassification, context: Dict[str, Any] = None) -> str:
+        # Fallback when no LLM provider is available
+        if not self.llm:
+            return self._fallback_response(text, intent, context)
+
         context = context or {}
         memory_context = context.get("context", "")
         plan_info = context.get("plan", None)
@@ -213,3 +231,29 @@ class ConversationAgent:
         chain = prompt | self.llm
         response = await chain.ainvoke({"text": text})
         return response.content
+
+    def _fallback_response(self, text: str, intent: IntentClassification, context: Dict[str, Any] = None) -> str:
+        """Return a template response when no LLM provider is available."""
+        greeting_keywords = ["hello", "hi", "hey", "greetings", "sup", "yo", "howdy"]
+        greeting = any(g in text.lower() for g in greeting_keywords)
+
+        if greeting:
+            return "Hello! I'm Jarvis. To unlock my full intelligence, please add an API key in Settings. Without one, I can still acknowledge you — but I need a provider to think and respond properly."
+
+        if text.lower().strip("?") in ("what can you do", "who are you", "help"):
+            return (
+                "I'm Jarvis — your AI OS assistant. Here's what I can do:\n\n"
+                "- **Chat & Answer Questions** (requires API key)\n"
+                "- **Multi-step Task Automation** (requires API key)\n"
+                "- **Memory & Recall** (requires API key)\n"
+                "- **Device Control** (Android integration)\n\n"
+                "To enable AI features, go to **Settings** and add your API key. "
+                "I support OpenAI, Anthropic, Google Gemini, Groq, and more."
+            )
+
+        return (
+            f"I received your message. To generate a response, I need an AI provider configured.\n\n"
+            f"**Please go to Settings → API Key and add your key.**\n\n"
+            f"I support: **OpenAI**, **Anthropic (Claude)**, **Google Gemini**, "
+            f"**Groq**, **Mistral**, **OpenRouter**, and **DeepSeek**."
+        )

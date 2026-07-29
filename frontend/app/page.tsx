@@ -12,7 +12,8 @@ import { useWS } from "@/hooks/WebSocketContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Mic, Settings, MessageSquare, Zap,
-  Trash2, ChevronDown,
+  Trash2, ChevronDown, Wifi, WifiOff, Clock,
+  Loader,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,12 @@ interface DisplayMessage {
   content: string;
   timestamp?: string;
   isStreaming?: boolean;
+  error?: string | null;
+}
+
+interface StreamMetrics {
+  tokenCount: number;
+  elapsedSeconds: number;
 }
 
 let msgCounter = 0;
@@ -45,7 +52,7 @@ function nextId() { return `msg_${++msgCounter}_${Date.now()}`; }
 
 export default function Home() {
   const router = useRouter();
-  const { socket, isConnected, messages, timelineSteps, send, clearMessages } = useWS();
+  const { socket, isConnected, messages, timelineSteps, send, clearMessages, pendingCount } = useWS();
   const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [state, setState] = useState<"idle" | "thinking" | "listening" | "speaking">("idle");
@@ -54,10 +61,15 @@ export default function Home() {
   const [agentThoughts, setAgentThoughts] = useState<AgentThought[]>([]);
   const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [streamMetrics, setStreamMetrics] = useState<StreamMetrics>({ tokenCount: 0, elapsedSeconds: 0 });
+  const [lastSentText, setLastSentText] = useState("");
+  const [showReconnecting, setShowReconnecting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const processingRef = useRef<Set<string>>(new Set());
   const streamBufferRef = useRef<string>("");
+  const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wasConnectedRef = useRef(true);
 
   const scrollToBottom = useCallback((force = false) => {
     if (scrollRef.current) {
@@ -78,6 +90,35 @@ export default function Home() {
       setShowScrollBtn(dist > 150);
     }
   }, []);
+
+  // Manage stream metrics timer
+  const startStreamTimer = useCallback(() => {
+    setStreamMetrics({ tokenCount: 0, elapsedSeconds: 0 });
+    if (streamTimerRef.current) clearInterval(streamTimerRef.current);
+    const start = Date.now();
+    streamTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setStreamMetrics((prev) => ({ ...prev, elapsedSeconds: elapsed }));
+    }, 1000);
+  }, []);
+
+  const stopStreamTimer = useCallback(() => {
+    if (streamTimerRef.current) {
+      clearInterval(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
+  }, []);
+
+  // Track reconnection state
+  useEffect(() => {
+    if (isConnected) {
+      wasConnectedRef.current = true;
+      setShowReconnecting(false);
+    } else if (wasConnectedRef.current) {
+      // Only show reconnecting if we were previously connected
+      setShowReconnecting(true);
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -129,24 +170,29 @@ export default function Home() {
         }
         break;
 
-      case "stream_token":
-        streamBufferRef.current += lastMsg.content || "";
+      case "stream_token": {
+        const token = lastMsg.content || "";
+        streamBufferRef.current += token;
+        setStreamMetrics((prev) => ({ ...prev, tokenCount: prev.tokenCount + 1 }));
         setDisplayMessages((prev) => {
           if (prev.length > 0 && prev[prev.length - 1].isStreaming) {
             const updated = [...prev];
             const last = updated[updated.length - 1];
             updated[updated.length - 1] = {
               ...last,
-              content: last.content + (lastMsg.content || ""),
+              content: last.content + token,
             };
             return updated;
           }
           return prev;
         });
         break;
+      }
 
       case "stream_start": {
         streamBufferRef.current = "";
+        setStreamMetrics({ tokenCount: 0, elapsedSeconds: 0 });
+        startStreamTimer();
         const hasAssistant = displayMessages.some(m => m.isStreaming);
         if (!hasAssistant) {
           setDisplayMessages((prev) => [
@@ -159,8 +205,9 @@ export default function Home() {
         break;
       }
 
-      case "stream_end":
+      case "stream_end": {
         streamBufferRef.current = "";
+        stopStreamTimer();
         setDisplayMessages((prev) => {
           if (prev.length > 0 && prev[prev.length - 1].isStreaming) {
             const updated = [...prev];
@@ -174,11 +221,13 @@ export default function Home() {
           }
           return prev;
         });
-        setTimeout(() => { setState("idle"); setShowTimeline(false); }, 500);
+        setTimeout(() => { setState("idle"); setShowTimeline(false); }, 800);
         break;
+      }
 
       case "message":
         if (lastMsg.content) {
+          stopStreamTimer();
           setDisplayMessages((prev) => [
             ...prev,
             { id: nextId(), role: "assistant", content: lastMsg.content ?? "", timestamp: lastMsg.timestamp },
@@ -189,16 +238,42 @@ export default function Home() {
         }
         break;
 
-      case "error":
-        setDisplayMessages((prev) => [
-          ...prev,
-          { id: nextId(), role: "system", content: lastMsg.content || "An error occurred" },
-        ]);
+      case "error": {
+        stopStreamTimer();
+        // If there's an active streaming message, attach error to it
+        const lastDisplay = displayMessages[displayMessages.length - 1];
+        if (lastDisplay?.isStreaming) {
+          setDisplayMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.isStreaming) {
+              updated[updated.length - 1] = {
+                ...last,
+                isStreaming: false,
+                error: lastMsg.content || "Stream failed",
+              };
+            }
+            return updated;
+          });
+        } else {
+          setDisplayMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "system", content: "", error: lastMsg.content || "An error occurred" },
+          ]);
+        }
         setState("idle");
         setShowTimeline(false);
         break;
+      }
     }
-  }, [messages, isChatOpen, displayMessages]);
+  }, [messages, isChatOpen, displayMessages, startStreamTimer, stopStreamTimer]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (streamTimerRef.current) clearInterval(streamTimerRef.current);
+    };
+  }, []);
 
   const handleSend = () => {
     const text = input.trim();
@@ -207,16 +282,35 @@ export default function Home() {
     if (!isConnected || !socket) {
       setDisplayMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "system", content: "Cannot send message: not connected to server" },
+        {
+          id: nextId(),
+          role: "system",
+          content: "",
+          error: "Cannot send message: not connected to server. Please check that the backend is running.",
+        },
       ]);
       return;
     }
 
+    setLastSentText(text);
     send({ text });
     setInput("");
     setState("thinking");
+    setStreamMetrics({ tokenCount: 0, elapsedSeconds: 0 });
     if (!isChatOpen) setIsChatOpen(true);
   };
+
+  const handleRetry = useCallback(() => {
+    if (lastSentText) {
+      send({ text: lastSentText });
+      setState("thinking");
+      setStreamMetrics({ tokenCount: 0, elapsedSeconds: 0 });
+    }
+  }, [lastSentText, send]);
+
+  const handleDismissError = useCallback((msgId: string) => {
+    setDisplayMessages((prev) => prev.filter((m) => m.id !== msgId));
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -224,6 +318,11 @@ export default function Home() {
       handleSend();
     }
   };
+
+  // Compute streaming progress for UI
+  const streamingProgress = streamMetrics.tokenCount > 0
+    ? Math.min(streamMetrics.tokenCount / 200, 1)
+    : 0;
 
   return (
     <main className="relative flex flex-col items-center justify-center min-h-dvh bg-background overflow-hidden font-sans text-foreground safe-area">
@@ -239,6 +338,33 @@ export default function Home() {
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(196,149,106,0.04),transparent_70%)] pointer-events-none" />
 
+      {/* Reconnection banner */}
+      <AnimatePresence>
+        {showReconnecting && !isConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 px-4 py-2 bg-destructive/10 border-b border-destructive/20"
+          >
+            <Loader className="w-3.5 h-3.5 text-destructive animate-spin" />
+            <span className="text-[11px] font-medium text-destructive">
+              Connection lost — reconnecting{""}
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="inline-block"
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
+                >
+                  .
+                </motion.span>
+              ))}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <header className="absolute top-0 w-full p-4 sm:p-6 flex justify-between items-center z-20">
         <div className="flex items-center gap-2.5">
           <div className={cn(
@@ -251,8 +377,25 @@ export default function Home() {
           {isConnected && (
             <span className="text-[10px] text-muted-foreground/50 hidden sm:inline">v4.1</span>
           )}
+          {/* Connection icons */}
+          {isConnected ? (
+            <Wifi className="w-3 h-3 text-success/60 hidden sm:block" />
+          ) : (
+            <WifiOff className="w-3 h-3 text-destructive/60 hidden sm:block" />
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Pending messages indicator */}
+          {pendingCount > 0 && (
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-warning/10 border border-warning/20"
+            >
+              <Clock className="w-3 h-3 text-warning" />
+              <span className="text-[10px] font-medium text-warning">{pendingCount}</span>
+            </motion.div>
+          )}
           {displayMessages.length > 0 && (
             <button
               onClick={() => { setDisplayMessages([]); clearMessages(); }}
@@ -283,7 +426,9 @@ export default function Home() {
           {state === "idle" && (isConnected ? "System Ready" : "Awaiting Connection")}
           {state === "thinking" && "Processing..."}
           {state === "listening" && "Listening..."}
-          {state === "speaking" && "Jarvis Speaking"}
+          {state === "speaking" && streamMetrics.tokenCount > 0
+            ? `${streamMetrics.tokenCount} tokens · ${streamMetrics.elapsedSeconds}s`
+            : "Jarvis Speaking"}
         </p>
       </div>
 
@@ -328,12 +473,48 @@ export default function Home() {
                   "w-2 h-2 rounded-full transition-colors",
                   isConnected ? "bg-success" : "bg-destructive"
                 )} />
+                <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">Jarvis AI</span>
               </div>
-              <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">Jarvis AI</span>
-              <button onClick={() => { setDisplayMessages([]); clearMessages(); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Token count during streaming */}
+                {state === "speaking" && streamMetrics.tokenCount > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/5"
+                  >
+                    <Zap className="w-3 h-3 text-primary" />
+                    <span className="text-[10px] font-mono text-primary/70">
+                      {streamMetrics.tokenCount}
+                    </span>
+                  </motion.div>
+                )}
+                <button onClick={() => { setDisplayMessages([]); clearMessages(); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
             </div>
+
+            {/* Streaming progress bar */}
+            <AnimatePresence>
+              {state === "speaking" && streamingProgress > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-0.5 bg-muted overflow-hidden"
+                >
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-primary via-accent to-primary"
+                    animate={{
+                      width: [`${streamingProgress * 100}%`, `${Math.min(streamingProgress * 100 + 5, 100)}%`],
+                    }}
+                    transition={{ duration: 0.5 }}
+                    style={{ width: `${Math.min(streamingProgress * 100, 100)}%` }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div
               ref={scrollRef}
@@ -366,6 +547,10 @@ export default function Home() {
                     role={msg.role}
                     timestamp={msg.timestamp}
                     isStreaming={msg.isStreaming}
+                    error={msg.error}
+                    onRetry={msg.error ? handleRetry : undefined}
+                    onDismiss={msg.error ? () => handleDismissError(msg.id) : undefined}
+                    streamElapsed={msg.isStreaming ? streamMetrics.elapsedSeconds : undefined}
                   />
                 ))}
               </AnimatePresence>
@@ -393,8 +578,14 @@ export default function Home() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={isConnected ? "Ask Jarvis anything..." : "Reconnecting..."}
-                  disabled={!isConnected}
+                  placeholder={
+                    !isConnected
+                      ? "Reconnecting..."
+                      : state === "thinking"
+                      ? "Waiting for response..."
+                      : "Ask Jarvis anything..."
+                  }
+                  disabled={!isConnected || state === "thinking"}
                   className="flex-1 bg-transparent border-none outline-none text-sm px-3 sm:px-4 py-2 text-foreground placeholder:text-muted-foreground/50 disabled:opacity-40"
                 />
                 <button
@@ -408,16 +599,40 @@ export default function Home() {
                 </button>
                 <button
                   onClick={handleSend}
-                  disabled={!input.trim() || !isConnected}
+                  disabled={!input.trim() || !isConnected || state === "thinking"}
                   className={cn(
                     "p-2.5 rounded-xl transition-all flex-shrink-0",
-                    input.trim() && isConnected
+                    input.trim() && isConnected && state !== "thinking"
                       ? "bg-primary hover:bg-[#DA4800] text-white shadow-sm"
                       : "bg-muted text-muted-foreground"
                   )}
                 >
-                  <Send className="w-4 h-4" />
+                  {state === "thinking" ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </button>
+              </div>
+              {/* Input footer status */}
+              <div className="flex items-center justify-between mt-1.5 px-1">
+                <div className="flex items-center gap-1">
+                  {!isConnected && (
+                    <span className="text-[10px] text-destructive/60 flex items-center gap-1">
+                      <WifiOff className="w-3 h-3" />
+                      Offline
+                    </span>
+                  )}
+                  {pendingCount > 0 && (
+                    <span className="text-[10px] text-warning flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {pendingCount} pending
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-muted-foreground/40">
+                  Enter to send
+                </span>
               </div>
             </div>
           </motion.div>
